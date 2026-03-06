@@ -1,0 +1,21 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Components/Touchable/Touchable.js	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Components/Touchable/Touchable.js	2026-03-06 15:22:52
+@@ -25,13 +25,18 @@
+ import * as React from 'react';
+ 
+ const extractSingleTouch = (nativeEvent: {
++  +altKey?: ?boolean, // [macOS]
++  +button?: ?number, // [macOS]
+   +changedTouches: $ReadOnlyArray<GestureResponderEvent['nativeEvent']>,
++  +ctrlKey?: ?boolean, // [macOS]
+   +force?: number,
+   +identifier: number,
+   +locationX: number,
+   +locationY: number,
++  +metaKey?: ?boolean, // [macOS]
+   +pageX: number,
+   +pageY: number,
++  +shiftKey?: ?boolean, // [macOS]
+   +target: ?number,
+   +timestamp: number,
+   +touches: $ReadOnlyArray<GestureResponderEvent['nativeEvent']>,

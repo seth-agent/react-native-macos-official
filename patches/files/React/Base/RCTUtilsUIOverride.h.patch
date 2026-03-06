@@ -1,0 +1,11 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Base/RCTUtilsUIOverride.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Base/RCTUtilsUIOverride.h	2026-03-06 15:22:52
+@@ -6,7 +6,7 @@
+  */
+ 
+ #import <Foundation/Foundation.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ @interface RCTUtilsUIOverride : NSObject
+ /**

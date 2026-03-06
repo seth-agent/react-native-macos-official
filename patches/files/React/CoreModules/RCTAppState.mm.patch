@@ -1,0 +1,64 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/CoreModules/RCTAppState.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/CoreModules/RCTAppState.mm	2026-03-06 15:22:52
+@@ -7,6 +7,7 @@
+ 
+ #import "RCTAppState.h"
+ 
++#import <React/RCTUIKit.h> // [macOS]
+ #import <FBReactNativeSpec/FBReactNativeSpec.h>
+ #import <React/RCTAssert.h>
+ #import <React/RCTBridge.h>
+@@ -18,6 +19,7 @@
+ 
+ static NSString *RCTCurrentAppState()
+ {
++#if !TARGET_OS_OSX // [macOS]
+   static NSDictionary *states;
+   static dispatch_once_t onceToken;
+   dispatch_once(&onceToken, ^{
+@@ -27,12 +29,21 @@
+       @(UIApplicationStateInactive) : @"inactive"
+     };
+   });
+-
+   if (RCTRunningInAppExtension()) {
+     return @"extension";
+   }
+-
+   return states[@(RCTSharedApplication().applicationState)] ?: @"unknown";
++#else // [macOS
++  
++  if (RCTSharedApplication().isActive) {
++    return @"active";
++  } else if (RCTSharedApplication().isHidden) {
++    return @"background";
++  }
++  return @"unknown";
++  
++#endif // macOS]
++  
+ }
+ 
+ @interface RCTAppState () <NativeAppStateSpec, RCTInitializing>
+@@ -64,7 +75,7 @@
+ 
+ - (facebook::react::ModuleConstants<JS::NativeAppState::Constants>)constantsToExport
+ {
+-  return [self getConstants];
++  return (facebook::react::ModuleConstants<JS::NativeAppState::Constants>)[self getConstants];
+ }
+ 
+ - (facebook::react::ModuleConstants<JS::NativeAppState::Constants>)getConstants
+@@ -94,10 +105,12 @@
+                                                object:nil];
+   }
+ 
++#if !TARGET_OS_OSX // [macOS]
+   [[NSNotificationCenter defaultCenter] addObserver:self
+                                            selector:@selector(handleMemoryWarning)
+                                                name:UIApplicationDidReceiveMemoryWarningNotification
+                                              object:nil];
++#endif // [macOS]
+ }
+ 
+ - (void)stopObserving

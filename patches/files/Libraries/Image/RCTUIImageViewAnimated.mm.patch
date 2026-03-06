@@ -1,0 +1,220 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Image/RCTUIImageViewAnimated.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Image/RCTUIImageViewAnimated.mm	2026-03-06 15:22:52
+@@ -23,34 +23,31 @@
+   vm_size_t page_size;
+   vm_statistics_data_t vm_stat;
+   kern_return_t kern;
+-
+   kern = host_page_size(host_port, &page_size);
+-  if (kern != KERN_SUCCESS) {
++  if (kern != KERN_SUCCESS)
+     return 0;
+-  }
+   kern = host_statistics(host_port, HOST_VM_INFO, (host_info_t)&vm_stat, &host_size);
+-  if (kern != KERN_SUCCESS) {
++  if (kern != KERN_SUCCESS)
+     return 0;
+-  }
+   return (vm_stat.free_count - vm_stat.speculative_count) * page_size;
+ }
+ 
+ @interface RCTUIImageViewAnimated () <RCTDisplayRefreshable>
+ 
+ @property (nonatomic, assign) NSUInteger maxBufferSize;
+-@property (nonatomic, strong, readwrite) UIImage *currentFrame;
++@property (nonatomic, strong, readwrite) RCTPlatformImage *currentFrame; // [macOS]
+ @property (nonatomic, assign, readwrite) NSUInteger currentFrameIndex;
+ @property (nonatomic, assign, readwrite) NSUInteger currentLoopCount;
+ @property (nonatomic, assign) NSUInteger totalFrameCount;
+ @property (nonatomic, assign) NSUInteger totalLoopCount;
+-@property (nonatomic, strong) UIImage<RCTAnimatedImage> *animatedImage;
+-@property (nonatomic, strong) NSMutableDictionary<NSNumber *, UIImage *> *frameBuffer;
++@property (nonatomic, strong) RCTPlatformImage<RCTAnimatedImage> *animatedImage; // [macOS]
++@property (nonatomic, strong) NSMutableDictionary<NSNumber *, RCTPlatformImage *> *frameBuffer; // [macOS]
+ @property (nonatomic, assign) NSTimeInterval currentTime;
+ @property (nonatomic, assign) BOOL bufferMiss;
+ @property (nonatomic, assign) NSUInteger maxBufferCount;
+ @property (nonatomic, strong) NSOperationQueue *fetchQueue;
+ @property (nonatomic, strong) dispatch_semaphore_t lock;
+-@property (nonatomic, strong) CADisplayLink *displayLink;
++@property (nonatomic, strong) RCTPlatformDisplayLink *displayLink; // [macOS]
+ 
+ @end
+ 
+@@ -60,10 +57,12 @@
+ {
+   if (self = [super initWithFrame:frame]) {
+     self.lock = dispatch_semaphore_create(1);
++#if !TARGET_OS_OSX // [macOS]
+     [[NSNotificationCenter defaultCenter] addObserver:self
+                                              selector:@selector(didReceiveMemoryWarning:)
+                                                  name:UIApplicationDidReceiveMemoryWarningNotification
+                                                object:nil];
++#endif // [macOS]
+   }
+   return self;
+ }
+@@ -87,25 +86,24 @@
+   dispatch_semaphore_signal(self.lock);
+ }
+ 
+-- (void)setImage:(UIImage *)image
++- (void)setImage:(RCTPlatformImage *)image // [macOS]
+ {
+-  UIImage *thisImage = self.animatedImage != nil ? self.animatedImage : super.image;
++  RCTPlatformImage *thisImage = self.animatedImage != nil ? self.animatedImage : super.image; // [macOS]
+   if (image == thisImage) {
+     return;
+   }
+-
++  
+   [self stop];
+   [self resetAnimatedImage];
+ 
+   if ([image respondsToSelector:@selector(animatedImageFrameAtIndex:)]) {
+-    NSUInteger animatedImageFrameCount = ((UIImage<RCTAnimatedImage> *)image).animatedImageFrameCount;
+-
++    NSUInteger animatedImageFrameCount = ((RCTPlatformImage<RCTAnimatedImage> *)image).animatedImageFrameCount; // [macOS]
+     // In case frame count is 0, there is no reason to continue.
+     if (animatedImageFrameCount == 0) {
+       return;
+     }
+ 
+-    self.animatedImage = (UIImage<RCTAnimatedImage> *)image;
++    self.animatedImage = (RCTPlatformImage<RCTAnimatedImage> *)image; // [macOS]
+     self.totalFrameCount = animatedImageFrameCount;
+ 
+     // Get the current frame and loop count.
+@@ -141,7 +139,7 @@
+   return _fetchQueue;
+ }
+ 
+-- (NSMutableDictionary<NSNumber *, UIImage *> *)frameBuffer
++- (NSMutableDictionary<NSNumber *, RCTPlatformImage *> *)frameBuffer // [macOS]
+ {
+   if (!_frameBuffer) {
+     _frameBuffer = [NSMutableDictionary dictionary];
+@@ -149,7 +147,7 @@
+   return _frameBuffer;
+ }
+ 
+-- (CADisplayLink *)displayLink
++- (RCTPlatformDisplayLink *)displayLink // [macOS]
+ {
+   // We only need a displayLink in the case of animated images, so short-circuit this code and don't create one for most
+   // of the use cases. Since this class is used for all RCTImageView's, this is especially important.
+@@ -166,13 +164,13 @@
+   return _displayLink;
+ }
+ 
+-- (void)prefetchNextFrame:(UIImage *)fetchFrame fetchFrameIndex:(NSInteger)fetchFrameIndex
++- (void)prefetchNextFrame:(RCTPlatformImage *)fetchFrame fetchFrameIndex:(NSInteger)fetchFrameIndex // [macOS]
+ {
+   if (!fetchFrame && !(self.frameBuffer.count == self.totalFrameCount) && self.fetchQueue.operationCount == 0) {
+     // Prefetch next frame in background queue
+-    UIImage<RCTAnimatedImage> *animatedImage = self.animatedImage;
++    RCTPlatformImage<RCTAnimatedImage> *animatedImage = self.animatedImage; // [macOS]
+     NSOperation *operation = [NSBlockOperation blockOperationWithBlock:^{
+-      UIImage *frame = [animatedImage animatedImageFrameAtIndex:fetchFrameIndex];
++      RCTPlatformImage *frame = [animatedImage animatedImageFrameAtIndex:fetchFrameIndex]; // [macOS]
+       dispatch_semaphore_wait(self.lock, DISPATCH_TIME_FOREVER);
+       self.frameBuffer[@(fetchFrameIndex)] = frame;
+       dispatch_semaphore_signal(self.lock);
+@@ -198,16 +196,19 @@
+   return self.displayLink.isPaused;
+ }
+ 
+-- (void)displayDidRefresh:(CADisplayLink *)displayLink
++- (void)displayDidRefresh:(RCTPlatformDisplayLink *)displayLink // [macOS]
+ {
+   // displaylink.duration -- time interval between frames, assuming maximumFramesPerSecond
+   // displayLink.preferredFramesPerSecond (>= iOS 10) -- Set to 30 for displayDidRefresh to be called at 30 fps
+   // durationToNextRefresh -- Time interval to the next time displayDidRefresh is called
++#if !TARGET_OS_OSX // [macOS]
+   NSTimeInterval durationToNextRefresh = displayLink.targetTimestamp - displayLink.timestamp;
++#else // [macOS
++  NSTimeInterval durationToNextRefresh = displayLink.duration;
++#endif // macOS]
+   NSUInteger totalFrameCount = self.totalFrameCount;
+   NSUInteger currentFrameIndex = self.currentFrameIndex;
+   NSUInteger nextFrameIndex = (currentFrameIndex + 1) % totalFrameCount;
+-
+   // Check if we have the frame buffer firstly to improve performance
+   if (!self.bufferMiss) {
+     // Then check if timestamp is reached
+@@ -228,10 +229,9 @@
+     self.currentFrameIndex = nextFrameIndex;
+     nextFrameIndex = (currentFrameIndex + 1) % totalFrameCount;
+   }
+-
+   // Update the current frame
+-  UIImage *currentFrame;
+-  UIImage *fetchFrame;
++  RCTPlatformImage *currentFrame; // [macOS]
++  RCTPlatformImage *fetchFrame; // [macOS]
+   dispatch_semaphore_wait(self.lock, DISPATCH_TIME_FOREVER);
+   currentFrame = self.frameBuffer[@(currentFrameIndex)];
+   fetchFrame = currentFrame ? self.frameBuffer[@(nextFrameIndex)] : nil;
+@@ -249,7 +249,6 @@
+   } else {
+     self.bufferMiss = YES;
+   }
+-
+   // Update the loop count when last frame rendered
+   if (nextFrameIndex == 0 && !self.bufferMiss) {
+     // Update the loop count
+@@ -261,7 +260,6 @@
+       return;
+     }
+   }
+-
+   // Check if we should prefetch next frame or current frame
+   NSUInteger fetchFrameIndex;
+   if (self.bufferMiss) {
+@@ -279,10 +277,15 @@
+ 
+ - (void)calculateMaxBufferCount
+ {
++#if !TARGET_OS_OSX // [macOS]
+   NSUInteger bytes = CGImageGetBytesPerRow(self.currentFrame.CGImage) * CGImageGetHeight(self.currentFrame.CGImage);
+-  if (bytes == 0) {
++#else // [macOS
++  // NSImage doesn't have a direct CGImage property like UIImage
++  CGImageRef cgImage = [self.currentFrame CGImageForProposedRect:nil context:nil hints:nil];
++  NSUInteger bytes = cgImage ? (CGImageGetBytesPerRow(cgImage) * CGImageGetHeight(cgImage)) : 0;
++#endif // macOS]
++  if (bytes == 0)
+     bytes = 1024;
+-  }
+ 
+   NSUInteger max = 0;
+   if (self.maxBufferSize > 0) {
+@@ -293,13 +296,11 @@
+     NSUInteger free = RCTDeviceFreeMemory();
+     max = MIN((double)total * 0.2, (double)free * 0.6);
+   }
+-
+   NSUInteger maxBufferCount = (double)max / (double)bytes;
+   if (!maxBufferCount) {
+     // At least 1 frame
+     maxBufferCount = 1;
+   }
+-
+   self.maxBufferCount = maxBufferCount;
+ }
+ 
+@@ -312,6 +313,7 @@
+   _displayLink = nil;
+ }
+ 
++#if !TARGET_OS_OSX // [macOS]
+ - (void)didReceiveMemoryWarning:(NSNotification *)notification
+ {
+   [_fetchQueue cancelAllOperations];
+@@ -328,5 +330,6 @@
+     dispatch_semaphore_signal(self.lock);
+   }];
+ }
++#endif // [macOS]
+ 
+ @end

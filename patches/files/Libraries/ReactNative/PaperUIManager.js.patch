@@ -1,0 +1,20 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/ReactNative/PaperUIManager.js	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/ReactNative/PaperUIManager.js	2026-03-06 15:22:52
+@@ -121,7 +121,7 @@
+     defineLazyObjectProperty(viewConfig, 'Constants', {
+       get: () => {
+         const viewManager = NativeModules[viewConfig.Manager];
+-        const constants: {[string]: unknown} = {};
++        const constants: {[string]: mixed} = {};
+         viewManager &&
+           Object.keys(viewManager).forEach(key => {
+             const value = viewManager[key];
+@@ -155,7 +155,7 @@
+  * only needed for iOS, which puts the constants in the ViewManager
+  * namespace instead of UIManager, unlike Android.
+  */
+-if (Platform.OS === 'ios') {
++if (Platform.OS === 'ios' || Platform.OS === 'macos' /* [macOS] */) {
+   Object.keys(getConstants()).forEach(viewName => {
+     lazifyViewManagerConfig(viewName);
+   });

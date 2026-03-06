@@ -1,0 +1,346 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Components/TextInput/TextInput.flow.js	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Components/TextInput/TextInput.flow.js	2026-03-06 15:22:52
+@@ -16,9 +16,15 @@
+   NativeSyntheticEvent,
+   ScrollEvent,
+ } from '../../Types/CoreEventTypes';
++// [macOS
++import type {
++  DataTransfer,
++  HandledKeyEvent,
++  KeyEvent,
++} from '../../Types/CoreEventTypes';
++// macOS]
+ import type {ViewProps} from '../View/ViewPropTypes';
+ 
+-import ReactNativeElement from '../../../src/private/webapis/dom/nodes/ReactNativeElement';
+ import {type ColorValue, type TextStyleProp} from '../../StyleSheet/StyleSheet';
+ import * as React from 'react';
+ 
+@@ -138,16 +144,55 @@
+ export type TextInputEditingEvent =
+   NativeSyntheticEvent<TextInputEndEditingEventData>;
+ 
++// [macOS macOS-only
++export type SettingChangeEvent = NativeSyntheticEvent<
++  $ReadOnly<{|
++    autoCorrectEnabled: boolean,
++    spellCheckEnabled: boolean,
++    grammarCheckEnabled: boolean,
++  |}>,
++>;
++
++export type PasteEvent = NativeSyntheticEvent<
++  $ReadOnly<{|
++    dataTransfer: DataTransfer,
++  |}>,
++>;
++
++export type SubmitKeyEvent = $ReadOnly<{|
++  key: string,
++  altKey?: ?boolean,
++  ctrlKey?: ?boolean,
++  metaKey?: ?boolean,
++  shiftKey?: ?boolean,
++  functionKey?: ?boolean,
++|}>;
++// macOS]
++
++// [macOS
+ type DataDetectorTypesType =
++  // iOS+macOS
+   | 'phoneNumber'
+   | 'link'
+   | 'address'
+   | 'calendarEvent'
++  // iOS-only
+   | 'trackingNumber'
+   | 'flightNumber'
+   | 'lookupSuggestion'
+   | 'none'
+-  | 'all';
++  | 'all'
++  // [macOS macOS-only
++  | 'ortography'
++  | 'spelling'
++  | 'grammar'
++  | 'quote'
++  | 'dash'
++  | 'replacement'
++  | 'correction'
++  | 'regularExpression'
++  | 'transitInformation';
++// macOS]
+ 
+ export type KeyboardType =
+   | 'default'
+@@ -375,7 +420,7 @@
+ 
+   /**
+    * Set line break strategy on iOS.
+-   * @platform ios
++   * @platform ios macos
+    */
+   lineBreakStrategyIOS?: ?('none' | 'standard' | 'hangul-word' | 'push-out'),
+ 
+@@ -403,6 +448,121 @@
+   smartInsertDelete?: ?boolean,
+ }>;
+ 
++// [macOS
++type TextInputMacOSProps = $ReadOnly<{|
++  /**
++   * If `true`, clears the text field synchronously before `onSubmitEditing` is emitted.
++   *
++   * @platform macos
++   */
++  clearTextOnSubmit?: ?boolean,
++
++  /**
++   * If `false`, disables grammar-check.
++   *
++   * @platform macos
++   */
++  grammarCheck?: ?boolean,
++
++  /**
++   * If `true`, hide vertical scrollbar on the underlying multiline scrollview
++   * The default value is `false`.
++   *
++   * @platform macos
++   */
++  hideVerticalScrollIndicator?: ?boolean,
++
++  /**
++   * Fired when a supported element is pasted
++   *
++   * @platform macos
++   */
++  onPaste?: (event: PasteEvent) => void,
++
++  /**
++   * Callback that is called when the text input's autoCorrect setting changes.
++   * This will be called with
++   * `{ nativeEvent: { enabled } }`.
++   * Does only work with 'multiline={true}'.
++   *
++   * @platform macos
++   */
++  onAutoCorrectChange?: ?(e: SettingChangeEvent) => mixed,
++
++  /**
++   * Callback that is called when the text input's spellCheck setting changes.
++   * This will be called with
++   * `{ nativeEvent: { enabled } }`.
++   * Does only work with 'multiline={true}'.
++   *
++   * @platform macos
++   */
++  onSpellCheckChange?: ?(e: SettingChangeEvent) => mixed,
++
++  /**
++   * Callback that is called when the text input's grammarCheck setting changes.
++   * This will be called with
++   * `{ nativeEvent: { enabled } }`.
++   * Does only work with 'multiline={true}'.
++   *
++   * @platform macos
++   */
++  onGrammarCheckChange?: ?(e: SettingChangeEvent) => mixed,
++
++  /**
++   * Enables Paste support for certain types of pasted types
++   *
++   * Possible values for `pastedTypes` are:
++   *
++   * - `'fileUrl'`
++   * - `'image'`
++   * - `'string'`
++   *
++   * @platform macos
++   */
++  pastedTypes?: PastedTypesType,
++
++  /**
++   * Configures keys that can be used to submit editing for the TextInput. Defaults to 'Enter' key.
++   * @platform macos
++   */
++  submitKeyEvents?: ?$ReadOnlyArray<SubmitKeyEvent>,
++
++  /**
++   * Specifies the tooltip.
++   *
++   * @platform macos
++   */
++  tooltip?: ?string,
++
++  /**
++   * An array of key events that should be handled by the TextInput.
++   * When a key event matches one of these specifications, event propagation will be stopped.
++   * @platform macos
++   */
++  keyDownEvents?: ?$ReadOnlyArray<HandledKeyEvent>,
++
++  /**
++   * An array of key events that should be handled by the TextInput.
++   * When a key event matches one of these specifications, event propagation will be stopped.
++   * @platform macos
++   */
++  keyUpEvents?: ?$ReadOnlyArray<HandledKeyEvent>,
++
++  /**
++   * Callback that is called when a key is pressed down.
++   * @platform macos
++   */
++  onKeyDown?: ?(e: KeyEvent) => mixed,
++
++  /**
++   * Callback that is called when a key is released.
++   * @platform macos
++   */
++  onKeyUp?: ?(e: KeyEvent) => mixed,
++|}>;
++// macOS]
++
+ export type TextInputAndroidProps = $ReadOnly<{
+   /**
+    * When provided it will set the color of the cursor (or "caret") in the component.
+@@ -809,18 +969,18 @@
+   /**
+    * Callback that is called when the text input is blurred.
+    */
+-  onBlur?: ?(e: TextInputBlurEvent) => unknown,
++  onBlur?: ?(e: TextInputBlurEvent) => mixed,
+ 
+   /**
+    * Callback that is called when the text input's text changes.
+    */
+-  onChange?: ?(e: TextInputChangeEvent) => unknown,
++  onChange?: ?(e: TextInputChangeEvent) => mixed,
+ 
+   /**
+    * Callback that is called when the text input's text changes.
+    * Changed text is passed as an argument to the callback handler.
+    */
+-  onChangeText?: ?(text: string) => unknown,
++  onChangeText?: ?(text: string) => mixed,
+ 
+   /**
+    * Callback that is called when the text input's content size changes.
+@@ -829,17 +989,17 @@
+    *
+    * Only called for multiline text inputs.
+    */
+-  onContentSizeChange?: ?(e: TextInputContentSizeChangeEvent) => unknown,
++  onContentSizeChange?: ?(e: TextInputContentSizeChangeEvent) => mixed,
+ 
+   /**
+    * Callback that is called when text input ends.
+    */
+-  onEndEditing?: ?(e: TextInputEndEditingEvent) => unknown,
++  onEndEditing?: ?(e: TextInputEndEditingEvent) => mixed,
+ 
+   /**
+    * Callback that is called when the text input is focused.
+    */
+-  onFocus?: ?(e: TextInputFocusEvent) => unknown,
++  onFocus?: ?(e: TextInputFocusEvent) => void, // [macOS]
+ 
+   /**
+    * Callback that is called when a key is pressed.
+@@ -848,42 +1008,42 @@
+    * the typed-in character otherwise including `' '` for space.
+    * Fires before `onChange` callbacks.
+    */
+-  onKeyPress?: ?(e: TextInputKeyPressEvent) => unknown,
++  onKeyPress?: ?(e: TextInputKeyPressEvent) => mixed,
+ 
+   /**
+    * Called when a single tap gesture is detected.
+    */
+-  onPress?: ?(event: GestureResponderEvent) => unknown,
++  onPress?: ?(event: GestureResponderEvent) => mixed,
+ 
+   /**
+    * Called when a touch is engaged.
+    */
+-  onPressIn?: ?(event: GestureResponderEvent) => unknown,
++  onPressIn?: ?(event: GestureResponderEvent) => mixed,
+ 
+   /**
+    * Called when a touch is released.
+    */
+-  onPressOut?: ?(event: GestureResponderEvent) => unknown,
++  onPressOut?: ?(event: GestureResponderEvent) => mixed,
+ 
+   /**
+    * Callback that is called when the text input selection is changed.
+    * This will be called with
+    * `{ nativeEvent: { selection: { start, end } } }`.
+    */
+-  onSelectionChange?: ?(e: TextInputSelectionChangeEvent) => unknown,
++  onSelectionChange?: ?(e: TextInputSelectionChangeEvent) => mixed,
+ 
+   /**
+    * Callback that is called when the text input's submit button is pressed.
+    * Invalid if `multiline={true}` is specified.
+    */
+-  onSubmitEditing?: ?(e: TextInputSubmitEditingEvent) => unknown,
++  onSubmitEditing?: ?(e: TextInputSubmitEditingEvent) => mixed,
+ 
+   /**
+    * Invoked on content scroll with `{ nativeEvent: { contentOffset: { x, y } } }`.
+    * May also contain other properties from ScrollEvent but on Android contentSize
+    * is not provided for performance reasons.
+    */
+-  onScroll?: ?(e: ScrollEvent) => unknown,
++  onScroll?: ?(e: ScrollEvent) => mixed,
+ 
+   /**
+    * The string that will be rendered before text input has been entered.
+@@ -1031,26 +1191,25 @@
+   textAlign?: ?('left' | 'center' | 'right'),
+ }>;
+ 
++export type PasteType = 'fileUrl' | 'image' | 'string'; // [macOS]
++export type PastedTypesType = PasteType | $ReadOnlyArray<PasteType>; // [macOS]
++
+ export type TextInputProps = $ReadOnly<{
+   ...Omit<ViewProps, 'style' | 'experimental_accessibilityOrder'>,
+   ...TextInputIOSProps,
+   ...TextInputAndroidProps,
+   ...TextInputBaseProps,
++  ...TextInputMacOSProps, // [macOS]
+ }>;
+ 
+-/**
+- * TextInput monkey-patches the native element instance with these methods.
+- * It isn't technically a class but this is the most elegant way to type it.
+- */
+-declare class _TextInputInstance extends ReactNativeElement {
+-  clear(): void;
+-  isFocused(): boolean;
+-  getNativeRef(): ?ReactNativeElement;
+-  setSelection(start: number, end: number): void;
++export interface TextInputInstance extends HostInstance {
++  +clear: () => void;
++  +isFocused: () => boolean;
++  +getNativeRef: () => ?HostInstance;
++  +setSelection: (start: number, end: number) => void;
++  +setGhostText: (ghostText: ?string) => void; // [macOS]
+ }
+ 
+-export type TextInputInstance = _TextInputInstance;
+-
+ /**
+  * A foundational component for inputting text into the app via a
+  * keyboard. Props provide configurability for several features, such as
+@@ -1173,6 +1332,8 @@
+     currentlyFocusedField: () => ?number,
+     focusTextInput: (textField: ?HostInstance) => void,
+     blurTextInput: (textField: ?HostInstance) => void,
++    onTextInputFocus: (textField: ?HostInstance) => void, // [macOS]
++    onTextInputBlur: (textField: ?HostInstance) => void, // [macOS]
+   }>,
+ }>;
+ 

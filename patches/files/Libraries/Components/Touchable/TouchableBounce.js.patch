@@ -1,0 +1,115 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Components/Touchable/TouchableBounce.js	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Components/Touchable/TouchableBounce.js	2026-03-06 15:22:52
+@@ -47,14 +47,15 @@
+ 
+   _createPressabilityConfig(): PressabilityConfig {
+     return {
+-      android_disableSound: this.props.touchSoundDisabled,
+       cancelable: !this.props.rejectResponderTermination,
++      disabled: this.props.disabled,
++      hitSlop: this.props.hitSlop,
+       delayLongPress: this.props.delayLongPress,
+       delayPressIn: this.props.delayPressIn,
+       delayPressOut: this.props.delayPressOut,
+-      disabled: this.props.disabled,
+-      hitSlop: this.props.hitSlop,
+       minPressDuration: 0,
++      pressRectOffset: this.props.pressRetentionOffset,
++      android_disableSound: this.props.touchSoundDisabled,
+       onBlur: event => {
+         if (Platform.isTV) {
+           this._bounceTo(1, 0.4, 0);
+@@ -112,7 +113,6 @@
+           this.props.onPressOut(event);
+         }
+       },
+-      pressRectOffset: this.props.pressRetentionOffset,
+     };
+   }
+ 
+@@ -123,22 +123,27 @@
+     callback?: ?() => void,
+   ) {
+     Animated.spring(this.state.scale, {
+-      bounciness,
+       toValue,
+-      useNativeDriver: true,
+       velocity,
++      bounciness,
++      useNativeDriver: true,
+     }).start(callback);
+   }
+ 
+   render(): React.Node {
+     // BACKWARD-COMPATIBILITY: Focus and blur events were never supported before
+     // adopting `Pressability`, so preserve that behavior.
+-    const {onBlur, onFocus, ...eventHandlersWithoutBlurAndFocus} =
+-      this.state.pressability.getEventHandlers();
++    const {
++      onBlur,
++      onFocus,
++      onMouseEnter,
++      onMouseLeave,
++      ...eventHandlersWithoutBlurAndFocus
++    } = this.state.pressability.getEventHandlers(); // [macOS]
+     const accessibilityLiveRegion =
+       this.props['aria-live'] === 'off'
+         ? 'none'
+-        : (this.props['aria-live'] ?? this.props.accessibilityLiveRegion);
++        : this.props['aria-live'] ?? this.props.accessibilityLiveRegion;
+     const _accessibilityState = {
+       busy: this.props['aria-busy'] ?? this.props.accessibilityState?.busy,
+       checked:
+@@ -188,11 +193,26 @@
+         nativeID={this.props.id ?? this.props.nativeID}
+         testID={this.props.testID}
+         hitSlop={this.props.hitSlop}
+-        focusable={
+-          this.props.focusable !== false &&
+-          this.props.onPress !== undefined &&
++        // [macOS
++        acceptsFirstMouse={
++          this.props.acceptsFirstMouse !== false && !this.props.disabled
++        }
++        enableFocusRing={
++          (this.props.enableFocusRing === undefined ||
++            this.props.enableFocusRing === true) &&
+           !this.props.disabled
+         }
++        focusable={this.props.focusable !== false && !this.props.disabled}
++        tooltip={this.props.tooltip}
++        onMouseEnter={this.props.onMouseEnter}
++        onMouseLeave={this.props.onMouseLeave}
++        onDragEnter={this.props.onDragEnter}
++        onDragLeave={this.props.onDragLeave}
++        onDrop={this.props.onDrop}
++        onFocus={this.props.onFocus}
++        onBlur={this.props.onBlur}
++        draggedTypes={this.props.draggedTypes}
++        // macOS]
+         // $FlowFixMe[prop-missing]
+         ref={this.props.hostRef}
+         {...eventHandlersWithoutBlurAndFocus}>
+@@ -211,7 +231,7 @@
+     this.state.pressability.configure(this._createPressabilityConfig());
+   }
+ 
+-  componentDidMount(): unknown {
++  componentDidMount(): mixed {
+     this.state.pressability.configure(this._createPressabilityConfig());
+   }
+ 
+@@ -225,11 +245,11 @@
+   ref: hostRef,
+   ...props
+ }: {
+-  ref: React.RefSetter<unknown>,
++  ref: React.RefSetter<mixed>,
+   ...$ReadOnly<Omit<TouchableBounceProps, 'hostRef'>>,
+ }) {
+   return <TouchableBounce {...props} hostRef={hostRef} />;
+ } as component(
+-  ref?: React.RefSetter<unknown>,
++  ref: React.RefSetter<mixed>,
+   ...props: $ReadOnly<Omit<TouchableBounceProps, 'hostRef'>>
+ ));

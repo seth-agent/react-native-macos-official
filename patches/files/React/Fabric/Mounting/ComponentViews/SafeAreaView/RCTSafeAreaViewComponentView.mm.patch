@@ -1,0 +1,46 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Mounting/ComponentViews/SafeAreaView/RCTSafeAreaViewComponentView.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Fabric/Mounting/ComponentViews/SafeAreaView/RCTSafeAreaViewComponentView.mm	2026-03-06 15:22:52
+@@ -28,12 +28,23 @@
+   return self;
+ }
+ 
++- (UIEdgeInsets)_safeAreaInsets
++{
++  if (@available(iOS 11.0, *)) {
++    return self.safeAreaInsets;
++  }
++
++  return UIEdgeInsetsZero;
++}
++
++#if !TARGET_OS_OSX // [macOS]
+ - (void)safeAreaInsetsDidChange
+ {
+   [super safeAreaInsetsDidChange];
+ 
+   [self _updateStateIfNecessary];
+ }
++#endif // [macOS]
+ 
+ - (void)_updateStateIfNecessary
+ {
+@@ -41,15 +52,16 @@
+     return;
+   }
+ 
+-  UIEdgeInsets insets = self.safeAreaInsets;
++  UIEdgeInsets insets = [self _safeAreaInsets];
++  CGFloat scale = _layoutMetrics.pointScaleFactor; // [macOS]
+   insets.left = RCTRoundPixelValue(insets.left);
+   insets.top = RCTRoundPixelValue(insets.top);
+   insets.right = RCTRoundPixelValue(insets.right);
+   insets.bottom = RCTRoundPixelValue(insets.bottom);
+ 
+   auto newPadding = RCTEdgeInsetsFromUIEdgeInsets(insets);
+-  auto threshold = 1.0 / RCTScreenScale() + 0.01; // Size of a pixel plus some small threshold.
+-
++  auto threshold = 1.0 / scale + 0.01; // Size of a pixel plus some small threshold. [macOS]
++  
+   _state->updateState(
+       [=](const SafeAreaViewShadowNode::ConcreteState::Data &oldData)
+           -> SafeAreaViewShadowNode::ConcreteState::SharedData {

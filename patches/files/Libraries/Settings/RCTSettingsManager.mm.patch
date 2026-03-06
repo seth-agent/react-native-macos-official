@@ -1,0 +1,79 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Settings/RCTSettingsManager.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Settings/RCTSettingsManager.mm	2026-03-06 15:22:52
+@@ -21,6 +21,10 @@
+ @implementation RCTSettingsManager {
+   BOOL _ignoringUpdates;
+   NSUserDefaults *_defaults;
++  
++#if TARGET_OS_OSX // [macOS
++  BOOL _isListeningForUpdates;
++#endif // macOS]
+ }
+ 
+ @synthesize moduleRegistry = _moduleRegistry;
+@@ -39,20 +43,22 @@
+ 
+ - (instancetype)initWithUserDefaults:(NSUserDefaults *)defaults
+ {
+-  if ((self = [super init]) != nullptr) {
++  if ((self = [super init])) {
+     _defaults = defaults;
+ 
++#if !TARGET_OS_OSX // [macOS]
+     [[NSNotificationCenter defaultCenter] addObserver:self
+                                              selector:@selector(userDefaultsDidChange:)
+                                                  name:NSUserDefaultsDidChangeNotification
+                                                object:_defaults];
++#endif // [macOS]
+   }
+   return self;
+ }
+ 
+ - (facebook::react::ModuleConstants<JS::NativeSettingsManager::Constants>)constantsToExport
+ {
+-  return [self getConstants];
++  return (facebook::react::ModuleConstants<JS::NativeSettingsManager::Constants>)[self getConstants];
+ }
+ 
+ - (facebook::react::ModuleConstants<JS::NativeSettingsManager::Constants>)getConstants
+@@ -84,7 +90,7 @@
+   _ignoringUpdates = YES;
+   [values enumerateKeysAndObjectsUsingBlock:^(NSString *key, id json, BOOL *stop) {
+     id plist = [RCTConvert NSPropertyList:json];
+-    if (plist != nullptr) {
++    if (plist) {
+       [self->_defaults setObject:plist forKey:key];
+     } else {
+       [self->_defaults removeObjectForKey:key];
+@@ -109,6 +115,31 @@
+   _ignoringUpdates = NO;
+ }
+ 
++#if TARGET_OS_OSX // [macOS
++/**
++ * Enable or disable monitoring of changes to NSUserDefaults
++ */
++RCT_EXPORT_METHOD(setIsMonitoringEnabled:(BOOL)isEnabled)
++{
++  if (isEnabled) {
++    if (!_isListeningForUpdates) {
++      [[NSNotificationCenter defaultCenter] addObserver:self
++                                               selector:@selector(userDefaultsDidChange:)
++                                                   name:NSUserDefaultsDidChangeNotification
++                                                 object:_defaults];
++      _isListeningForUpdates = YES;
++    }
++  }
++  else
++  {
++    if (_isListeningForUpdates) {
++      [[NSNotificationCenter defaultCenter] removeObserver:self];
++      _isListeningForUpdates = NO;
++    }
++  }
++}
++#endif // macOS]
++
+ - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
+     (const facebook::react::ObjCTurboModule::InitParams &)params
+ {

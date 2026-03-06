@@ -1,0 +1,125 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Base/RCTBridge.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Base/RCTBridge.mm	2026-03-06 15:22:52
+@@ -8,6 +8,7 @@
+ #import "RCTBridge.h"
+ #import "RCTBridge+Inspector.h"
+ #import "RCTBridge+Private.h"
++#import "RCTDevSettings.h" // [macOS]
+ 
+ #import <objc/runtime.h>
+ 
+@@ -117,7 +118,7 @@
+ }
+ 
+ static NSMutableArray<NSString *> *modulesLoadedWithOldArch;
+-void addModuleLoadedWithOldArch(NSString * /*moduleName*/);
++void addModuleLoadedWithOldArch(NSString *);
+ void addModuleLoadedWithOldArch(NSString *moduleName)
+ {
+   static dispatch_once_t onceToken;
+@@ -138,10 +139,11 @@
+  * prior to the first bridge initialization.
+  * TODO: (T115656171) Refactor RCTRegisterModule out of Bridge.m since it doesn't use the Bridge.
+  */
+-void RCTRegisterModule(Class /*moduleClass*/);
++void RCTRegisterModule(Class);
+ void RCTRegisterModule(Class moduleClass)
+ {
+-  if (RCTAreLegacyLogsEnabled() && ![getCoreModuleClasses() containsObject:[moduleClass description]]) {
++  if (RCTAreLegacyLogsEnabled() && RCTIsNewArchEnabled() &&
++      ![getCoreModuleClasses() containsObject:[moduleClass description]]) {
+     addModuleLoadedWithOldArch([moduleClass description]);
+   }
+   static dispatch_once_t onceToken;
+@@ -182,7 +184,7 @@
+   return RCTDropReactPrefixes(name);
+ }
+ 
+-static const BOOL turboModuleEnabled = YES;
++static BOOL turboModuleEnabled = NO;
+ BOOL RCTTurboModuleEnabled(void)
+ {
+ #if RCT_DEBUG
+@@ -196,7 +198,7 @@
+ 
+ void RCTEnableTurboModule(BOOL enabled)
+ {
+-  // The new Architecture is enabled by default and we are ignoring changes to the TurboModule system.
++  turboModuleEnabled = enabled;
+ }
+ 
+ static BOOL turboModuleInteropEnabled = NO;
+@@ -242,6 +244,17 @@
+   bridgeProxyLoggingLevel = logLevel;
+ }
+ 
++// Turn on TurboModule sync execution of void methods
++static BOOL gTurboModuleEnableSyncVoidMethods = NO;
++BOOL RCTTurboModuleSyncVoidMethodsEnabled(void)
++{
++  return gTurboModuleEnableSyncVoidMethods;
++}
++void RCTEnableTurboModuleSyncVoidMethods(BOOL enabled)
++{
++  gTurboModuleEnableSyncVoidMethods = enabled;
++}
++
+ BOOL kDispatchAccessibilityManagerInitOntoMain = NO;
+ BOOL RCTUIManagerDispatchAccessibilityManagerInitOntoMain(void)
+ {
+@@ -253,7 +266,7 @@
+   kDispatchAccessibilityManagerInitOntoMain = enabled;
+ }
+ 
+-#ifndef RCT_REMOVE_LEGACY_ARCH
++#ifndef RCT_FIT_RM_OLD_RUNTIME
+ class RCTBridgeHostTargetDelegate : public facebook::react::jsinspector_modern::HostTargetDelegate {
+  public:
+   RCTBridgeHostTargetDelegate(RCTBridge *bridge)
+@@ -369,12 +382,8 @@
+                   moduleProvider:(RCTBridgeModuleListProvider)block
+                    launchOptions:(NSDictionary *)launchOptions
+ {
+-  // Only enable this assertion in OSS
+-#if COCOAPODS
+-  [RCTBridge throwIfOnLegacyArch];
+-#endif
+-
+   if (self = [super init]) {
++    RCTEnforceNewArchitectureValidation(RCTNotAllowedInBridgeless, self, nil);
+     _delegate = delegate;
+     _bundleURL = bundleURL;
+     _moduleProvider = block;
+@@ -386,17 +395,6 @@
+   return self;
+ }
+ 
+-// Wrap the exception throwing in a static method to avoid the warning: "The code following the exception will never be
+-// executed". This might create build failures internally where we treat warnings as errors.
+-+ (void)throwIfOnLegacyArch
+-{
+-  @throw [NSException
+-      exceptionWithName:NSInternalInconsistencyException
+-                 reason:
+-                     @"You are trying to initialize the legacy architecture. This is not supported anymore and will be removed in the next version of React Native. Please use the New Architecture instead."
+-               userInfo:nil];
+-}
+-
+ RCT_NOT_IMPLEMENTED(-(instancetype)init)
+ 
+ - (void)dealloc
+@@ -679,7 +677,7 @@
+   return _inspectorTarget.get();
+ }
+ @end
+-#else // RCT_REMOVE_LEGACY_ARCH
++#else // RCT_FIT_RM_OLD_RUNTIME
+ @implementation RCTBridge
+ - (instancetype)initWithDelegate:(id<RCTBridgeDelegate>)delegate launchOptions:(NSDictionary *)launchOptions
+ {
+@@ -785,4 +783,4 @@
+ }
+ 
+ @end
+-#endif // RCT_REMOVE_LEGACY_ARCH
++#endif // RCT_FIT_RM_OLD_RUNTIME

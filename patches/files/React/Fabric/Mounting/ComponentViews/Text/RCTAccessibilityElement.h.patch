@@ -1,0 +1,19 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Mounting/ComponentViews/Text/RCTAccessibilityElement.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Fabric/Mounting/ComponentViews/Text/RCTAccessibilityElement.h	2026-03-06 15:22:52
+@@ -5,11 +5,15 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ NS_ASSUME_NONNULL_BEGIN
+ 
++#if !TARGET_OS_OSX // [macOS]
+ @interface RCTAccessibilityElement : UIAccessibilityElement
++#else // [macOS
++@interface RCTAccessibilityElement : NSAccessibilityElement
++#endif // macOS]
+ 
+ /*
+  * Frame of the accessibility element in parent coordinate system.

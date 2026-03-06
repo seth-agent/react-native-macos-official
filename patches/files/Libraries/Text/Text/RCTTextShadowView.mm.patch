@@ -1,0 +1,107 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Text/Text/RCTTextShadowView.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Text/Text/RCTTextShadowView.mm	2026-03-06 15:22:52
+@@ -7,8 +7,6 @@
+ 
+ #import <React/RCTTextShadowView.h>
+ 
+-#ifndef RCT_REMOVE_LEGACY_ARCH
+-
+ #import <React/RCTBridge.h>
+ #import <React/RCTShadowView+Layout.h>
+ #import <React/RCTUIManager.h>
+@@ -98,16 +96,16 @@
+                          [descendantViewTags addObject:shadowView.reactTag];
+                        }];
+ 
+-  [_bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
++  [_bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTPlatformView *> *viewRegistry) { // [macOS]
+     RCTTextView *textView = (RCTTextView *)viewRegistry[tag];
+     if (!textView) {
+       return;
+     }
+ 
+-    NSMutableArray<UIView *> *descendantViews = [NSMutableArray arrayWithCapacity:descendantViewTags.count];
++    NSMutableArray<RCTPlatformView *> *descendantViews = [NSMutableArray arrayWithCapacity:descendantViewTags.count]; // [macOS]
+     [descendantViewTags
+         enumerateObjectsUsingBlock:^(NSNumber *_Nonnull descendantViewTag, NSUInteger index, BOOL *_Nonnull stop) {
+-          UIView *descendantView = viewRegistry[descendantViewTag];
++          RCTPlatformView *descendantView = viewRegistry[descendantViewTag]; // [macOS]
+           if (!descendantView) {
+             return;
+           }
+@@ -143,7 +141,7 @@
+     return;
+   }
+ 
+-  __block CGFloat maximumFontLineHeight = 0;
++    __block CGFloat maximumFontLineHeight = 0;
+ 
+   [attributedText enumerateAttribute:NSFontAttributeName
+                              inRange:NSMakeRange(0, attributedText.length)
+@@ -153,8 +151,8 @@
+                               return;
+                             }
+ 
+-                            if (maximumFontLineHeight <= font.lineHeight) {
+-                              maximumFontLineHeight = font.lineHeight;
++                            if (maximumFontLineHeight <= UIFontLineHeight(font)) { // [macOS]
++                              maximumFontLineHeight = UIFontLineHeight(font); // [macOS]
+                             }
+                           }];
+ 
+@@ -165,16 +163,16 @@
+   CGFloat baseLineOffset = maximumLineHeight / 2.0 - maximumFontLineHeight / 2.0;
+ 
+   [attributedText addAttribute:NSBaselineOffsetAttributeName
+-                         value:@(baseLineOffset)
+-                         range:NSMakeRange(0, attributedText.length)];
++                          value:@(baseLineOffset)
++                          range:NSMakeRange(0, attributedText.length)];
+ }
+ 
+ - (NSAttributedString *)attributedTextWithMeasuredAttachmentsThatFitSize:(CGSize)size
+ {
+-  static UIImage *placeholderImage;
++  static RCTPlatformImage *placeholderImage; // [macOS]
+   static dispatch_once_t onceToken;
+   dispatch_once(&onceToken, ^{
+-    placeholderImage = [UIImage new];
++    placeholderImage = [RCTPlatformImage new]; // [macOS]
+   });
+ 
+   NSMutableAttributedString *attributedText =
+@@ -204,7 +202,7 @@
+ 
+ - (NSTextStorage *)textStorageAndLayoutManagerThatFitsSize:(CGSize)size exclusiveOwnership:(BOOL)exclusiveOwnership
+ {
+-  NSValue *key = [NSValue valueWithCGSize:size];
++  NSValue *key = NSValueWithCGSize(size); // [macOS]
+   NSTextStorage *cachedTextStorage = [_cachedTextStorages objectForKey:key];
+ 
+   if (cachedTextStorage) {
+@@ -443,14 +441,15 @@
+     size.width -= letterSpacing;
+   }
+ 
+-  size = (CGSize){MIN(RCTCeilPixelValue(size.width), maximumSize.width),
+-                  MIN(RCTCeilPixelValue(size.height), maximumSize.height)};
++  size = (CGSize){
++      MIN(RCTCeilPixelValue(size.width), maximumSize.width), MIN(RCTCeilPixelValue(size.height), maximumSize.height)};
+ 
+   // Adding epsilon value illuminates problems with converting values from
+   // `double` to `float`, and then rounding them to pixel grid in Yoga.
+   CGFloat epsilon = 0.001;
+-  return (YGSize){RCTYogaFloatFromCoreGraphicsFloat(size.width + epsilon),
+-                  RCTYogaFloatFromCoreGraphicsFloat(size.height + epsilon)};
++  return (YGSize){
++      RCTYogaFloatFromCoreGraphicsFloat(size.width + epsilon),
++      RCTYogaFloatFromCoreGraphicsFloat(size.height + epsilon)};
+ }
+ 
+ static float RCTTextShadowViewBaseline(YGNodeConstRef node, const float width, const float height)
+@@ -465,5 +464,3 @@
+ }
+ 
+ @end
+-
+-#endif // RCT_REMOVE_LEGACY_ARCH

@@ -1,0 +1,10 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Modules/RCTUIManagerUtils.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Modules/RCTUIManagerUtils.h	2026-03-06 15:22:52
+@@ -6,6 +6,7 @@
+  */
+ 
+ #import <Foundation/Foundation.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #import <React/RCTAssert.h>
+ #import <React/RCTDefines.h>

@@ -1,0 +1,174 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/ReactCommon/react/renderer/textlayoutmanager/platform/ios/react/renderer/textlayoutmanager/RCTTextLayoutManager.mm	2026-03-06 15:51:55
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/ReactCommon/react/renderer/textlayoutmanager/platform/ios/react/renderer/textlayoutmanager/RCTTextLayoutManager.mm	2026-03-06 15:22:53
+@@ -113,11 +113,22 @@
+                                   withinSelectedGlyphRange:range
+                                            inTextContainer:textContainer
+                                                 usingBlock:^(CGRect enclosingRect, __unused BOOL *anotherStop) {
++#if !TARGET_OS_OSX // [macOS] We dont' have access to RCTUIKit, so let's copy the implementation here
+                                                   UIBezierPath *path = [UIBezierPath
+                                                       bezierPathWithRoundedRect:CGRectInset(enclosingRect, -2, -2)
+                                                                    cornerRadius:2];
+-                                                  if (highlightPath != nullptr) {
++#else // [macOS
++                                                  NSBezierPath *path = [NSBezierPath
++                                                      bezierPathWithRoundedRect:CGRectInset(enclosingRect, -2, -2)
++                                                                        xRadius:2
++                                                                        yRadius:2];
++#endif // macOS[
++                                                  if (highlightPath) {
++#if !TARGET_OS_OSX // [macOS]
+                                                     [highlightPath appendPath:path];
++#else // [macOS
++                                                    [highlightPath appendBezierPath:path];
++#endif // macOS]
+                                                   } else {
+                                                     highlightPath = path;
+                                                   }
+@@ -159,7 +170,7 @@
+                                            id attribute = [textStorage attribute:key
+                                                                          atIndex:characterRange.location - 1
+                                                                   effectiveRange:nil];
+-                                           if (attribute != nullptr) {
++                                           if (attribute) {
+                                              [textStorage addAttribute:key value:attribute range:characterRange];
+                                            }
+                                          }
+@@ -187,36 +198,34 @@
+   std::vector<LineMeasurement> paragraphLines{};
+   auto blockParagraphLines = &paragraphLines;
+ 
+-  [layoutManager
+-      enumerateLineFragmentsForGlyphRange:glyphRange
+-                               usingBlock:^(
+-                                   CGRect overallRect,
+-                                   CGRect usedRect,
+-                                   NSTextContainer *_Nonnull usedTextContainer,
+-                                   NSRange lineGlyphRange,
+-                                   BOOL *_Nonnull stop) {
+-                                 NSRange range = [layoutManager characterRangeForGlyphRange:lineGlyphRange
+-                                                                           actualGlyphRange:nil];
+-                                 NSString *renderedString = [textStorage.string substringWithRange:range];
+-                                 UIFont *font =
+-                                     [[textStorage attributedSubstringFromRange:range] attribute:NSFontAttributeName
+-                                                                                         atIndex:0
+-                                                                                  effectiveRange:nil];
+-                                 auto rect = facebook::react::Rect{
+-                                     .origin = facebook::react::Point{.x = usedRect.origin.x, .y = usedRect.origin.y},
+-                                     .size = facebook::react::Size{
+-                                         .width = usedRect.size.width, .height = usedRect.size.height}};
++  [layoutManager enumerateLineFragmentsForGlyphRange:glyphRange
++                                          usingBlock:^(
++                                              CGRect overallRect,
++                                              CGRect usedRect,
++                                              NSTextContainer *_Nonnull usedTextContainer,
++                                              NSRange lineGlyphRange,
++                                              BOOL *_Nonnull stop) {
++                                            NSRange range = [layoutManager characterRangeForGlyphRange:lineGlyphRange
++                                                                                      actualGlyphRange:nil];
++                                            NSString *renderedString = [textStorage.string substringWithRange:range];
++                                            UIFont *font = [[textStorage attributedSubstringFromRange:range]
++                                                     attribute:NSFontAttributeName
++                                                       atIndex:0
++                                                effectiveRange:nil];
++                                            auto rect = facebook::react::Rect{
++                                                facebook::react::Point{usedRect.origin.x, usedRect.origin.y},
++                                                facebook::react::Size{usedRect.size.width, usedRect.size.height}};
+ 
+-                                 CGFloat baseline = [layoutManager locationForGlyphAtIndex:range.location].y;
+-                                 auto line = LineMeasurement{
+-                                     std::string([renderedString UTF8String]),
+-                                     rect,
+-                                     overallRect.size.height - baseline,
+-                                     font.capHeight,
+-                                     baseline,
+-                                     font.xHeight};
+-                                 blockParagraphLines->push_back(line);
+-                               }];
++                                            CGFloat baseline = [layoutManager locationForGlyphAtIndex:range.location].y;
++                                            auto line = LineMeasurement{
++                                                std::string([renderedString UTF8String]),
++                                                rect,
++                                                overallRect.size.height - baseline,
++                                                font.capHeight,
++                                                baseline,
++                                                font.xHeight};
++                                            blockParagraphLines->push_back(line);
++                                          }];
+   return paragraphLines;
+ }
+ 
+@@ -303,7 +312,7 @@
+                           inRange:characterRange
+                           options:0
+                        usingBlock:^(NSString *value, NSRange range, BOOL *pause) {
+-                         if (value == nullptr) {
++                         if (!value) {
+                            return;
+                          }
+ 
+@@ -388,8 +397,9 @@
+     size.height = enumeratedLinesHeight;
+   }
+ 
+-  size = (CGSize){ceil(size.width * layoutContext.pointScaleFactor) / layoutContext.pointScaleFactor,
+-                  ceil(size.height * layoutContext.pointScaleFactor) / layoutContext.pointScaleFactor};
++  size = (CGSize){
++      ceil(size.width * layoutContext.pointScaleFactor) / layoutContext.pointScaleFactor,
++      ceil(size.height * layoutContext.pointScaleFactor) / layoutContext.pointScaleFactor};
+ 
+   __block auto attachments = TextMeasurement::Attachments{};
+ 
+@@ -398,7 +408,7 @@
+                  inRange:NSMakeRange(0, textStorage.length)
+                  options:0
+               usingBlock:^(NSTextAttachment *attachment, NSRange range, BOOL *stop) {
+-                if (attachment == nullptr) {
++                if (!attachment) {
+                   return;
+                 }
+ 
+@@ -413,24 +423,33 @@
+                   CGRect glyphRect = [layoutManager boundingRectForGlyphRange:range inTextContainer:textContainer];
+ 
+                   CGRect frame;
+-                  UIFont *font = [[textStorage attributedSubstringFromRange:range] attribute:NSFontAttributeName
+-                                                                                     atIndex:0
+-                                                                              effectiveRange:nil];
+-                  frame = {
+-                      .origin =
+-                          {glyphRect.origin.x,
+-                           glyphRect.origin.y + glyphRect.size.height - attachmentSize.height + font.descender},
+-                      .size = attachmentSize};
++                  CGFloat baseline = [layoutManager locationForGlyphAtIndex:range.location].y;
+ 
++                  frame = {{glyphRect.origin.x, glyphRect.origin.y + baseline - attachmentSize.height}, attachmentSize};
++
+                   auto rect = facebook::react::Rect{
+-                      .origin = facebook::react::Point{.x = frame.origin.x, .y = frame.origin.y},
+-                      .size = facebook::react::Size{.width = frame.size.width, .height = frame.size.height}};
++                      facebook::react::Point{frame.origin.x, frame.origin.y},
++                      facebook::react::Size{frame.size.width, frame.size.height}};
+ 
+                   attachments.push_back(TextMeasurement::Attachment{.frame = rect, .isClipped = false});
+                 }
+               }];
+ 
+-  return TextMeasurement{.size = {.width = size.width, .height = size.height}, .attachments = attachments};
++  return TextMeasurement{{size.width, size.height}, attachments};
+ }
+ 
++#if TARGET_OS_OSX // [macOS
++- (NSTextStorage *)getTextStorageForAttributedString:(AttributedString)attributedString
++                                 paragraphAttributes:(ParagraphAttributes)paragraphAttributes
++                                                size:(CGSize)size
++{
++  NSAttributedString *nsAttributedString = [self _nsAttributedStringFromAttributedString:attributedString];
++  NSTextStorage *textStorage = [self _textStorageAndLayoutManagerWithAttributesString:nsAttributedString
++                                                                  paragraphAttributes:paragraphAttributes
++                                                                                 size:size];
++  
++  return textStorage;
++}
++#endif // macOS]
++
+ @end

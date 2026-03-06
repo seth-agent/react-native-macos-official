@@ -1,0 +1,18 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Utils/RCTLinearGradient.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Fabric/Utils/RCTLinearGradient.mm	2026-03-06 15:22:52
+@@ -7,6 +7,7 @@
+ 
+ #import "RCTLinearGradient.h"
+ 
++#import <QuartzCore/QuartzCore.h> // [macOS]
+ #import <React/RCTAnimationUtils.h>
+ #import <React/RCTConversions.h>
+ #include <react/renderer/graphics/ValueUnit.h>
+@@ -60,7 +61,6 @@
+ 
+   [RCTGradientUtils getColors:colors andLocations:locations fromColorStops:colorStops];
+ 
+-  gradientLayer.frame = CGRectMake(0.0f, 0.0f, size.width, size.height);
+   gradientLayer.colors = colors;
+   gradientLayer.locations = locations;
+ 

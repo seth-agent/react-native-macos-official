@@ -1,0 +1,99 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Image/RCTImageViewManager.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Image/RCTImageViewManager.mm	2026-03-06 15:22:52
+@@ -7,10 +7,8 @@
+ 
+ #import <React/RCTImageViewManager.h>
+ 
+-#ifndef RCT_REMOVE_LEGACY_ARCH
++#import <React/RCTUIKit.h> // [macOS]
+ 
+-#import <UIKit/UIKit.h>
+-
+ #import <React/RCTConvert.h>
+ #import <React/RCTImageSource.h>
+ 
+@@ -27,11 +25,15 @@
+   return [RCTImageShadowView new];
+ }
+ 
+-- (UIView *)view
++- (RCTPlatformView *)view // [macOS]
+ {
+   return [[RCTImageView alloc] initWithBridge:self.bridge];
+ }
+ 
++#if TARGET_OS_OSX // [macOS
++// setting accessibilityElement on NSImageView has no effect, must be set on NSImageCell
++RCT_REMAP_VIEW_PROPERTY(accessible, reactAccessibilityElementCell.accessibilityElement, BOOL)
++#endif // macOS]
+ RCT_EXPORT_VIEW_PROPERTY(blurRadius, CGFloat)
+ RCT_EXPORT_VIEW_PROPERTY(capInsets, UIEdgeInsets)
+ RCT_REMAP_VIEW_PROPERTY(defaultSource, defaultImage, UIImage)
+@@ -53,9 +55,10 @@
+   view.renderingMode = json ? UIImageRenderingModeAlwaysTemplate : defaultView.renderingMode;
+ }
+ 
+-RCT_EXPORT_METHOD(
+-    getSize : (NSURLRequest *)request successBlock : (RCTResponseSenderBlock)
+-        successBlock errorBlock : (RCTResponseErrorBlock)errorBlock)
++RCT_EXPORT_METHOD(getSize
++                  : (NSURLRequest *)request successBlock
++                  : (RCTResponseSenderBlock)successBlock errorBlock
++                  : (RCTResponseErrorBlock)errorBlock)
+ {
+   [[self.bridge moduleForName:@"ImageLoader"
+         lazilyLoadIfNecessary:YES] getImageSizeForURLRequest:request
+@@ -68,9 +71,10 @@
+                                                        }];
+ }
+ 
+-RCT_EXPORT_METHOD(
+-    getSizeWithHeaders : (RCTImageSource *)source resolve : (RCTPromiseResolveBlock)
+-        resolve reject : (RCTPromiseRejectBlock)reject)
++RCT_EXPORT_METHOD(getSizeWithHeaders
++                  : (RCTImageSource *)source resolve
++                  : (RCTPromiseResolveBlock)resolve reject
++                  : (RCTPromiseRejectBlock)reject)
+ {
+   [[self.bridge moduleForName:@"ImageLoader" lazilyLoadIfNecessary:YES]
+       getImageSizeForURLRequest:source.request
+@@ -83,9 +87,10 @@
+                           }];
+ }
+ 
+-RCT_EXPORT_METHOD(
+-    prefetchImage : (NSURLRequest *)request resolve : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)
+-        reject)
++RCT_EXPORT_METHOD(prefetchImage
++                  : (NSURLRequest *)request resolve
++                  : (RCTPromiseResolveBlock)resolve reject
++                  : (RCTPromiseRejectBlock)reject)
+ {
+   if (!request) {
+     reject(@"E_INVALID_URI", @"Cannot prefetch an image for an empty URI", nil);
+@@ -95,7 +100,7 @@
+                                                                             lazilyLoadIfNecessary:YES];
+   [imageLoader loadImageWithURLRequest:request
+                               priority:RCTImageLoaderPriorityPrefetch
+-                              callback:^(NSError *error, UIImage *image) {
++                              callback:^(NSError *error, RCTPlatformImage *image) { // [macOS]
+                                 if (error) {
+                                   reject(@"E_PREFETCH_FAILURE", nil, error);
+                                   return;
+@@ -104,12 +109,12 @@
+                               }];
+ }
+ 
+-RCT_EXPORT_METHOD(
+-    queryCache : (NSArray *)requests resolve : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
++RCT_EXPORT_METHOD(queryCache
++                  : (NSArray *)requests resolve
++                  : (RCTPromiseResolveBlock)resolve reject
++                  : (RCTPromiseRejectBlock)reject)
+ {
+   resolve([[self.bridge moduleForName:@"ImageLoader"] getImageCacheStatus:requests]);
+ }
+ 
+ @end
+-
+-#endif // RCT_REMOVE_LEGACY_ARCH

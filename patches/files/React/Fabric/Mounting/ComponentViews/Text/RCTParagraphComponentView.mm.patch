@@ -1,0 +1,174 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Mounting/ComponentViews/Text/RCTParagraphComponentView.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Fabric/Mounting/ComponentViews/Text/RCTParagraphComponentView.mm	2026-03-06 15:22:52
+@@ -8,7 +8,14 @@
+ #import "RCTParagraphComponentView.h"
+ #import "RCTParagraphComponentAccessibilityProvider.h"
+ 
++#if !TARGET_OS_OSX // [macOS]
+ #import <MobileCoreServices/UTCoreTypes.h>
++#endif // [macOS]
++#if TARGET_OS_OSX // [macOS
++#import <QuartzCore/CAShapeLayer.h>
++#endif // macOS]
++
++#import <React/RCTViewAccessibilityElement.h>
+ #import <react/renderer/components/text/ParagraphComponentDescriptor.h>
+ #import <react/renderer/components/text/ParagraphProps.h>
+ #import <react/renderer/components/text/ParagraphState.h>
+@@ -26,7 +33,7 @@
+ 
+ // ParagraphTextView is an auxiliary view we set as contentView so the drawing
+ // can happen on top of the layers manipulated by RCTViewComponentView (the parent view)
+-@interface RCTParagraphTextView : UIView
++@interface RCTParagraphTextView : RCTUIView // [macOS]
+ 
+ @property (nonatomic) ParagraphShadowNode::ConcreteState::Shared state;
+ @property (nonatomic) ParagraphAttributes paragraphAttributes;
+@@ -34,16 +41,23 @@
+ 
+ @end
+ 
++#if !TARGET_OS_OSX // [macOS]
+ @interface RCTParagraphComponentView () <UIEditMenuInteractionDelegate>
+ 
+ @property (nonatomic, nullable) UIEditMenuInteraction *editMenuInteraction API_AVAILABLE(ios(16.0));
+ 
+ @end
++#else // [macOS
++@interface RCTParagraphComponentView ()
++@end
++#endif // [macOS]
+ 
+ @implementation RCTParagraphComponentView {
+   ParagraphAttributes _paragraphAttributes;
+   RCTParagraphComponentAccessibilityProvider *_accessibilityProvider;
++#if !TARGET_OS_OSX // [macOS]
+   UILongPressGestureRecognizer *_longPressGestureRecognizer;
++#endif // [macOS]
+   RCTParagraphTextView *_textView;
+ }
+ 
+@@ -52,9 +66,11 @@
+   if (self = [super initWithFrame:frame]) {
+     _props = ParagraphShadowNode::defaultSharedProps();
+ 
++#if !TARGET_OS_OSX // [macOS]
+     self.opaque = NO;
++#endif // [macOS]
+     _textView = [RCTParagraphTextView new];
+-    _textView.backgroundColor = UIColor.clearColor;
++    _textView.backgroundColor = RCTUIColor.clearColor; // [macOS]
+     self.contentView = _textView;
+   }
+ 
+@@ -105,11 +121,13 @@
+   _textView.paragraphAttributes = _paragraphAttributes;
+ 
+   if (newParagraphProps.isSelectable != oldParagraphProps.isSelectable) {
++#if !TARGET_OS_OSX // [macOS]
+     if (newParagraphProps.isSelectable) {
+       [self enableContextMenu];
+     } else {
+       [self disableContextMenu];
+     }
++#endif // [macOS]
+   }
+ 
+   [super updateProps:props oldProps:oldProps];
+@@ -171,6 +189,7 @@
+   return NO;
+ }
+ 
++#if !TARGET_OS_OSX // [macOS
+ - (NSArray *)accessibilityElements
+ {
+   const auto &paragraphProps = static_cast<const ParagraphProps &>(*_props);
+@@ -226,6 +245,10 @@
+         for (NSObject *element in elements) {
+           if ([element isKindOfClass:[UIView class]] && [cooptingCandidates containsObject:((UIView *)element)]) {
+             return YES;
++          } else if (
++              [element isKindOfClass:[RCTViewAccessibilityElement class]] &&
++              [cooptingCandidates containsObject:((RCTViewAccessibilityElement *)element).view]) {
++            return YES;
+           }
+         }
+       }
+@@ -244,6 +267,12 @@
+ {
+   return [super accessibilityTraits] | UIAccessibilityTraitStaticText;
+ }
++#else // [macOS
++- (NSAccessibilityRole)accessibilityRole
++{
++  return [super accessibilityRole] ?: NSAccessibilityStaticTextRole;
++}
++#endif // macOS]
+ 
+ #pragma mark - RCTTouchableComponentViewProtocol
+ 
+@@ -280,6 +309,7 @@
+ 
+ #pragma mark - Context Menu
+ 
++#if !TARGET_OS_OSX // [macOS]
+ - (void)enableContextMenu
+ {
+   _longPressGestureRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self
+@@ -320,6 +350,7 @@
+     [menuController showMenuFromView:self rect:self.bounds];
+   }
+ }
++#endif // [macOS]
+ 
+ - (BOOL)canBecomeFirstResponder
+ {
+@@ -327,6 +358,7 @@
+   return paragraphProps.isSelectable;
+ }
+ 
++#if !TARGET_OS_OSX // [macOS]
+ - (BOOL)canPerformAction:(SEL)action withSender:(id)sender
+ {
+   const auto &paragraphProps = static_cast<const ParagraphProps &>(*_props);
+@@ -337,6 +369,7 @@
+ 
+   return [self.nextResponder canPerformAction:action withSender:sender];
+ }
++#endif // [macOS]
+ 
+ - (void)copy:(id)sender
+ {
+@@ -354,8 +387,14 @@
+ 
+   [item setObject:attributedText.string forKey:(id)kUTTypeUTF8PlainText];
+ 
++#if !TARGET_OS_OSX // [macOS]
+   UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
+   pasteboard.items = @[ item ];
++#else // [macOS
++  NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
++  [pasteboard clearContents];
++  [pasteboard setData:rtf forType:NSPasteboardTypeRTFD];
++#endif // macOS]
+ }
+ 
+ @end
+@@ -369,7 +408,7 @@
+   CAShapeLayer *_highlightLayer;
+ }
+ 
+-- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event
++- (RCTUIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event
+ {
+   return nil;
+ }
+@@ -398,7 +437,7 @@
+                                 if (highlightPath) {
+                                   if (!self->_highlightLayer) {
+                                     self->_highlightLayer = [CAShapeLayer layer];
+-                                    self->_highlightLayer.fillColor = [UIColor colorWithWhite:0 alpha:0.25].CGColor;
++                                    self->_highlightLayer.fillColor = [RCTUIColor colorWithWhite:0 alpha:0.25].CGColor; // [macOS]
+                                     [self.layer addSublayer:self->_highlightLayer];
+                                   }
+                                   self->_highlightLayer.position = frame.origin;

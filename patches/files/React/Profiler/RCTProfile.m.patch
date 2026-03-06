@@ -1,0 +1,252 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Profiler/RCTProfile.m	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Profiler/RCTProfile.m	2026-03-06 15:22:52
+@@ -13,7 +13,7 @@
+ #import <objc/runtime.h>
+ #import <stdatomic.h>
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #import "RCTAssert.h"
+ #import "RCTBridge+Private.h"
+@@ -48,9 +48,11 @@
+ static NSMutableDictionary *RCTProfileOngoingEvents;
+ static NSTimeInterval RCTProfileStartTime;
+ static NSUInteger RCTProfileEventID = 0;
+-static CADisplayLink *RCTProfileDisplayLink;
+ static __weak RCTBridge *_RCTProfilingBridge;
++#if !TARGET_OS_OSX // [macOS]
++static CADisplayLink *RCTProfileDisplayLink; // [macOS]
+ static UIWindow *RCTProfileControlsWindow;
++#endif // [macOS]
+ 
+ #pragma mark - Macros
+ 
+@@ -184,7 +186,7 @@
+ static void *RCTProfileTrampoline = NULL;
+ #endif
+ 
+-RCT_EXTERN void RCTProfileTrampolineStart(id /*self*/, SEL /*cmd*/);
++RCT_EXTERN void RCTProfileTrampolineStart(id, SEL);
+ void RCTProfileTrampolineStart(id self, SEL cmd)
+ {
+   /**
+@@ -202,10 +204,10 @@
+   RCT_PROFILE_END_EVENT(RCTProfileTagAlways, @"objc_call,modules,auto");
+ }
+ 
+-static UIView *(*originalCreateView)(RCTComponentData *, SEL, NSNumber *, NSNumber *);
+-static UIView *RCTProfileCreateView(RCTComponentData *self, SEL _cmd, NSNumber *tag, NSNumber *rootTag)
++static RCTUIView *(*originalCreateView)(RCTComponentData *, SEL, NSNumber *, NSNumber *); // [macOS]
++static RCTUIView *RCTProfileCreateView(RCTComponentData *self, SEL _cmd, NSNumber *tag, NSNumber *rootTag) // [macOS]
+ {
+-  UIView *view = originalCreateView(self, _cmd, tag, rootTag);
++  RCTUIView *view = originalCreateView(self, _cmd, tag, rootTag); // [macOS]
+   RCTProfileHookInstance(view);
+   return view;
+ }
+@@ -367,6 +369,7 @@
+ 
+ #pragma mark - Private ObjC class only used for the vSYNC CADisplayLink target
+ 
++#if !TARGET_OS_OSX // [macOS]
+ @interface RCTProfile : NSObject
+ @end
+ 
+@@ -424,6 +427,7 @@
+ }
+ 
+ @end
++#endif // [macOS]
+ 
+ #pragma mark - Public Functions
+ 
+@@ -471,18 +475,22 @@
+     [orderedThreads enumerateObjectsUsingBlock:^(NSString *thread, NSUInteger idx, __unused BOOL *stop) {
+       RCTProfileAddEvent(
+           kProfileTraceEvents,
+-          @"ph" : @"M", // metadata event
+-          @"name" : @"thread_sort_index",
+-          @"tid" : thread,
+-          @"args" :
++          @"ph"
++          : @"M", // metadata event
++            @"name"
++          : @"thread_sort_index", @"tid"
++          : thread, @"args"
++          :
+           @{@"sort_index" : @(-1000 + (NSInteger)idx)});
+     }];
+   });
+ 
+   RCTProfileHookModules(bridge);
+ 
++#if !TARGET_OS_OSX // [macOS]
+   RCTProfileDisplayLink = [CADisplayLink displayLinkWithTarget:[RCTProfile class] selector:@selector(vsync:)];
+   [RCTProfileDisplayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
++#endif // [macOS]
+ 
+   [[NSNotificationCenter defaultCenter] postNotificationName:RCTProfileDidStartProfiling object:bridge];
+ }
+@@ -497,8 +505,10 @@
+ 
+   [[NSNotificationCenter defaultCenter] postNotificationName:RCTProfileDidEndProfiling object:bridge];
+ 
++#if !TARGET_OS_OSX // [macOS]
+   [RCTProfileDisplayLink invalidate];
+   RCTProfileDisplayLink = nil;
++#endif // [macOS]
+ 
+   RCTProfileUnhookModules(bridge);
+ 
+@@ -580,15 +590,14 @@
+     }
+ 
+     NSNumber *start = event[0];
+-    RCTProfileAddEvent(
+-        kProfileTraceEvents,
+-        @"tid" : threadName,
+-        @"name" : event[1],
+-        @"cat" : category,
+-        @"ph" : @"X",
+-        @"ts" : start,
+-        @"dur" : @(RCTProfileTimestamp(time).doubleValue - start.doubleValue),
+-        @"args" : event[2], );
++    RCTProfileAddEvent(kProfileTraceEvents, @"tid"
++                       : threadName, @"name"
++                       : event[1], @"cat"
++                       : category, @"ph"
++                       : @"X", @"ts"
++                       : start, @"dur"
++                       : @(RCTProfileTimestamp(time).doubleValue - start.doubleValue), @"args"
++                       : event[2], );
+   });
+ }
+ 
+@@ -635,15 +644,14 @@
+     if (event) {
+       NSNumber *endTimestamp = RCTProfileTimestamp(time);
+ 
+-      RCTProfileAddEvent(
+-          kProfileTraceEvents,
+-          @"tid" : threadName,
+-          @"name" : event[1],
+-          @"cat" : category,
+-          @"ph" : @"X",
+-          @"ts" : event[0],
+-          @"dur" : @(endTimestamp.doubleValue - [event[0] doubleValue]),
+-          @"args" : event[2], );
++      RCTProfileAddEvent(kProfileTraceEvents, @"tid"
++                         : threadName, @"name"
++                         : event[1], @"cat"
++                         : category, @"ph"
++                         : @"X", @"ts"
++                         : event[0], @"dur"
++                         : @(endTimestamp.doubleValue - [event[0] doubleValue]), @"args"
++                         : event[2], );
+       [RCTProfileOngoingEvents removeObjectForKey:@(cookie)];
+     }
+   });
+@@ -661,14 +669,13 @@
+   NSString *threadName = RCTCurrentThreadName();
+ 
+   dispatch_async(RCTProfileGetQueue(), ^{
+-    RCTProfileAddEvent(
+-        kProfileTraceEvents,
+-        @"tid" : threadName,
+-        @"name" : name,
+-        @"ts" : RCTProfileTimestamp(time),
+-        @"scope" : @(scope),
+-        @"ph" : @"i",
+-        @"args" : RCTProfileGetMemoryUsage(), );
++    RCTProfileAddEvent(kProfileTraceEvents, @"tid"
++                       : threadName, @"name"
++                       : name, @"ts"
++                       : RCTProfileTimestamp(time), @"scope"
++                       : @(scope), @"ph"
++                       : @"i", @"args"
++                       : RCTProfileGetMemoryUsage(), );
+   });
+ }
+ 
+@@ -688,14 +695,13 @@
+   NSString *threadName = RCTCurrentThreadName();
+ 
+   dispatch_async(RCTProfileGetQueue(), ^{
+-    RCTProfileAddEvent(
+-        kProfileTraceEvents,
+-        @"tid" : threadName,
+-        @"name" : @"flow",
+-        @"id" : @(cookie),
+-        @"cat" : @"flow",
+-        @"ph" : @"s",
+-        @"ts" : RCTProfileTimestamp(time), );
++    RCTProfileAddEvent(kProfileTraceEvents, @"tid"
++                       : threadName, @"name"
++                       : @"flow", @"id"
++                       : @(cookie), @"cat"
++                       : @"flow", @"ph"
++                       : @"s", @"ts"
++                       : RCTProfileTimestamp(time), );
+   });
+ 
+   return cookie;
+@@ -714,14 +720,13 @@
+   NSString *threadName = RCTCurrentThreadName();
+ 
+   dispatch_async(RCTProfileGetQueue(), ^{
+-    RCTProfileAddEvent(
+-        kProfileTraceEvents,
+-        @"tid" : threadName,
+-        @"name" : @"flow",
+-        @"id" : @(cookie),
+-        @"cat" : @"flow",
+-        @"ph" : @"f",
+-        @"ts" : RCTProfileTimestamp(time), );
++    RCTProfileAddEvent(kProfileTraceEvents, @"tid"
++                       : threadName, @"name"
++                       : @"flow", @"id"
++                       : @(cookie), @"cat"
++                       : @"flow", @"ph"
++                       : @"f", @"ts"
++                       : RCTProfileTimestamp(time), );
+   });
+ }
+ 
+@@ -749,6 +754,7 @@
+               NSString *message = [[NSString alloc] initWithData:responseData encoding:NSUTF8StringEncoding];
+ 
+               if (message.length) {
++#if !TARGET_OS_OSX // [macOS]
+                 dispatch_async(dispatch_get_main_queue(), ^{
+                   UIAlertController *alertController =
+                       [UIAlertController alertControllerWithTitle:@"Profile"
+@@ -759,6 +765,13 @@
+                                                                     handler:nil]];
+                   [RCTPresentedViewController() presentViewController:alertController animated:YES completion:nil];
+                 });
++#else // [macOS               
++                NSAlert *alert = [NSAlert new];
++                alert.messageText = @"Profile";
++                alert.informativeText = message;
++                [alert addButtonWithTitle:@"OK"];
++                [alert runModal];
++#endif // macOS]
+               }
+             }
+           }];
+@@ -766,6 +779,7 @@
+   [task resume];
+ }
+ 
++#if !TARGET_OS_OSX // [macOS]
+ void RCTProfileShowControls(void)
+ {
+   static const CGFloat height = 30;
+@@ -804,5 +818,6 @@
+   RCTProfileControlsWindow.hidden = YES;
+   RCTProfileControlsWindow = nil;
+ }
++#endif // [macOS]
+ 
+ #endif

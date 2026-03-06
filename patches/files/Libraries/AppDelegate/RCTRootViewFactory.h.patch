@@ -1,0 +1,90 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/AppDelegate/RCTRootViewFactory.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/AppDelegate/RCTRootViewFactory.h	2026-03-06 15:22:52
+@@ -18,17 +18,15 @@
+ @class RCTHost;
+ @class RCTRootView;
+ @class RCTSurfacePresenterBridgeAdapter;
+-@class RCTBundleConfiguration;
+-@class RCTDevMenuConfiguration;
+ 
+ NS_ASSUME_NONNULL_BEGIN
+ 
+ #pragma mark - Blocks' definitions
+-typedef UIView *_Nonnull (
++typedef RCTPlatformView *_Nonnull ( // [macOS]
+     ^RCTCreateRootViewWithBridgeBlock)(RCTBridge *bridge, NSString *moduleName, NSDictionary *initProps);
+ typedef RCTBridge *_Nonnull (
+     ^RCTCreateBridgeWithDelegateBlock)(id<RCTBridgeDelegate> delegate, NSDictionary *launchOptions);
+-typedef void (^RCTCustomizeRootViewBlock)(UIView *rootView);
++typedef void (^RCTCustomizeRootViewBlock)(RCTPlatformView *rootView); // [macOS]
+ typedef NSURL *_Nullable (^RCTSourceURLForBridgeBlock)(RCTBridge *bridge);
+ typedef NSURL *_Nullable (^RCTBundleURLBlock)(void);
+ typedef NSArray<id<RCTBridgeModule>> *_Nonnull (^RCTExtraModulesForBridgeBlock)(RCTBridge *bridge);
+@@ -67,15 +65,14 @@
+ - (instancetype)initWithBundleURLBlock:(RCTBundleURLBlock)bundleURLBlock
+                         newArchEnabled:(BOOL)newArchEnabled
+                     turboModuleEnabled:(BOOL)turboModuleEnabled
+-                     bridgelessEnabled:(BOOL)bridgelessEnabled __deprecated;
++                     bridgelessEnabled:(BOOL)bridgelessEnabled NS_DESIGNATED_INITIALIZER __deprecated;
+ 
+ - (instancetype)initWithBundleURL:(NSURL *)bundleURL
+                    newArchEnabled:(BOOL)newArchEnabled
+                turboModuleEnabled:(BOOL)turboModuleEnabled
+                 bridgelessEnabled:(BOOL)bridgelessEnabled __deprecated;
+ 
+-- (instancetype)initWithBundleURLBlock:(RCTBundleURLBlock)bundleURLBlock
+-                        newArchEnabled:(BOOL)newArchEnabled NS_DESIGNATED_INITIALIZER;
++- (instancetype)initWithBundleURLBlock:(RCTBundleURLBlock)bundleURLBlock newArchEnabled:(BOOL)newArchEnabled;
+ 
+ - (instancetype)initWithBundleURL:(NSURL *)bundleURL newArchEnabled:(BOOL)newArchEnabled;
+ 
+@@ -203,24 +200,16 @@
+  * @parameter: moduleName  - the name of the app, used by Metro to resolve the module.
+  * @parameter: initialProperties  -  a set of initial properties.
+  * @parameter: launchOptions  - a dictionary with a set of options.
+- * @parameter: bundleConfiguration  - a configuration for custom bundle source URL.
+- * @parameter: devMenuConfiguration - a configuration for enabling/disabling dev menu.
+  */
+-- (UIView *_Nonnull)viewWithModuleName:(NSString *)moduleName
+-                     initialProperties:(NSDictionary *__nullable)initialProperties
+-                         launchOptions:(NSDictionary *__nullable)launchOptions
+-                   bundleConfiguration:(RCTBundleConfiguration *)bundleConfiguration
+-                  devMenuConfiguration:(RCTDevMenuConfiguration *)devMenuConfiguration;
++- (RCTPlatformView *_Nonnull)viewWithModuleName:(NSString *)moduleName // [macOS]
++                              initialProperties:(NSDictionary *__nullable)initialProperties
++                                  launchOptions:(NSDictionary *__nullable)launchOptions;
+ 
+-- (UIView *_Nonnull)viewWithModuleName:(NSString *)moduleName
+-                     initialProperties:(NSDictionary *__nullable)initialProperties
+-                         launchOptions:(NSDictionary *__nullable)launchOptions;
++- (RCTPlatformView *_Nonnull)viewWithModuleName:(NSString *)moduleName // [macOS]
++                              initialProperties:(NSDictionary *__nullable)initialProperties;
+ 
+-- (UIView *_Nonnull)viewWithModuleName:(NSString *)moduleName
+-                     initialProperties:(NSDictionary *__nullable)initialProperties;
++- (RCTPlatformView *_Nonnull)viewWithModuleName:(NSString *)moduleName; // [macOS]
+ 
+-- (UIView *_Nonnull)viewWithModuleName:(NSString *)moduleName;
+-
+ #pragma mark - RCTRootViewFactory Helpers
+ 
+ /**
+@@ -229,17 +218,9 @@
+  * Use it to speed up later viewWithModuleName: calls.
+  *
+  * @parameter: launchOptions  - a dictionary with a set of options.
+- * @parameter: bundleConfiguration  - a configuration for custom bundle source URL.
+- * @parameter: devMenuConfiguration - a configuration for enabling/disabling dev menu.
+  */
+-- (void)initializeReactHostWithLaunchOptions:(NSDictionary *__nullable)launchOptions
+-                         bundleConfiguration:(RCTBundleConfiguration *)bundleConfiguration
+-                        devMenuConfiguration:(RCTDevMenuConfiguration *)devMenuConfiguration;
++- (void)initializeReactHostWithLaunchOptions:(NSDictionary *__nullable)launchOptions;
+ 
+-- (RCTHost *)createReactHost:(NSDictionary *__nullable)launchOptions
+-         bundleConfiguration:(RCTBundleConfiguration *)bundleConfiguration
+-        devMenuConfiguration:(RCTDevMenuConfiguration *)devMenuConfiguration;
+-
+ - (RCTHost *)createReactHost:(NSDictionary *__nullable)launchOptions;
+ 
+ @end

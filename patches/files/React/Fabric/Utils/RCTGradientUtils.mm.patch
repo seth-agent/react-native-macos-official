@@ -1,0 +1,81 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Utils/RCTGradientUtils.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Fabric/Utils/RCTGradientUtils.mm	2026-03-06 15:22:52
+@@ -207,20 +207,20 @@
+     // Position the new color stops
+     if (leftDist > rightDist) {
+       for (int y = 0; y < 7; ++y) {
+-        ProcessedColorStop newStop{.color = SharedColor(), .position = offsetLeft + leftDist * ((7.0f + y) / 13.0f)};
++        ProcessedColorStop newStop{SharedColor(), offsetLeft + leftDist * ((7.0f + y) / 13.0f)};
+         newStops.push_back(newStop);
+       }
+-      ProcessedColorStop stop1{.color = SharedColor(), .position = offset + rightDist * (1.0f / 3.0f)};
+-      ProcessedColorStop stop2{.color = SharedColor(), .position = offset + rightDist * (2.0f / 3.0f)};
++      ProcessedColorStop stop1{SharedColor(), offset + rightDist * (1.0f / 3.0f)};
++      ProcessedColorStop stop2{SharedColor(), offset + rightDist * (2.0f / 3.0f)};
+       newStops.push_back(stop1);
+       newStops.push_back(stop2);
+     } else {
+-      ProcessedColorStop stop1{.color = SharedColor(), .position = offsetLeft + leftDist * (1.0f / 3.0f)};
+-      ProcessedColorStop stop2{.color = SharedColor(), .position = offsetLeft + leftDist * (2.0f / 3.0f)};
++      ProcessedColorStop stop1{SharedColor(), offsetLeft + leftDist * (1.0f / 3.0f)};
++      ProcessedColorStop stop2{SharedColor(), offsetLeft + leftDist * (2.0f / 3.0f)};
+       newStops.push_back(stop1);
+       newStops.push_back(stop2);
+       for (int y = 0; y < 7; ++y) {
+-        ProcessedColorStop newStop{.color = SharedColor(), .position = offset + rightDist * (y / 13.0f)};
++        ProcessedColorStop newStop{SharedColor(), offset + rightDist * (y / 13.0f)};
+         newStops.push_back(newStop);
+       }
+     }
+@@ -233,7 +233,7 @@
+     auto leftColor = RCTUIColorFromSharedColor(leftSharedColor);
+     auto rightColor = RCTUIColorFromSharedColor(rightSharedColor);
+     NSArray<NSNumber *> *inputRange = @[ @0.0, @1.0 ];
+-    NSArray<UIColor *> *outputRange = @[ leftColor, rightColor ];
++    NSArray<RCTUIColor *> *outputRange = @[ leftColor, rightColor ]; // [macOS]
+ 
+     for (auto &newStop : newStops) {
+       auto pointRelativeOffset = (newStop.position.value() - offsetLeft) / totalDist;
+@@ -267,10 +267,6 @@
+ + (std::vector<ProcessedColorStop>)getFixedColorStops:(const std::vector<ColorStop> &)colorStops
+                                    gradientLineLength:(CGFloat)gradientLineLength
+ {
+-  if (colorStops.empty()) {
+-    return {};
+-  }
+-
+   std::vector<ProcessedColorStop> fixedColorStops(colorStops.size());
+   bool hasNullPositions = false;
+   auto maxPositionSoFar = resolveColorStopPosition(colorStops[0].position, gradientLineLength);
+@@ -301,7 +297,7 @@
+     // largest specified position of any color stop or transition hint before it.
+     if (newPosition.has_value()) {
+       newPosition = std::max(newPosition.value(), maxPositionSoFar.value());
+-      fixedColorStops[i] = ProcessedColorStop{.color = colorStop.color, .position = newPosition};
++      fixedColorStops[i] = ProcessedColorStop{colorStop.color, newPosition};
+       maxPositionSoFar = newPosition;
+     } else {
+       hasNullPositions = true;
+@@ -324,8 +320,8 @@
+           if (startPosition.has_value()) {
+             auto increment = (endPosition.value() - startPosition.value()) / (unpositionedStops + 1);
+             for (size_t j = 1; j <= unpositionedStops; j++) {
+-              fixedColorStops[lastDefinedIndex + j] = ProcessedColorStop{
+-                  .color = colorStops[lastDefinedIndex + j].color, .position = startPosition.value() + increment * j};
++              fixedColorStops[lastDefinedIndex + j] =
++                  ProcessedColorStop{colorStops[lastDefinedIndex + j].color, startPosition.value() + increment * j};
+             }
+           }
+         }
+@@ -388,9 +384,9 @@
+   // To fix this, we detect when a color stop is transparent black and replace it with
+   // a transparent version of the *previous* color stop. This creates a smooth fade-out effect
+   // by only interpolating the alpha channel, matching web and Android behavior.
+-  UIColor *lastColor = nil;
++  RCTUIColor *lastColor = nil; // [macOS]
+   for (const auto &colorStop : colorStops) {
+-    UIColor *currentColor = RCTUIColorFromSharedColor(colorStop.color);
++    RCTUIColor *currentColor = RCTUIColorFromSharedColor(colorStop.color); // [macOS]
+ 
+     CGFloat red = 0.0;
+     CGFloat green = 0.0;

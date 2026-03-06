@@ -1,0 +1,256 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Components/View/ViewPropTypes.js	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Components/View/ViewPropTypes.js	2026-03-06 15:22:52
+@@ -16,14 +16,21 @@
+   BlurEvent,
+   FocusEvent,
+   GestureResponderEvent,
+-  KeyDownEvent,
+-  KeyUpEvent,
+   LayoutChangeEvent,
+   LayoutRectangle,
+   MouseEvent,
+   PointerEvent,
+ } from '../../Types/CoreEventTypes';
++// [macOS
+ import type {
++  DragEvent,
++  HandledKeyEvent,
++  KeyEvent,
++  ScrollEvent,
++} from '../../Types/CoreEventTypes';
++// macOS]
++import type {DraggedTypesType} from '../View/DraggedType'; // [macOS]
++import type {
+   AccessibilityActionEvent,
+   AccessibilityProps,
+ } from './ViewAccessibility';
+@@ -39,7 +46,7 @@
+    * when the user performs an accessibility custom action.
+    *
+    */
+-  onAccessibilityAction?: ?(event: AccessibilityActionEvent) => unknown,
++  onAccessibilityAction?: ?(event: AccessibilityActionEvent) => mixed,
+ 
+   /**
+    * When `accessible` is true, the system will try to invoke this function
+@@ -47,9 +54,23 @@
+    *
+    * See https://reactnative.dev/docs/view#onaccessibilitytap
+    */
+-  onAccessibilityTap?: ?() => unknown,
++  onAccessibilityTap?: ?() => mixed,
+ 
++  // [macOS
+   /**
++   * This event is fired when the scrollView's inverted property changes.
++   * @platform macos
++   */
++  onInvertedDidChange?: ?() => mixed,
++
++  /**
++   * This event is fired when the system's preferred scroller style changes.
++   * The `preferredScrollerStyle` key will be `legacy` or `overlay`.
++   */
++  onPreferredScrollerStyleDidChange?: ?(event: ScrollEvent) => mixed,
++  // macOS]
++
++  /**
+    * Invoked on mount and layout changes with:
+    *
+    * `{nativeEvent: { layout: {x, y, width, height}}}`
+@@ -60,7 +81,7 @@
+    *
+    * See https://reactnative.dev/docs/view#onlayout
+    */
+-  onLayout?: ?(event: LayoutChangeEvent) => unknown,
++  onLayout?: ?(event: LayoutChangeEvent) => mixed,
+ 
+   /**
+    * When `accessible` is `true`, the system will invoke this function when the
+@@ -68,7 +89,7 @@
+    *
+    * See https://reactnative.dev/docs/view#onmagictap
+    */
+-  onMagicTap?: ?() => unknown,
++  onMagicTap?: ?() => mixed,
+ 
+   /**
+    * When `accessible` is `true`, the system will invoke this function when the
+@@ -76,12 +97,40 @@
+    *
+    * See https://reactnative.dev/docs/view#onaccessibilityescape
+    */
+-  onAccessibilityEscape?: ?() => unknown,
++  onAccessibilityEscape?: ?() => mixed,
+ }>;
+ 
++export type KeyboardEventProps = $ReadOnly<{|
++  /**
++   * Called after a key down event is detected.
++   */
++  onKeyDown?: ?(event: KeyEvent) => void,
++
++  /**
++   * Called after a key up event is detected.
++   */
++  onKeyUp?: ?(event: KeyEvent) => void,
++
++  /**
++   * Array of keys to receive key down events for. These events have their default native behavior prevented.
++   *
++   * @platform macos
++   */
++  keyDownEvents?: ?Array<HandledKeyEvent>,
++
++  /**
++   * Array of keys to receive key up events for. These events have their default native behavior prevented.
++   *
++   * @platform macos
++   */
++  keyUpEvents?: ?Array<HandledKeyEvent>,
++|}>;
++// macOS]
++
+ type MouseEventProps = $ReadOnly<{
+   onMouseEnter?: ?(event: MouseEvent) => void,
+   onMouseLeave?: ?(event: MouseEvent) => void,
++  onDoubleClick?: ?(event: MouseEvent) => void, // [macOS]
+ }>;
+ 
+ // Experimental/Work in Progress Pointer Event Callbacks (not yet ready for use)
+@@ -117,13 +166,6 @@
+   onFocusCapture?: ?(event: FocusEvent) => void,
+ }>;
+ 
+-type KeyEventProps = $ReadOnly<{
+-  onKeyDown?: ?(event: KeyDownEvent) => void,
+-  onKeyDownCapture?: ?(event: KeyDownEvent) => void,
+-  onKeyUp?: ?(event: KeyUpEvent) => void,
+-  onKeyUpCapture?: ?(event: KeyUpEvent) => void,
+-}>;
+-
+ type TouchEventProps = $ReadOnly<{
+   onTouchCancel?: ?(e: GestureResponderEvent) => void,
+   onTouchCancelCapture?: ?(e: GestureResponderEvent) => void,
+@@ -331,7 +373,7 @@
+   /**
+    * Whether this `View` should be focusable with a non-touch input device, eg. receive focus with a hardware keyboard.
+    *
+-   * @platform android
++   * @platform android macos
+    */
+   focusable?: ?boolean,
+ 
+@@ -353,7 +395,7 @@
+    *
+    * @platform android
+    */
+-  onClick?: ?(event: GestureResponderEvent) => unknown,
++  onClick?: ?(event: GestureResponderEvent) => mixed,
+ }>;
+ 
+ export type TVViewPropsIOS = $ReadOnly<{
+@@ -411,7 +453,90 @@
+    */
+   shouldRasterizeIOS?: ?boolean,
+ }>;
++
++// [macOS
++type MacOSViewProps = $ReadOnly<{|
++  /**
++   * Fired when a file is dragged into the view via the mouse.
++   *
++   * @platform macos
++   */
++  onDragEnter?: (event: DragEvent) => void,
+ 
++  /**
++   * Fired when a file is dragged out of the view via the mouse.
++   *
++   * @platform macos
++   */
++  onDragLeave?: (event: DragEvent) => void,
++
++  /**
++   * Fired when an element is dropped on a valid drop target
++   *
++   * @platform macos
++   */
++  onDrop?: (event: DragEvent) => void,
++
++  /**
++   * Specifies the Tooltip for the view
++   * @platform macos
++   */
++  tooltip?: ?string,
++
++  /**
++   * Specifies whether the view should receive the mouse down event when the
++   * containing window is in the background.
++   *
++   * @platform macos
++   */
++  acceptsFirstMouse?: ?boolean,
++
++  /**
++   * Specifies whether clicking and dragging the view can move the window. This is useful
++   * to disable in Button like components like Pressable where mouse the user should still
++   * be able to click and drag off the view to cancel the click without accidentally moving the window.
++   *
++   * @platform macos
++   */
++  mouseDownCanMoveWindow?: ?boolean,
++
++  /**
++   * Specifies whether the view ensures it is vibrant on top of other content.
++   * For more information, see the following apple documentation:
++   * https://developer.apple.com/documentation/appkit/nsview/1483793-allowsvibrancy
++   * https://developer.apple.com/documentation/appkit/nsvisualeffectview#1674177
++   *
++   * @platform macos
++   */
++  allowsVibrancy?: ?boolean,
++
++  /**
++   * Specifies whether system focus ring should be drawn when the view has keyboard focus.
++   *
++   * @platform macos
++   */
++  enableFocusRing?: ?boolean,
++
++  /**
++   * The types of dragged files that the view will accept.
++   *
++   * Possible values for `draggedTypes` are:
++   *
++   * - `'fileUrl'`
++   *
++   * @platform macos
++   */
++  draggedTypes?: ?DraggedTypesType,
++
++  /**
++   * Reverses the direction of scroll. Uses native inversion on macOS and scale transforms of -1 elsewhere
++   *
++   * @platform macos
++   */
++  inverted?: ?boolean,
++|}>;
++// macOS]
++
+ type ViewBaseProps = $ReadOnly<{
+   children?: React.Node,
+   style?: ?ViewStyleProp,
+@@ -514,10 +639,11 @@
+   ...MouseEventProps,
+   ...PointerEventProps,
+   ...FocusEventProps,
+-  ...KeyEventProps,
+   ...TouchEventProps,
++  ...KeyboardEventProps, // [macOS]
+   ...ViewPropsAndroid,
+   ...ViewPropsIOS,
++  ...MacOSViewProps, // [macOS]
+   ...AccessibilityProps,
+   ...ViewBaseProps,
+ }>;

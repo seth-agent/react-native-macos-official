@@ -1,0 +1,887 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Views/ScrollView/RCTScrollView.m	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Views/ScrollView/RCTScrollView.m	2026-03-06 15:22:52
+@@ -7,13 +7,11 @@
+ 
+ #import "RCTScrollView.h"
+ 
+-#ifndef RCT_REMOVE_LEGACY_ARCH
++#import <React/RCTUIKit.h> // [macOS]
+ 
+-#import <UIKit/UIKit.h>
+-
+ #import "RCTConvert.h"
++#import "RCTHandledKey.h" // [macOS]
+ #import "RCTLog.h"
+-#import "RCTRefreshControl.h"
+ #import "RCTScrollEvent.h"
+ #import "RCTUIManager.h"
+ #import "RCTUIManagerObserverCoordinator.h"
+@@ -23,17 +21,36 @@
+ #import "UIView+Private.h"
+ #import "UIView+React.h"
+ 
++
++#if !TARGET_OS_OSX // [macOS]
++#import "RCTRefreshControl.h"
++#else // [macOS
++#import "RCTI18nUtil.h"
++#import "RCTViewKeyboardEvent.h"
++#endif // macOS]
++
+ /**
+  * Include a custom scroll view subclass because we want to limit certain
+  * default UIKit behaviors such as textFields automatically scrolling
+  * scroll views that contain them.
+  */
+-@interface RCTCustomScrollView : UIScrollView <UIGestureRecognizerDelegate>
++@interface RCTCustomScrollView :
++#if !TARGET_OS_OSX // [macOS]
++  UIScrollView <UIGestureRecognizerDelegate>
++#else // [macOS
++  RCTUIScrollView
++#endif // macOS]
+ 
+ @property (nonatomic, assign) BOOL centerContent;
++#if !TARGET_OS_OSX // [macOS]
+ @property (nonatomic, strong) UIView<RCTCustomRefreshControlProtocol> *customRefreshControl;
+ @property (nonatomic, assign) BOOL pinchGestureEnabled;
+-
++#else // [macOS
+++ (BOOL)isCompatibleWithResponsiveScrolling;
++@property (nonatomic, assign, getter=isInverted) BOOL inverted;
++@property (nonatomic, assign, getter=isScrollEnabled) BOOL scrollEnabled;
++@property (nonatomic, strong) NSPanGestureRecognizer *panGestureRecognizer;
++#endif // macOS]
+ @end
+ 
+ @implementation RCTCustomScrollView
+@@ -41,6 +58,7 @@
+ - (instancetype)initWithFrame:(CGRect)frame
+ {
+   if ((self = [super initWithFrame:frame])) {
++#if !TARGET_OS_OSX // [macOS]
+     [self.panGestureRecognizer addTarget:self action:@selector(handleCustomPan:)];
+ 
+     if ([self respondsToSelector:@selector(setSemanticContentAttribute:)]) {
+@@ -49,16 +67,27 @@
+       // scrollbar flip because we also flip it with whole `UIScrollView` flip.
+       self.semanticContentAttribute = UISemanticContentAttributeForceLeftToRight;
+     }
++#else // [macOS
++    self.scrollEnabled = YES;
++    self.hasHorizontalScroller = YES;
++    self.hasVerticalScroller = YES;
++    self.autohidesScrollers = YES;
++    self.panGestureRecognizer = [[NSPanGestureRecognizer alloc] initWithTarget:self action:@selector(handleCustomPan:)];
++#endif // macOS]
+ 
++#if !TARGET_OS_OSX // [macOS]
+     _pinchGestureEnabled = YES;
++#endif // [macOS]
+   }
+   return self;
+ }
+ 
++#if !TARGET_OS_OSX // [macOS] NSScrollView's contentView is an NSClipView. Use documentView to access NSScrollView's content.
+ - (UIView *)contentView
+ {
+   return ((RCTScrollView *)self.superview).contentView;
+ }
++#endif // [macOS]
+ 
+ /**
+  * @return Whether or not the scroll view interaction should be blocked because
+@@ -68,16 +97,37 @@
+ {
+   // Since this may be called on every pan, we need to make sure to only climb
+   // the hierarchy on rare occasions.
+-  UIView *JSResponder = [RCTUIManager JSResponder];
++  RCTPlatformView *JSResponder = [RCTUIManager JSResponder]; // [macOS]
+   if (JSResponder && JSResponder != self.superview) {
+-    BOOL superviewHasResponder = [self isDescendantOfView:JSResponder];
++    BOOL superviewHasResponder = RCTUIViewIsDescendantOfView(self, JSResponder); // [macOS]
+     return superviewHasResponder;
+   }
+   return NO;
+ }
+ 
+-- (void)handleCustomPan:(__unused UIPanGestureRecognizer *)sender
++#if TARGET_OS_OSX // [macOS
+++ (BOOL)isCompatibleWithResponsiveScrolling
+ {
++  return YES;
++}
++
++- (BOOL)isFlipped
++{
++  return !self.inverted;
++}
++
++- (void)scrollWheel:(NSEvent *)theEvent
++{
++  if (!self.isScrollEnabled) {
++    [[self nextResponder] scrollWheel:theEvent];
++    return;
++  }
++  [super scrollWheel:theEvent];
++}
++#endif // macOS]
++
++- (void)handleCustomPan:(__unused UIGestureRecognizer *)sender // [macOS]
++{
+   if ([self _shouldDisableScrollInteraction] && ![[RCTUIManager JSResponder] isKindOfClass:[RCTScrollView class]]) {
+     self.panGestureRecognizer.enabled = NO;
+     self.panGestureRecognizer.enabled = YES;
+@@ -104,8 +154,11 @@
+   if (CGRectIsNull(rect)) {
+     return;
+   }
+-
++#if !TARGET_OS_OSX // [macOS]
+   [super scrollRectToVisible:rect animated:animated];
++#else // [macOS
++  [super scrollRectToVisible:rect];
++#endif // macOS]
+ }
+ 
+ /**
+@@ -150,13 +203,15 @@
+  * In order to have this called, you must have delaysContentTouches set to NO
+  * (which is the not the `UIKit` default).
+  */
+-- (BOOL)touchesShouldCancelInContentView:(__unused UIView *)view
++- (BOOL)touchesShouldCancelInContentView:(__unused RCTUIView *)view // [macOS]
+ {
+   BOOL shouldDisableScrollInteraction = [self _shouldDisableScrollInteraction];
+ 
++#if !TARGET_OS_OSX // [macOS]
+   if (shouldDisableScrollInteraction == NO) {
+     [super touchesShouldCancelInContentView:view];
+   }
++#endif // [macOS]
+ 
+   return !shouldDisableScrollInteraction;
+ }
+@@ -182,9 +237,11 @@
+   if (CGSizeEqualToSize(contentSize, CGSizeZero)) {
+     self.contentOffset = originalOffset;
+   } else {
++#if !TARGET_OS_OSX // [macOS]
+     if (!UIEdgeInsetsEqualToEdgeInsets(UIEdgeInsetsZero, self.adjustedContentInset)) {
+       contentInset = self.adjustedContentInset;
+     }
++#endif // [macOS]
+     CGSize boundsSize = self.bounds.size;
+     CGFloat xMaxOffset = contentSize.width - boundsSize.width + contentInset.right;
+     CGFloat yMaxOffset = contentSize.height - boundsSize.height + contentInset.bottom;
+@@ -199,6 +256,7 @@
+   }
+ }
+ 
++#if !TARGET_OS_OSX // [macOS]
+ - (void)setCustomRefreshControl:(UIView<RCTCustomRefreshControlProtocol> *)refreshControl
+ {
+   if (_customRefreshControl) {
+@@ -230,7 +288,21 @@
+   // ScrollView enables pinch gesture late in its lifecycle. So simply setting it
+   // in the setter gets overridden when the view loads.
+   self.pinchGestureRecognizer.enabled = _pinchGestureEnabled;
++}
++#endif // [macOS]
++
++#if TARGET_OS_OSX // [macOS
++- (void)setAccessibilityLabel:(NSString *)accessibilityLabel
++{
++  [super setAccessibilityLabel:accessibilityLabel];
++  [[self documentView] setAccessibilityLabel:accessibilityLabel];
+ }
++- (void)setDocumentView:(__kindof NSView *)documentView
++{
++  [super setDocumentView:documentView];
++  [documentView setAccessibilityLabel:[self accessibilityLabel]];
++}
++#endif // macOS]
+ 
+ - (BOOL)shouldGroupAccessibilityChildren
+ {
+@@ -246,18 +318,25 @@
+ @implementation RCTScrollView {
+   id<RCTEventDispatcherProtocol> _eventDispatcher;
+   CGRect _prevFirstVisibleFrame;
+-  __weak UIView *_firstVisibleView;
++  __weak RCTUIView *_firstVisibleView; // [macOS]
+   RCTCustomScrollView *_scrollView;
++#if !TARGET_OS_OSX // [macOS]
+   UIView *_contentView;
++#endif // [macOS]
+   NSTimeInterval _lastScrollDispatchTime;
+   NSMutableArray<NSValue *> *_cachedChildFrames;
+   BOOL _allowNextScrollNoMatterWhat;
++#if TARGET_OS_OSX // [macOS
++  BOOL _notifyDidScroll;
++  NSPoint _lastScrollPosition;
++#endif // macOS]
+   CGRect _lastClippedToRect;
+   uint16_t _coalescingKey;
+   NSString *_lastEmittedEventName;
+   NSHashTable *_scrollListeners;
+ }
+ 
++#if !TARGET_OS_OSX // [macOS] UIKeyboard notifications not needed on macOS
+ - (void)_registerKeyboardListener
+ {
+   [[NSNotificationCenter defaultCenter] addObserver:self
+@@ -323,11 +402,13 @@
+       // Text field active region is below visible area with keyboard - update diff to bring into view
+       contentDiff = endFrame.origin.y - focusEnd;
+     } else {
++#if !TARGET_OS_VISION
+       UIView *inputAccessoryView = _firstResponderViewOutsideScrollView.inputAccessoryView;
+       if (inputAccessoryView) {
+         // Text input view is within the inputAccessoryView.
+         contentDiff = endFrame.origin.y - beginFrame.origin.y;
+       }
++#endif // !TARGET_OS_VISION
+     }
+   } else if (endFrame.origin.y <= beginFrame.origin.y) {
+     // Keyboard opened for other reason
+@@ -359,24 +440,34 @@
+                    }
+                    completion:nil];
+ }
++#endif // [macOS]
+ 
+ - (instancetype)initWithEventDispatcher:(id<RCTEventDispatcherProtocol>)eventDispatcher
+ {
+   RCTAssertParam(eventDispatcher);
+ 
+   if ((self = [super initWithFrame:CGRectZero])) {
++#if !TARGET_OS_OSX // [macOS]
+     [self _registerKeyboardListener];
++#endif // [macOS]
+     _eventDispatcher = eventDispatcher;
+ 
+     _scrollView = [[RCTCustomScrollView alloc] initWithFrame:CGRectZero];
+     _scrollView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
++#if !TARGET_OS_OSX // [macOS]
+     _scrollView.delegate = self;
+     _scrollView.delaysContentTouches = NO;
++#else // [macOS
++    _scrollView.postsBoundsChangedNotifications = YES;
++    _lastScrollPosition = NSZeroPoint;
++#endif // macOS]
+ 
++#if !TARGET_OS_OSX // [macOS]
+     // We set the default behavior to "never" so that iOS
+     // doesn't do weird things to UIScrollView insets automatically
+     // and keeps it as an opt-in behavior.
+     _scrollView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
++#endif // [macOS]
+ 
+     _automaticallyAdjustContentInsets = YES;
+     _contentInset = UIEdgeInsetsZero;
+@@ -393,15 +484,75 @@
+   return self;
+ }
+ 
++#if TARGET_OS_OSX // [macOS
++- (BOOL)canBecomeKeyView
++{
++  return [self focusable];
++}
++
++- (CGRect)focusRingMaskBounds
++{
++  return [self bounds];
++}
++
++- (void)drawFocusRingMask
++{
++  if (self.enableFocusRing) {
++    NSBezierPath *borderPath = [NSBezierPath bezierPathWithRoundedRect:self.bounds xRadius:2.0 yRadius:2.0];
++    [borderPath stroke];
++  }
++}
++
++- (RCTBridge *)bridge
++{
++  return [_eventDispatcher bridge];
++}
++
++- (RCTUIView *)contentView // [macOS]
++{
++  return _scrollView.documentView;
++}
++
++- (void)setAccessibilityLabel:(NSString *)accessibilityLabel
++{
++  [_scrollView setAccessibilityLabel:accessibilityLabel];
++}
++
++- (void)setAccessibilityRole:(NSAccessibilityRole)accessibilityRole
++{
++  [_scrollView setAccessibilityRole:accessibilityRole];
++}
++
++- (void)setInverted:(BOOL)inverted
++{
++  BOOL changed = _inverted != inverted;
++  _inverted = inverted;  
++  if (changed && _onInvertedDidChange) {
++    _onInvertedDidChange(@{});
++  }
++}
++
++- (void)setHasOverlayStyleIndicator:(BOOL)hasOverlayStyle
++{
++  if (hasOverlayStyle == true) {
++    self.scrollView.scrollerStyle = NSScrollerStyleOverlay;
++  } else {
++    self.scrollView.scrollerStyle = NSScrollerStyleLegacy;
++  }
++}
++#endif // macOS]
++
+ RCT_NOT_IMPLEMENTED(-(instancetype)initWithFrame : (CGRect)frame)
+ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder *)aDecoder)
+ 
+ static inline void RCTApplyTransformationAccordingLayoutDirection(
+-    UIView *view,
++    RCTPlatformView *view, // [macOS]
+     UIUserInterfaceLayoutDirection layoutDirection)
+ {
++#if !TARGET_OS_OSX // [macOS]
+   view.transform = layoutDirection == UIUserInterfaceLayoutDirectionLeftToRight ? CGAffineTransformIdentity
+                                                                                 : CGAffineTransformMakeScale(-1, 1);
++#endif // [macOS]
+ }
+ 
+ - (void)setReactLayoutDirection:(UIUserInterfaceLayoutDirection)layoutDirection
+@@ -409,7 +560,7 @@
+   [super setReactLayoutDirection:layoutDirection];
+ 
+   RCTApplyTransformationAccordingLayoutDirection(_scrollView, layoutDirection);
+-  RCTApplyTransformationAccordingLayoutDirection(_contentView, layoutDirection);
++  RCTApplyTransformationAccordingLayoutDirection(self.contentView, layoutDirection); // macOS use property instead of ivar for mac
+ }
+ 
+ - (void)setRemoveClippedSubviews:(__unused BOOL)removeClippedSubviews
+@@ -423,9 +574,10 @@
+   [self centerContentIfNeeded];
+ }
+ 
+-- (void)insertReactSubview:(UIView *)view atIndex:(NSInteger)atIndex
++- (void)insertReactSubview:(RCTPlatformView *)view atIndex:(NSInteger)atIndex // [macOS]
+ {
+   [super insertReactSubview:view atIndex:atIndex];
++#if !TARGET_OS_OSX // [macOS]
+   if ([view conformsToProtocol:@protocol(RCTCustomRefreshControlProtocol)]) {
+     [_scrollView setCustomRefreshControl:(UIView<RCTCustomRefreshControlProtocol> *)view];
+     if (![view isKindOfClass:[UIRefreshControl class]] && [view conformsToProtocol:@protocol(UIScrollViewDelegate)]) {
+@@ -440,13 +592,21 @@
+     RCTApplyTransformationAccordingLayoutDirection(_contentView, self.reactLayoutDirection);
+     [_scrollView addSubview:view];
+   }
++#else // [macOS
++	RCTAssert(self.contentView == nil, @"RCTScrollView may only contain a single subview");
+ 
++  _scrollView.documentView = view;
++#endif // macOS]
++
+   [self centerContentIfNeeded];
+ }
+ 
+-- (void)removeReactSubview:(UIView *)subview
++- (void)removeReactSubview:(RCTUIView *)subview // [macOS]
+ {
+   [super removeReactSubview:subview];
++#if TARGET_OS_OSX // [macOS
++  _scrollView.documentView = nil;
++#else // [macOS
+   if ([subview conformsToProtocol:@protocol(RCTCustomRefreshControlProtocol)]) {
+     [_scrollView setCustomRefreshControl:nil];
+     if (![subview isKindOfClass:[UIRefreshControl class]] &&
+@@ -457,6 +617,7 @@
+     RCTAssert(_contentView == subview, @"Attempted to remove non-existent subview");
+     _contentView = nil;
+   }
++#endif // macOS]
+ }
+ 
+ - (void)didUpdateReactSubviews
+@@ -484,14 +645,20 @@
+ - (void)setClipsToBounds:(BOOL)clipsToBounds
+ {
+   super.clipsToBounds = clipsToBounds;
++#if !TARGET_OS_OSX // [macOS]
+   _scrollView.clipsToBounds = clipsToBounds;
++#endif // [macOS]
+ }
+ 
+ - (void)dealloc
+ {
++#if !TARGET_OS_OSX // [macOS]
+   _scrollView.delegate = nil;
++#endif // [macOS]
+   [_eventDispatcher.bridge.uiManager.observerCoordinator removeObserver:self];
++#if !TARGET_OS_OSX // [macOS]
+   [self _unregisterKeyboardListener];
++#endif // [macOS]
+ }
+ 
+ - (void)layoutSubviews
+@@ -500,7 +667,7 @@
+   RCTAssert(self.subviews.count == 1, @"we should only have exactly one subview");
+   RCTAssert([self.subviews lastObject] == _scrollView, @"our only subview should be a scrollview");
+ 
+-#if !TARGET_OS_TV
++#if !TARGET_OS_TV && !TARGET_OS_OSX // [macOS]
+   // Adjust the refresh control frame if the scrollview layout changes.
+   UIView<RCTCustomRefreshControlProtocol> *refreshControl = _scrollView.customRefreshControl;
+   if (refreshControl && refreshControl.isRefreshing && ![refreshControl isKindOfClass:UIRefreshControl.class]) {
+@@ -515,7 +682,7 @@
+ - (void)updateClippedSubviews
+ {
+   // Find a suitable view to use for clipping
+-  UIView *clipView = [self react_findClipView];
++  RCTPlatformView *clipView = [self react_findClipView]; // [macOS]
+   if (!clipView) {
+     return;
+   }
+@@ -523,7 +690,11 @@
+   static const CGFloat leeway = 1.0;
+ 
+   const CGSize contentSize = _scrollView.contentSize;
+-  const CGRect bounds = _scrollView.bounds;
++#if !TARGET_OS_OSX // [macOS]
++	const CGRect bounds = _scrollView.bounds;
++#else // [macOS
++  const CGRect bounds = _scrollView.contentView.bounds;
++#endif // macOS]
+   const BOOL scrollsHorizontally = contentSize.width > bounds.size.width;
+   const BOOL scrollsVertically = contentSize.height > bounds.size.height;
+ 
+@@ -537,8 +708,38 @@
+     const CGRect clipRect = CGRectInset(clipView.bounds, -leeway, -leeway);
+     [self react_updateClippedSubviewsWithClipRect:clipRect relativeToView:clipView];
+     _lastClippedToRect = bounds;
++  }
++}
++
++#if TARGET_OS_OSX // [macOS
++- (void)viewDidMoveToWindow
++{
++  [super viewDidMoveToWindow];
++
++  NSNotificationCenter *defaultCenter = [NSNotificationCenter defaultCenter];
++  if ([self window] == nil) {
++    // Unregister for bounds change notifications
++    [defaultCenter removeObserver:self
++                             name:NSViewBoundsDidChangeNotification
++                           object:_scrollView.contentView];
++    [defaultCenter removeObserver:self
++                             name:NSPreferredScrollerStyleDidChangeNotification
++                           object:nil];
++  } else {
++    // Register for bounds change notifications so we can track scrolling
++    [defaultCenter addObserver:self
++                      selector:@selector(scrollViewDocumentViewBoundsDidChange:)
++                          name:NSViewBoundsDidChangeNotification
++                        object:_scrollView.contentView]; // NSClipView
++    [defaultCenter addObserver:self
++                      selector:@selector(preferredScrollerStyleDidChange:)
++                          name:NSPreferredScrollerStyleDidChangeNotification
++                        object:nil];
+   }
++
++  _notifyDidScroll = ([self window] != nil);
+ }
++#endif // macOS]
+ 
+ - (void)setContentInset:(UIEdgeInsets)contentInset
+ {
+@@ -554,11 +755,22 @@
+   _scrollView.contentOffset = contentOffset;
+ }
+ 
++#if !TARGET_OS_OSX // [macOS]
+ - (BOOL)isHorizontal:(UIScrollView *)scrollView
++#else // [macOS
++- (BOOL)isHorizontal:(RCTCustomScrollView *)scrollView
++#endif // macOS]
+ {
+   return scrollView.contentSize.width > self.frame.size.width;
+ }
+ 
++#if TARGET_OS_OSX // [macOS
++- (BOOL)isVertical:(RCTCustomScrollView *)scrollView
++{
++  return scrollView.contentSize.height > self.frame.size.height;
++}
++#endif // macOS]
++
+ - (void)scrollToOffset:(CGPoint)offset
+ {
+   [self scrollToOffset:offset animated:YES];
+@@ -584,6 +796,7 @@
+             0.01)); // Make width and height greater than 0
+     // Ensure at least one scroll event will fire
+     _allowNextScrollNoMatterWhat = YES;
++
+     if (!CGRectContainsPoint(maxRect, offset) && !self.scrollToOverflowEnabled) {
+       CGFloat x = fmax(offset.x, CGRectGetMinX(maxRect));
+       x = fmin(x, CGRectGetMaxX(maxRect));
+@@ -591,6 +804,7 @@
+       y = fmin(y, CGRectGetMaxY(maxRect));
+       offset = CGPointMake(x, y);
+     }
++
+     [_scrollView setContentOffset:offset animated:animated];
+   }
+ }
+@@ -602,12 +816,17 @@
+ - (void)scrollToEnd:(BOOL)animated
+ {
+   BOOL isHorizontal = [self isHorizontal:_scrollView];
++#if !TARGET_OS_OSX // [macOS
++  CGSize boundsSize = _scrollView.bounds.size;
++#else
++  CGSize boundsSize = _scrollView.contentView.bounds.size;
++#endif // macOS]
+   CGPoint offset;
+   if (isHorizontal) {
+-    CGFloat offsetX = _scrollView.contentSize.width - _scrollView.bounds.size.width + _scrollView.contentInset.right;
++    CGFloat offsetX = _scrollView.contentSize.width - boundsSize.width + _scrollView.contentInset.right; // [macOS]
+     offset = CGPointMake(fmax(offsetX, 0), 0);
+   } else {
+-    CGFloat offsetY = _scrollView.contentSize.height - _scrollView.bounds.size.height + _scrollView.contentInset.bottom;
++    CGFloat offsetY = _scrollView.contentSize.height - boundsSize.height + _scrollView.contentInset.bottom; // [macOS]
+     offset = CGPointMake(0, fmax(offsetY, 0));
+   }
+   if (!CGPointEqualToPoint(_scrollView.contentOffset, offset)) {
+@@ -619,16 +838,46 @@
+ 
+ - (void)zoomToRect:(CGRect)rect animated:(BOOL)animated
+ {
++#if TARGET_OS_OSX // [macOS
++  (void) animated;
++  [_scrollView magnifyToFitRect:rect];
++#else // [macOS
+   [_scrollView zoomToRect:rect animated:animated];
++#endif // macOS]
+ }
+ 
+ - (void)refreshContentInset
+ {
+   [RCTView autoAdjustInsetsForView:self withScrollView:_scrollView updateOffset:YES];
++}
++
++// [macOS
++- (void)flashScrollIndicators
++{
++#if !TARGET_OS_OSX
++	[_scrollView flashScrollIndicators];
++#else
++  [_scrollView flashScrollers];
++#endif
+ }
++// macOS]
+ 
+ #pragma mark - ScrollView delegate
+ 
++#if TARGET_OS_OSX // [macOS
++- (void)scrollViewDocumentViewBoundsDidChange:(__unused NSNotification *)notification
++{
++  if (_scrollView.centerContent) {
++    // contentOffset setter dynamically centers content when _centerContent == YES
++    [_scrollView setContentOffset:_scrollView.contentOffset];
++  }
++
++  if (_notifyDidScroll) {
++    [self scrollViewDidScroll:_scrollView];
++  }
++}
++#endif // macOS]
++
+ #define RCT_SEND_SCROLL_EVENT(_eventName, _userData)                                    \
+   {                                                                                     \
+     NSString *eventName = NSStringFromSelector(@selector(_eventName));                  \
+@@ -649,6 +898,7 @@
+     RCT_FORWARD_SCROLL_EVENT(delegateMethod : scrollView);  \
+   }
+ 
++#if !TARGET_OS_OSX // [macOS]
+ RCT_SCROLL_EVENT_HANDLER(scrollViewWillBeginDecelerating, onMomentumScrollBegin)
+ RCT_SCROLL_EVENT_HANDLER(scrollViewDidScrollToTop, onScrollToTop)
+ 
+@@ -659,6 +909,7 @@
+   RCT_SEND_SCROLL_EVENT(onScroll, nil);
+   RCT_FORWARD_SCROLL_EVENT(scrollViewDidZoom : scrollView);
+ }
++#endif // macOS]
+ 
+ /*
+  * Automatically centers the content such that if the content is smaller than the
+@@ -679,8 +930,7 @@
+     return;
+   }
+ 
+-  CGFloat top = 0;
+-  CGFloat left = 0;
++  CGFloat top = 0, left = 0;
+   if (contentSize.width < boundsSize.width) {
+     left = (boundsSize.width - contentSize.width) * 0.5f;
+   }
+@@ -690,6 +940,7 @@
+   _scrollView.contentInset = UIEdgeInsetsMake(top, left, top, left);
+ }
+ 
++#if !TARGET_OS_OSX // [macOS]
+ - (void)addScrollListener:(NSObject<UIScrollViewDelegate> *)scrollListener
+ {
+   [_scrollListeners addObject:scrollListener];
+@@ -699,12 +950,29 @@
+ {
+   [_scrollListeners removeObject:scrollListener];
+ }
++#endif // [macOS]
+ 
+-- (void)scrollViewDidScroll:(UIScrollView *)scrollView
++- (void)scrollViewDidScroll:(RCTCustomScrollView *)scrollView // [macOS]
+ {
+   NSTimeInterval now = CACurrentMediaTime();
+   [self updateClippedSubviews];
++  
++#if TARGET_OS_OSX // [macOS
+   /**
++   * To check for effective scroll position changes, the comparison with lastScrollPosition should happen
++   * after updateClippedSubviews. updateClippedSubviews will update the display of the vertical/horizontal 
++   * scrollers which can change the clipview bounds.
++   * This change also ensures that no onScroll events are sent when the React setFrame call is running,
++   * which could submit onScroll events while the content view was not setup yet.
++   */
++  BOOL didScroll = !NSEqualPoints(scrollView.contentView.bounds.origin, _lastScrollPosition);
++  if (!didScroll) {
++    return;
++  }
++  _lastScrollPosition = scrollView.contentView.bounds.origin;
++#endif // macOS]
++  
++  /**
+    * TODO: this logic looks wrong, and it may be because it is. Currently, if _scrollEventThrottle
+    * is set to zero (the default), the "didScroll" event is only sent once per scroll, instead of repeatedly
+    * while scrolling as expected. However, if you "fix" that bug, ScrollView will generate repeated
+@@ -719,9 +987,13 @@
+     _lastScrollDispatchTime = now;
+     _allowNextScrollNoMatterWhat = NO;
+   }
++#if !TARGET_OS_OSX // [macOS]
+   RCT_FORWARD_SCROLL_EVENT(scrollViewDidScroll : scrollView);
++#endif // [macOS]
+ }
+ 
++#if !TARGET_OS_OSX // [macOS]
++
+ - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView
+ {
+   _allowNextScrollNoMatterWhat = YES; // Ensure next scroll event is recorded, regardless of throttle
+@@ -860,8 +1132,10 @@
+     @"targetContentOffset" : @{@"x" : @(targetContentOffset->x), @"y" : @(targetContentOffset->y)}
+   };
+   RCT_SEND_SCROLL_EVENT(onScrollEndDrag, userData);
+-  RCT_FORWARD_SCROLL_EVENT(
+-      scrollViewWillEndDragging : scrollView withVelocity : velocity targetContentOffset : targetContentOffset);
++  RCT_FORWARD_SCROLL_EVENT(scrollViewWillEndDragging
++                           : scrollView withVelocity
++                           : velocity targetContentOffset
++                           : targetContentOffset);
+ }
+ 
+ - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
+@@ -944,6 +1218,8 @@
+   return _contentView;
+ }
+ 
++#endif // [macOS]
++
+ - (CGSize)_calculateViewportSize
+ {
+   CGSize viewportSize = self.bounds.size;
+@@ -958,7 +1234,7 @@
+ 
+ - (CGSize)contentSize
+ {
+-  return _contentView.frame.size;
++  return self.contentView.frame.size; // macOS use property instead of ivar for mac
+ }
+ 
+ - (void)updateContentSizeIfNeeded
+@@ -989,13 +1265,21 @@
+   RCTAssertUIManagerQueue();
+ 
+   [manager prependUIBlock:^(
+-               __unused RCTUIManager *uiManager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
++               __unused RCTUIManager *uiManager, __unused NSDictionary<NSNumber *, RCTPlatformView *> *viewRegistry) { // [macOS]
+     BOOL horz = [self isHorizontal:self->_scrollView];
+     NSUInteger minIdx = [self->_maintainVisibleContentPosition[@"minIndexForVisible"] integerValue];
++#if !TARGET_OS_OSX // [macOS]
+     for (NSUInteger ii = minIdx; ii < self->_contentView.subviews.count; ++ii) {
++#else // [macOS Use property instead of internal variable for macOS
++    for (NSUInteger ii = minIdx; ii < self.contentView.subviews.count; ++ii) {
++#endif // macOS]
+       // Find the first partially or fully visible view. This must be done after we update the content offset
+       // or it will tend to grab rows that were made visible by the shift in position
+-      UIView *subview = self->_contentView.subviews[ii];
++#if !TARGET_OS_OSX // [macOS]
++      UIView *subview = self->_contentView.subviews[ii]; // [macOS]
++#else // [macOS Use property instead of internal variable for macOS
++      NSView *subview = self.contentView.subviews[ii]; // [macOS]
++#endif // macOS]
+       BOOL hasNewView = NO;
+       if (horz) {
+         CGFloat leftInset = self.inverted ? self->_scrollView.contentInset.right : self->_scrollView.contentInset.left;
+@@ -1007,14 +1291,18 @@
+         CGFloat y = self->_scrollView.contentOffset.y + bottomInset;
+         hasNewView = subview.frame.origin.y + subview.frame.size.height > y;
+       }
++#if !TARGET_OS_OSX // [macOS]
+       if (hasNewView || ii == self->_contentView.subviews.count - 1) {
++#else // [macOS Use property instead of internal variable for macOS
++      if (hasNewView || ii == self.contentView.subviews.count - 1) {
++#endif // macOS]
+         self->_prevFirstVisibleFrame = subview.frame;
+         self->_firstVisibleView = subview;
+         break;
+       }
+     }
+   }];
+-  [manager addUIBlock:^(__unused RCTUIManager *uiManager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
++  [manager addUIBlock:^(__unused RCTUIManager *uiManager, __unused NSDictionary<NSNumber *, RCTPlatformView *> *viewRegistry) { // [macOS]
+     if (self->_maintainVisibleContentPosition == nil) {
+       return; // The prop might have changed in the previous UIBlocks, so need to abort here.
+     }
+@@ -1052,8 +1340,75 @@
+       }
+     }
+   }];
++}
++
++// [macOS
++#pragma mark - Keyboard Events
++
++#if TARGET_OS_OSX
++- (RCTViewKeyboardEvent*)keyboardEvent:(NSEvent*)event {
++	BOOL keyDown = event.type == NSEventTypeKeyDown;
++  NSArray<RCTHandledKey *> *keyEvents = keyDown ? self.keyDownEvents : self.keyUpEvents;
++
++	// Only post events for keys we care about
++	if (![RCTHandledKey event:event matchesFilter:keyEvents]) {
++		return nil;
++	}
++
++	return [RCTViewKeyboardEvent keyEventFromEvent:event reactTag:self.reactTag];
++}
++
++- (BOOL)handleKeyboardEvent:(NSEvent *)event {
++	if (event.type == NSEventTypeKeyDown ? self.onKeyDown : self.onKeyUp) {
++		RCTViewKeyboardEvent *keyboardEvent = [self keyboardEvent:event];
++		if (keyboardEvent) {
++			[_eventDispatcher sendEvent:keyboardEvent];
++			return YES;
++		}
++	}
++	return NO;
++}
++
++- (void)keyDown:(NSEvent *)event {
++	if (![self handleKeyboardEvent:event]) {
++		[super keyDown:event];
++		
++		// AX: if a tab key was pressed and the first responder is currently clipped by the scroll view,
++		// automatically scroll to make the view visible to make it navigable via keyboard.
++		NSString *key = [RCTViewKeyboardEvent keyFromEvent:event];
++		if ([key isEqualToString:@"Tab"]) {
++			id firstResponder = [[self window] firstResponder];
++			if ([firstResponder isKindOfClass:[NSView class]] &&
++					[firstResponder isDescendantOf:[_scrollView documentView]]) {
++				NSView *view = (NSView*)firstResponder;
++				NSRect visibleRect = ([view superview] == [_scrollView documentView]) ? NSInsetRect(view.frame, -1, -1) :
++															[view convertRect:view.frame toView:_scrollView.documentView];
++				[[_scrollView documentView] scrollRectToVisible:visibleRect];
++			 }
++		 }
++	}
+ }
+ 
++- (void)keyUp:(NSEvent *)event {
++	if (![self handleKeyboardEvent:event]) {
++		[super keyUp:event];
++	}
++}
++
++static NSString *RCTStringForScrollerStyle(NSScrollerStyle scrollerStyle) {
++  switch (scrollerStyle) {
++    case NSScrollerStyleLegacy:
++      return @"legacy";
++    case NSScrollerStyleOverlay:
++      return @"overlay";
++  }
++}
++
++- (void)preferredScrollerStyleDidChange:(__unused NSNotification *)notification {
++  RCT_SEND_SCROLL_EVENT(onPreferredScrollerStyleDidChange, (@{ @"preferredScrollerStyle": RCTStringForScrollerStyle([NSScroller preferredScrollerStyle])}));
++}
++#endif // macOS]
++
+ // Note: setting several properties of UIScrollView has the effect of
+ // resetting its contentOffset to {0, 0}. To prevent this, we generate
+ // setters here that will record the contentOffset beforehand, and
+@@ -1073,22 +1428,29 @@
+ 
+ RCT_SET_AND_PRESERVE_OFFSET(setAlwaysBounceHorizontal, alwaysBounceHorizontal, BOOL)
+ RCT_SET_AND_PRESERVE_OFFSET(setAlwaysBounceVertical, alwaysBounceVertical, BOOL)
++#if !TARGET_OS_OSX // [macOS]
+ RCT_SET_AND_PRESERVE_OFFSET(setBounces, bounces, BOOL)
+ RCT_SET_AND_PRESERVE_OFFSET(setBouncesZoom, bouncesZoom, BOOL)
+ RCT_SET_AND_PRESERVE_OFFSET(setCanCancelContentTouches, canCancelContentTouches, BOOL)
+ RCT_SET_AND_PRESERVE_OFFSET(setDecelerationRate, decelerationRate, CGFloat)
+ RCT_SET_AND_PRESERVE_OFFSET(setDirectionalLockEnabled, isDirectionalLockEnabled, BOOL)
+ RCT_SET_AND_PRESERVE_OFFSET(setIndicatorStyle, indicatorStyle, UIScrollViewIndicatorStyle)
++#if TARGET_OS_IOS // [visionOS]
+ RCT_SET_AND_PRESERVE_OFFSET(setKeyboardDismissMode, keyboardDismissMode, UIScrollViewKeyboardDismissMode)
++#endif // visionOS]
++#endif // [macOS]
+ RCT_SET_AND_PRESERVE_OFFSET(setMaximumZoomScale, maximumZoomScale, CGFloat)
+ RCT_SET_AND_PRESERVE_OFFSET(setMinimumZoomScale, minimumZoomScale, CGFloat)
+ RCT_SET_AND_PRESERVE_OFFSET(setScrollEnabled, isScrollEnabled, BOOL)
++#if !TARGET_OS_OSX // [macOS]
+ RCT_SET_AND_PRESERVE_OFFSET(setPagingEnabled, isPagingEnabled, BOOL)
+ RCT_SET_AND_PRESERVE_OFFSET(setScrollsToTop, scrollsToTop, BOOL)
++#endif // [macOS]
+ RCT_SET_AND_PRESERVE_OFFSET(setShowsHorizontalScrollIndicator, showsHorizontalScrollIndicator, BOOL)
+ RCT_SET_AND_PRESERVE_OFFSET(setShowsVerticalScrollIndicator, showsVerticalScrollIndicator, BOOL)
+ RCT_SET_AND_PRESERVE_OFFSET(setZoomScale, zoomScale, CGFloat);
+ 
++#if !TARGET_OS_OSX // [macOS]
+ - (void)setScrollIndicatorInsets:(UIEdgeInsets)value
+ {
+   [_scrollView setScrollIndicatorInsets:value];
+@@ -1120,9 +1482,11 @@
+   _scrollView.contentInsetAdjustmentBehavior = behavior;
+   _scrollView.contentOffset = contentOffset;
+ }
++#endif // [macOS]
++#pragma clang diagnostic pop // [macOS]
+ 
+ - (void)sendScrollEventWithName:(NSString *)eventName
+-                     scrollView:(UIScrollView *)scrollView
++                     scrollView:(RCTCustomScrollView *)scrollView // [macOS]
+                        userData:(NSDictionary *)userData
+ {
+   if (![_lastEmittedEventName isEqualToString:eventName]) {
+@@ -1164,5 +1528,3 @@
+                                                                 coalescingKey:0];
+   [eventDispatcher sendEvent:fakeScrollEvent];
+ }
+-
+-#endif // RCT_REMOVE_LEGACY_ARCH

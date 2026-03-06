@@ -1,0 +1,27 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Views/SafeAreaView/RCTSafeAreaView.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Views/SafeAreaView/RCTSafeAreaView.h	2026-03-06 15:22:52
+@@ -5,17 +5,14 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+-#ifndef RCT_REMOVE_LEGACY_ARCH
+-
+ #import <React/RCTView.h>
+ 
+ NS_ASSUME_NONNULL_BEGIN
+ 
+ @class RCTBridge;
+ 
+-__attribute__((deprecated("This API will be removed along with the legacy architecture.")))
+ @interface RCTSafeAreaView : RCTView
+ 
+ - (instancetype)initWithBridge:(RCTBridge *)bridge;
+@@ -23,5 +20,3 @@
+ @end
+ 
+ NS_ASSUME_NONNULL_END
+-
+-#endif // RCT_REMOVE_LEGACY_ARCH

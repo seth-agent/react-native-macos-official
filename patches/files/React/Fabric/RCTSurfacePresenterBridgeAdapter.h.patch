@@ -1,0 +1,20 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/RCTSurfacePresenterBridgeAdapter.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Fabric/RCTSurfacePresenterBridgeAdapter.h	2026-03-06 15:22:52
+@@ -7,7 +7,7 @@
+ 
+ #import <Foundation/Foundation.h>
+ #import <ReactCommon/RuntimeExecutor.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ #import <react/utils/ContextContainer.h>
+ 
+ NS_ASSUME_NONNULL_BEGIN
+@@ -25,7 +25,7 @@
+ @interface RCTSurfacePresenterBridgeAdapter : NSObject
+ 
+ - (instancetype)initWithBridge:(RCTBridge *)bridge
+-              contextContainer:(std::shared_ptr<const facebook::react::ContextContainer>)contextContainer;
++              contextContainer:(facebook::react::ContextContainer::Shared)contextContainer;
+ 
+ /*
+  * Returns a stored instance of Surface Presenter which is managed by a bridge.

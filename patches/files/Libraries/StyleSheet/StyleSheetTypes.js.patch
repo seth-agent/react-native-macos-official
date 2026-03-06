@@ -1,0 +1,146 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/StyleSheet/StyleSheetTypes.js	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/StyleSheet/StyleSheetTypes.js	2026-03-06 15:22:52
+@@ -40,7 +40,46 @@
+ 
+ export type DimensionValue = number | string | 'auto' | null;
+ 
+-export type CursorValue = 'auto' | 'pointer';
++// [macOS
++export type CursorValue =
++  | 'auto'
++  | 'alias'
++  | 'all-scroll'
++  | 'cell'
++  | 'col-resize'
++  | 'context-menu'
++  | 'copy'
++  | 'crosshair'
++  | 'default'
++  | 'e-resize'
++  | 'ew-resize'
++  | 'grab'
++  | 'grabbing'
++  | 'help'
++  | 'move'
++  | 'ne-resize'
++  | 'nesw-resize'
++  | 'n-resize'
++  | 'ns-resize'
++  | 'nw-resize'
++  | 'nwse-resize'
++  | 'no-drop'
++  | 'none'
++  | 'not-allowed'
++  | 'pointer'
++  | 'progress'
++  | 'row-resize'
++  | 's-resize'
++  | 'se-resize'
++  | 'sw-resize'
++  | 'text'
++  | 'url'
++  | 'vertical-text'
++  | 'w-resize'
++  | 'wait'
++  | 'zoom-in'
++  | 'zoom-out';
++// macOS]
+ 
+ /**
+  * React Native's layout system is based on Flexbox and is powered both
+@@ -778,44 +817,7 @@
+ };
+ 
+ export type BackgroundImageValue = LinearGradientValue | RadialGradientValue;
+-
+-export type BackgroundSizeValue =
+-  | {
+-      x: string | number,
+-      y: string | number,
+-    }
+-  | 'cover'
+-  | 'contain';
+-
+-export type BackgroundRepeatKeyword =
+-  | 'repeat'
+-  | 'space'
+-  | 'round'
+-  | 'no-repeat';
+ 
+-export type BackgroundPositionValue =
+-  | {
+-      top: number | string,
+-      left: number | string,
+-    }
+-  | {
+-      top: number | string,
+-      right: number | string,
+-    }
+-  | {
+-      bottom: number | string,
+-      left: number | string,
+-    }
+-  | {
+-      bottom: number | string,
+-      right: number | string,
+-    };
+-
+-export type BackgroundRepeatValue = {
+-  x: BackgroundRepeatKeyword,
+-  y: BackgroundRepeatKeyword,
+-};
+-
+ export type BoxShadowValue = {
+   offsetX: number | string,
+   offsetY: number | string,
+@@ -890,13 +892,6 @@
+   filter?: $ReadOnlyArray<FilterFunction> | string,
+   mixBlendMode?: ____BlendMode_Internal,
+   experimental_backgroundImage?: $ReadOnlyArray<BackgroundImageValue> | string,
+-  experimental_backgroundSize?: $ReadOnlyArray<BackgroundSizeValue> | string,
+-  experimental_backgroundPosition?:
+-    | $ReadOnlyArray<BackgroundPositionValue>
+-    | string,
+-  experimental_backgroundRepeat?:
+-    | $ReadOnlyArray<BackgroundRepeatValue>
+-    | string,
+   isolation?: 'auto' | 'isolate',
+ }>;
+ 
+@@ -1028,6 +1023,7 @@
+   userSelect?: 'auto' | 'text' | 'none' | 'contain' | 'all',
+   verticalAlign?: 'auto' | 'top' | 'bottom' | 'middle',
+   writingDirection?: 'auto' | 'ltr' | 'rtl',
++  cursor?: CursorValue, // [macOS]
+ }>;
+ 
+ export type ____TextStyle_InternalCore = $ReadOnly<{
+@@ -1104,20 +1100,22 @@
+ // ____FlattenStyleProp_Helper should be considered internal.
+ type FlattenDepthLimiter = [void, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+ type ____FlattenStyleProp_Helper<
+-  +TStyleProp: StyleProp<unknown>,
++  +TStyleProp: StyleProp<mixed>,
+   Depth: $Values<FlattenDepthLimiter> = 9,
+ > = Depth extends 0
+   ? empty
+   : TStyleProp extends null | void | false | ''
+-    ? empty // When TStyleProp is an array, recurse with decremented Depth
+-    : TStyleProp extends $ReadOnlyArray<infer V>
++    ? empty
++    : // When TStyleProp is an array, recurse with decremented Depth
++      TStyleProp extends $ReadOnlyArray<infer V>
+       ? ____FlattenStyleProp_Helper<
+           V,
+           Depth extends number ? FlattenDepthLimiter[Depth] : 0,
+         >
+       : TStyleProp;
+ 
+-export type ____FlattenStyleProp_Internal<+TStyleProp: StyleProp<unknown>> =
+-  ____FlattenStyleProp_Helper<TStyleProp> extends empty // $FlowFixMe[unclear-type]
+-    ? any
++export type ____FlattenStyleProp_Internal<+TStyleProp: StyleProp<mixed>> =
++  ____FlattenStyleProp_Helper<TStyleProp> extends empty
++    ? // $FlowFixMe[unclear-type]
++      any
+     : ____FlattenStyleProp_Helper<TStyleProp>;

@@ -1,0 +1,48 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Image/RCTImageUtils.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Image/RCTImageUtils.h	2026-03-06 15:22:52
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #import <React/RCTDefines.h>
+ #import <React/RCTResizeMode.h>
+@@ -60,7 +60,7 @@
+  * width/height of the returned image is guaranteed to be >= destSize.
+  * Pass a destSize of CGSizeZero to decode the image at its original size.
+  */
+-RCT_EXTERN UIImage *__nullable
++RCT_EXTERN RCTPlatformImage *__nullable // [macOS]
+ RCTDecodeImageWithData(NSData *data, CGSize destSize, CGFloat destScale, RCTResizeMode resizeMode);
+ 
+ /**
+@@ -76,19 +76,24 @@
+  * conversion, with 1.0 being maximum quality. It has no effect for images
+  * using PNG compression.
+  */
+-RCT_EXTERN NSData *__nullable RCTGetImageData(UIImage *image, float quality);
++RCT_EXTERN NSData *__nullable RCTGetImageData(RCTPlatformImage *image, float quality); // [macOS]
+ 
+ /**
+  * This function transforms an image. `destSize` is the size of the final image,
+  * and `destScale` is its scale. The `transform` argument controls how the
+  * source image will be mapped to the destination image.
+  */
+-RCT_EXTERN UIImage *__nullable
+-RCTTransformImage(UIImage *image, CGSize destSize, CGFloat destScale, CGAffineTransform transform);
++RCT_EXTERN RCTPlatformImage *__nullable // [macOS]
++RCTTransformImage(RCTPlatformImage *image, CGSize destSize, CGFloat destScale, CGAffineTransform transform); // [macOS]
+ 
+ /*
+  * Return YES if image has an alpha component
+  */
+ RCT_EXTERN BOOL RCTImageHasAlpha(CGImageRef image);
+ 
++/*
++ * Return YES if image has an alpha component
++ */
++RCT_EXTERN BOOL RCTUIImageHasAlpha(RCTPlatformImage *image); // [macOS]
++
+ NS_ASSUME_NONNULL_END

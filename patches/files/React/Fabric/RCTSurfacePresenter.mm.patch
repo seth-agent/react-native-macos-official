@@ -1,0 +1,95 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/RCTSurfacePresenter.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Fabric/RCTSurfacePresenter.mm	2026-03-06 15:22:52
+@@ -51,7 +51,7 @@
+   std::mutex _schedulerAccessMutex;
+   std::mutex _schedulerLifeCycleMutex;
+   RCTScheduler *_Nullable _scheduler; // Thread-safe. Pointer is protected by `_schedulerAccessMutex`.
+-  std::shared_ptr<const ContextContainer> _contextContainer; // Protected by `_schedulerLifeCycleMutex`.
++  ContextContainer::Shared _contextContainer; // Protected by `_schedulerLifeCycleMutex`.
+   RuntimeExecutor _runtimeExecutor; // Protected by `_schedulerLifeCycleMutex`.
+   std::optional<RuntimeExecutor> _bridgelessBindingsExecutor; // Only used for installing bindings.
+ 
+@@ -59,7 +59,7 @@
+   std::vector<__weak id<RCTSurfacePresenterObserver>> _observers; // Protected by `_observerListMutex`.
+ }
+ 
+-- (instancetype)initWithContextContainer:(std::shared_ptr<const ContextContainer>)contextContainer
++- (instancetype)initWithContextContainer:(ContextContainer::Shared)contextContainer
+                          runtimeExecutor:(RuntimeExecutor)runtimeExecutor
+               bridgelessBindingsExecutor:(std::optional<RuntimeExecutor>)bridgelessBindingsExecutor
+ {
+@@ -76,10 +76,12 @@
+ 
+     _scheduler = [self _createScheduler];
+ 
++#if !TARGET_OS_OSX // [macOS]
+     [[NSNotificationCenter defaultCenter] addObserver:self
+                                              selector:@selector(_applicationWillTerminate)
+                                                  name:UIApplicationWillTerminateNotification
+                                                object:nil];
++#endif // [macOS]
+   }
+ 
+   return self;
+@@ -96,7 +98,7 @@
+   return _scheduler;
+ }
+ 
+-- (std::shared_ptr<const ContextContainer>)contextContainer
++- (ContextContainer::Shared)contextContainer
+ {
+   std::lock_guard<std::mutex> lock(_schedulerLifeCycleMutex);
+   return _contextContainer;
+@@ -141,10 +143,10 @@
+                                           initialProperties:initialProperties];
+ }
+ 
+-- (UIView *)findComponentViewWithTag_DO_NOT_USE_DEPRECATED:(NSInteger)tag
++- (RCTUIView *)findComponentViewWithTag_DO_NOT_USE_DEPRECATED:(NSInteger)tag // [macOS]
+ {
+-  UIView<RCTComponentViewProtocol> *componentView =
+-      [_mountingManager.componentViewRegistry findComponentViewWithTag:tag];
++  RCTUIView<RCTComponentViewProtocol> *componentView =
++      [_mountingManager.componentViewRegistry findComponentViewWithTag:tag]; // [macOS]
+   return componentView;
+ }
+ 
+@@ -161,7 +163,7 @@
+     return;
+   }
+ 
+-  UIView<RCTComponentViewProtocol> *componentView =
++  RCTUIView<RCTComponentViewProtocol> *componentView = // [macOS]
+       [_mountingManager.componentViewRegistry findComponentViewWithTag:tag];
+   if (componentView == nil) {
+     return; // This view probably isn't managed by Fabric
+@@ -231,14 +233,12 @@
+ 
+ - (RCTScheduler *)_createScheduler
+ {
+-  auto componentRegistryFactory = [factory =
+-                                       wrapManagedObject(_mountingManager.componentViewRegistry.componentViewFactory)](
+-                                      const EventDispatcher::Weak &eventDispatcher,
+-                                      const std::shared_ptr<const ContextContainer> &contextContainer) {
+-    return [(RCTComponentViewFactory *)unwrapManagedObject(factory)
+-        createComponentDescriptorRegistryWithParameters:{.eventDispatcher = eventDispatcher,
+-                                                         .contextContainer = contextContainer}];
+-  };
++  auto componentRegistryFactory =
++      [factory = wrapManagedObject(_mountingManager.componentViewRegistry.componentViewFactory)](
++          const EventDispatcher::Weak &eventDispatcher, const ContextContainer::Shared &contextContainer) {
++        return [(RCTComponentViewFactory *)unwrapManagedObject(factory)
++            createComponentDescriptorRegistryWithParameters:{eventDispatcher, contextContainer}];
++      };
+ 
+   auto runtimeExecutor = _runtimeExecutor;
+ 
+@@ -246,7 +246,7 @@
+   toolbox.contextContainer = _contextContainer;
+   toolbox.componentRegistryFactory = componentRegistryFactory;
+ 
+-  auto weakRuntimeScheduler = _contextContainer->find<std::weak_ptr<RuntimeScheduler>>(RuntimeSchedulerKey);
++  auto weakRuntimeScheduler = _contextContainer->find<std::weak_ptr<RuntimeScheduler>>("RuntimeScheduler");
+   auto runtimeScheduler = weakRuntimeScheduler.has_value() ? weakRuntimeScheduler.value().lock() : nullptr;
+   if (runtimeScheduler) {
+     runtimeExecutor = [runtimeScheduler](std::function<void(jsi::Runtime & runtime)> &&callback) {

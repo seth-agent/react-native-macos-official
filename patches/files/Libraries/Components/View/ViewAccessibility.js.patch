@@ -1,0 +1,10 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Components/View/ViewAccessibility.js	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Components/View/ViewAccessibility.js	2026-03-06 15:22:52
+@@ -54,6 +54,7 @@
+   | 'drawerlayout'
+   | 'slidingdrawer'
+   | 'iconmenu'
++  | 'menubutton' // [macOS]
+   | string;
+ 
+ // Role types for web

@@ -1,0 +1,93 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Views/UIView+React.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Views/UIView+React.h	2026-03-06 15:22:52
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #import <React/RCTComponent.h>
+ #import <React/RCTConvert.h>
+@@ -19,15 +19,15 @@
+   CGFloat z;
+ } RCTTransformOrigin;
+ 
+-@interface UIView (React) <RCTComponent>
++@interface RCTPlatformView (React) <RCTComponent> // [macOS]
+ 
+ /**
+  * RCTComponent interface.
+  */
+-- (NSArray<UIView *> *)reactSubviews NS_REQUIRES_SUPER;
+-- (UIView *)reactSuperview NS_REQUIRES_SUPER;
+-- (void)insertReactSubview:(UIView *)subview atIndex:(NSInteger)atIndex NS_REQUIRES_SUPER;
+-- (void)removeReactSubview:(UIView *)subview NS_REQUIRES_SUPER;
++- (NSArray<RCTPlatformView *> *)reactSubviews NS_REQUIRES_SUPER; // [macOS]
++- (RCTPlatformView *)reactSuperview NS_REQUIRES_SUPER; // [macOS]
++- (void)insertReactSubview:(RCTPlatformView *)subview atIndex:(NSInteger)atIndex NS_REQUIRES_SUPER; // [macOS]
++- (void)removeReactSubview:(RCTPlatformView *)subview NS_REQUIRES_SUPER; // [macOS]
+ 
+ /**
+  * The native id of the view, used to locate view from native codes
+@@ -63,7 +63,7 @@
+  * Subviews sorted by z-index. Note that this method doesn't do any caching (yet)
+  * and sorts all the views each call.
+  */
+-- (NSArray<UIView *> *)reactZIndexSortedSubviews;
++- (NSArray<RCTPlatformView *> *)reactZIndexSortedSubviews; // [macOS]
+ 
+ /**
+  * Updates the subviews array based on the reactSubviews. Default behavior is
+@@ -83,11 +83,13 @@
+  */
+ - (void)reactSetFrame:(CGRect)frame;
+ 
++
+ /**
+  * This method finds and returns the containing view controller for the view.
+  */
+ - (UIViewController *)reactViewController;
+ 
++#if !TARGET_OS_OSX // [macOS]
+ /**
+  * This method attaches the specified controller as a child of the
+  * the owning view controller of this view. Returns NO if no view
+@@ -95,7 +97,10 @@
+  * attached to the view hierarchy).
+  */
+ - (void)reactAddControllerToClosestParent:(UIViewController *)controller;
++#endif // [macOS]
+ 
++- (void)reactViewDidMoveToWindow; // [macOS] Github #1412
++
+ /**
+  * Focus manipulation.
+  */
+@@ -125,19 +130,25 @@
+  * transparent in favour of some subview.
+  * Defaults to `self`.
+  */
+-@property (nonatomic, readonly) UIView *reactAccessibilityElement;
++@property (nonatomic, readonly) RCTPlatformView *reactAccessibilityElement; // [macOS]
+ 
+ /**
+  * Accessibility properties
+  */
++#if !TARGET_OS_OSX // [macOS]
+ @property (nonatomic, copy) NSString *accessibilityRole;
++#else // [macOS renamed so it doesn't conflict with -[NSAccessibility accessibilityRole].
++@property (nonatomic, copy) NSString *accessibilityRoleInternal;
++#endif // macOS]
+ @property (nonatomic, copy) NSString *role;
+ @property (nonatomic, copy) NSDictionary<NSString *, id> *accessibilityState;
+ @property (nonatomic, copy) NSArray<NSDictionary *> *accessibilityActions;
+ @property (nonatomic, copy) NSDictionary *accessibilityValueInternal;
+ @property (nonatomic, copy) NSString *accessibilityLanguage;
++#if !TARGET_OS_OSX // [macOS]
+ @property (nonatomic) UIAccessibilityTraits accessibilityRoleTraits;
+ @property (nonatomic) UIAccessibilityTraits roleTraits;
++#endif // [macOS]
+ 
+ /**
+  * Used in debugging to get a description of the view hierarchy rooted at

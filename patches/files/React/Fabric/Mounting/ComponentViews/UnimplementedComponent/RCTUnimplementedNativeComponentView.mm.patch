@@ -1,0 +1,36 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Mounting/ComponentViews/UnimplementedComponent/RCTUnimplementedNativeComponentView.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Fabric/Mounting/ComponentViews/UnimplementedComponent/RCTUnimplementedNativeComponentView.mm	2026-03-06 15:22:52
+@@ -14,7 +14,7 @@
+ using namespace facebook::react;
+ 
+ @implementation RCTUnimplementedNativeComponentView {
+-  UILabel *_label;
++  RCTUILabel *_label; // [macOS]
+ }
+ 
+ - (instancetype)initWithFrame:(CGRect)frame
+@@ -23,15 +23,21 @@
+     _props = UnimplementedNativeViewShadowNode::defaultSharedProps();
+ 
+     CGRect bounds = self.bounds;
+-    _label = [[UILabel alloc] initWithFrame:bounds];
+-    _label.backgroundColor = [UIColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:0.3];
++    _label = [[RCTUILabel alloc] initWithFrame:bounds];  // [macOS]
++    _label.backgroundColor = [RCTUIColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:0.3];
++#if !TARGET_OS_OSX // [macOS]
+     _label.layoutMargins = UIEdgeInsetsMake(12, 12, 12, 12);
++#endif // [macOS]
+     _label.lineBreakMode = NSLineBreakByWordWrapping;
+     _label.numberOfLines = 0;
+     _label.textAlignment = NSTextAlignmentCenter;
+-    _label.textColor = [UIColor whiteColor];
++    _label.textColor = [RCTUIColor whiteColor]; // [macOS]
+ 
++#if !TARGET_OS_OSX // [macOS]
+     self.contentView = _label;
++#else // [macOS
++    [self.contentView addSubview:_label];
++#endif // macOS]
+   }
+ 
+   return self;

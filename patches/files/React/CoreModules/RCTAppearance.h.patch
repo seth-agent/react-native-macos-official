@@ -1,0 +1,29 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/CoreModules/RCTAppearance.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/CoreModules/RCTAppearance.h	2026-03-06 15:22:52
+@@ -5,18 +5,22 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #import <React/RCTBridgeModule.h>
+ #import <React/RCTConvert.h>
+ #import <React/RCTEventEmitter.h>
+ 
+ RCT_EXTERN void RCTEnableAppearancePreference(BOOL enabled);
+-RCT_EXTERN void RCTOverrideAppearancePreference(NSString * /*colorSchemeOverride*/);
++RCT_EXTERN void RCTOverrideAppearancePreference(NSString *const);
+ RCT_EXTERN void RCTUseKeyWindowForSystemStyle(BOOL useMainScreen);
+ RCT_EXTERN NSString *RCTCurrentOverrideAppearancePreference(void);
++#if !TARGET_OS_OSX // [macOS]
+ RCT_EXTERN NSString *RCTColorSchemePreference(UITraitCollection *traitCollection);
++#else // [macOS
++RCT_EXTERN NSString *RCTColorSchemePreference(NSAppearance *appearance);
++#endif // macOS]
+ 
+ @interface RCTAppearance : RCTEventEmitter <RCTBridgeModule>
+ - (instancetype)init;
+-@end
++@end
+\ No newline at end of file

@@ -1,0 +1,24 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Lists/SectionList.d.ts	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Lists/SectionList.d.ts	2026-03-06 15:22:52
+@@ -11,7 +11,7 @@
+ import type {
+   ListRenderItemInfo,
+   VirtualizedListWithoutRenderItemProps,
+-} from '@react-native/virtualized-lists';
++} from '@react-native-macos/virtualized-lists'; // [macOS]
+ import type {
+   ScrollView,
+   ScrollViewProps,
+@@ -35,11 +35,7 @@
+ 
+   renderItem?: SectionListRenderItem<ItemT, SectionT> | undefined;
+ 
+-  ItemSeparatorComponent?:
+-    | React.ComponentType<any>
+-    | React.ReactElement
+-    | null
+-    | undefined;
++  ItemSeparatorComponent?: React.ComponentType<any> | null | undefined;
+ 
+   keyExtractor?: ((item: ItemT, index: number) => string) | undefined;
+ }

@@ -1,0 +1,84 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/ReactCommon/react/renderer/components/textinput/platform/ios/react/renderer/components/iostextinput/primitives.h	2026-03-06 15:51:55
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/ReactCommon/react/renderer/components/textinput/platform/ios/react/renderer/components/iostextinput/primitives.h	2026-03-06 15:22:53
+@@ -83,6 +83,24 @@
+   int end{0};
+ };
+ 
++#if TARGET_OS_OSX // [macOS
++enum class PastedTypesType {
++  FileUrl,
++  Image,
++  String,
++};
++
++class SubmitKeyEvent final {
++  public:
++    std::string key{};
++    bool altKey{false};
++    bool shiftKey{false};
++    bool ctrlKey{false};
++    bool metaKey{false};
++    bool functionKey{false};
++};
++#endif // macOS]
++
+ /*
+  * Controls features of text inputs.
+  */
+@@ -92,7 +110,8 @@
+    * iOS & Android
+    * Default value: `Sentences`.
+    */
+-  AutocapitalizationType autocapitalizationType{AutocapitalizationType::Sentences};
++  AutocapitalizationType autocapitalizationType{
++      AutocapitalizationType::Sentences};
+ 
+   /*
+    * Can be empty (`null` in JavaScript) which means `default`.
+@@ -147,7 +166,8 @@
+    * iOS-only (implemented only on iOS for now)
+    * Default value: `Never`.
+    */
+-  TextInputAccessoryVisibilityMode clearButtonMode{TextInputAccessoryVisibilityMode::Never};
++  TextInputAccessoryVisibilityMode clearButtonMode{
++      TextInputAccessoryVisibilityMode::Never};
+ 
+   /*
+    * iOS-only (implemented only on iOS for now)
+@@ -217,6 +237,36 @@
+    * Default value: `empty` (`null`).
+    */
+   std::optional<bool> smartInsertDelete{};
++
++#if TARGET_OS_OSX // [macOS
++  /*
++   * Can be empty (`null` in JavaScript) which means `default`.
++   * macOS
++   * Default value: `empty` (`null`).
++   */
++  std::optional<bool> grammarCheck{};
++
++  /*
++   * List of pastable types
++   * macOS-only
++   * Default value: `empty list`
++   */
++  std::vector<PastedTypesType> pastedTypes{};
++
++  /*
++   * List of key combinations that should submit.
++   * macOS-only
++   * Default value: `empty list` applies as 'Enter' key.
++  */
++  std::vector<SubmitKeyEvent> submitKeyEvents{};
++
++  /*
++   * When set to `true`, the text will be cleared after the submit.
++   * macOS-only
++   * Default value: `false`
++   */
++   bool clearTextOnSubmit{false};
++#endif // macOS]
+ };
+ 
+ } // namespace facebook::react

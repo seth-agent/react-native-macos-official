@@ -1,0 +1,35 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Utilities/DevSettings.js	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Utilities/DevSettings.js	2026-03-06 15:22:52
+@@ -24,7 +24,7 @@
+    * @param title - The title of the menu item. Is internally used as id and should therefore be unique.
+    * @param handler - The callback invoked when pressing the menu item.
+    */
+-  addMenuItem(title: string, handler: () => unknown): void,
++  addMenuItem(title: string, handler: () => mixed): void,
+   /**
+    * Reload the application.
+    *
+@@ -33,7 +33,7 @@
+   reload(reason?: string): void,
+   onFastRefresh(): void,
+ } = {
+-  addMenuItem(title: string, handler: () => unknown): void {},
++  addMenuItem(title: string, handler: () => mixed): void {},
+   reload(reason?: string): void {},
+   onFastRefresh(): void {},
+ };
+@@ -46,12 +46,12 @@
+   const emitter = new NativeEventEmitter<DevSettingsEventDefinitions>(
+     // T88715063: NativeEventEmitter only used this parameter on iOS. Now it uses it on all platforms, so this code was modified automatically to preserve its behavior
+     // If you want to use the native module on other platforms, please remove this condition and test its behavior
+-    Platform.OS !== 'ios' ? null : NativeDevSettings,
++    Platform.OS !== 'ios' && Platform.OS !== 'macos' ? null : NativeDevSettings, // [macOS] Also use this parameter on macOS
+   );
+   const subscriptions = new Map<string, EventSubscription>();
+ 
+   DevSettings = {
+-    addMenuItem(title: string, handler: () => unknown): void {
++    addMenuItem(title: string, handler: () => mixed): void {
+       // Make sure items are not added multiple times. This can
+       // happen when hot reloading the module that registers the
+       // menu items. The title is used as the id which means we

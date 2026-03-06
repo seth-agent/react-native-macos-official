@@ -1,0 +1,18 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Views/RCTViewUtils.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Views/RCTViewUtils.h	2026-03-06 15:22:52
+@@ -6,13 +6,13 @@
+  */
+ 
+ #import <React/RCTDefines.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ NS_ASSUME_NONNULL_BEGIN
+ 
+ RCT_EXTERN_C_BEGIN
+ 
+-UIEdgeInsets RCTContentInsets(UIView *view);
++UIEdgeInsets RCTContentInsets(RCTPlatformView *view); // [macOS]
+ 
+ RCT_EXTERN_C_END
+ 

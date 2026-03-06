@@ -1,0 +1,34 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/PushNotificationIOS/RCTPushNotificationManager.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/PushNotificationIOS/RCTPushNotificationManager.h	2026-03-06 15:22:52
+@@ -6,12 +6,15 @@
+  */
+ 
+ #import <React/RCTEventEmitter.h>
++#import <UserNotifications/UserNotifications.h> // [macOS]
+ 
+ extern NSString *const RCTRemoteNotificationReceived;
+ 
+ @interface RCTPushNotificationManager : RCTEventEmitter
+ 
++#if !TARGET_OS_OSX // [macOS]
+ typedef void (^RCTRemoteNotificationCallback)(UIBackgroundFetchResult result);
++#endif // [macOS]
+ 
+ + (void)didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken;
+ + (void)didFailToRegisterForRemoteNotificationsWithError:(NSError *)error;
+@@ -31,6 +34,7 @@
+  * is an instance of UNPushNotificationTrigger.
+  */
+ + (void)didReceiveNotification:(UNNotification *)notification;
++#if !TARGET_OS_OSX // [macOS]
+ /**
+  * Call this from your app delegate's `application:didReceiveRemoteNotification:fetchCompletionHandler:`. If you
+  * implement both that method and `userNotificationCenter:didReceiveNotificationResponse:withCompletionHandler:`, only
+@@ -38,6 +42,7 @@
+  */
+ + (void)didReceiveRemoteNotification:(NSDictionary *)notification
+               fetchCompletionHandler:(RCTRemoteNotificationCallback)completionHandler;
++#endif // [macOS]
+ 
+ /**
+  * Call this in `userNotificationCenter:didReceiveNotificationResponse:withCompletionHandler:`

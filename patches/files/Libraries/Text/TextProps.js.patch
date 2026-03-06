@@ -1,0 +1,89 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Text/TextProps.js	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Text/TextProps.js	2026-03-06 15:22:52
+@@ -119,10 +119,37 @@
+    * See https://reactnative.dev/docs/text#minimumfontscale
+    */
+   minimumFontScale?: ?number,
++};
++
++// [macOS
++export type TextPropsMacOS = {
++  /**
++   * Specifies the Tooltip for the button view
++   *
++   * @platform macos
++   */
++  tooltip?: ?string,
++
++  /**
++   * When `true`, indicates that the text can be focused in key view loop
++   * By default, when `selectable={true}` the text view will be focusable unless disabled.
++   *
++   * @platform macos
++   */
++  focusable?: ?boolean,
++
++  /**
++   * Specifies whether focus ring should be drawn when the view has the first responder status.
++   * Only works when `focusable={true}`.
++   *
++   * @platform macos
++   */
++  enableFocusRing?: ?boolean,
+ };
++// macOS]
+ 
+ type TextBaseProps = $ReadOnly<{
+-  onAccessibilityAction?: ?(event: AccessibilityActionEvent) => unknown,
++  onAccessibilityAction?: ?(event: AccessibilityActionEvent) => mixed,
+ 
+   /**
+    * Whether fonts should scale to respect Text Size accessibility settings.
+@@ -204,7 +231,7 @@
+    *
+    * See https://reactnative.dev/docs/text#onlayout
+    */
+-  onLayout?: ?(event: LayoutChangeEvent) => unknown,
++  onLayout?: ?(event: LayoutChangeEvent) => mixed,
+ 
+   /**
+    * This function is called on long press.
+@@ -212,7 +239,7 @@
+    *
+    * See https://reactnative.dev/docs/text#onlongpress
+    */
+-  onLongPress?: ?(event: GestureResponderEvent) => unknown,
++  onLongPress?: ?(event: GestureResponderEvent) => mixed,
+ 
+   /**
+    * This function is called on press.
+@@ -220,9 +247,9 @@
+    *
+    * See https://reactnative.dev/docs/text#onpress
+    */
+-  onPress?: ?(event: GestureResponderEvent) => unknown,
+-  onPressIn?: ?(event: GestureResponderEvent) => unknown,
+-  onPressOut?: ?(event: GestureResponderEvent) => unknown,
++  onPress?: ?(event: GestureResponderEvent) => mixed,
++  onPressIn?: ?(event: GestureResponderEvent) => mixed,
++  onPressOut?: ?(event: GestureResponderEvent) => mixed,
+   onResponderGrant?: ?(event: GestureResponderEvent) => void,
+   onResponderMove?: ?(event: GestureResponderEvent) => void,
+   onResponderRelease?: ?(event: GestureResponderEvent) => void,
+@@ -230,7 +257,7 @@
+   onResponderTerminationRequest?: ?() => boolean,
+   onStartShouldSetResponder?: ?() => boolean,
+   onMoveShouldSetResponder?: ?() => boolean,
+-  onTextLayout?: ?(event: TextLayoutEvent) => unknown,
++  onTextLayout?: ?(event: TextLayoutEvent) => mixed,
+ 
+   /**
+    * Defines how far your touch may move off of the button, before
+@@ -272,6 +299,7 @@
+   ...TextPointerEventProps,
+   ...TextPropsIOS,
+   ...TextPropsAndroid,
++  ...TextPropsMacOS, // [macOS]
+   ...TextBaseProps,
+   ...AccessibilityProps,
+ }>;

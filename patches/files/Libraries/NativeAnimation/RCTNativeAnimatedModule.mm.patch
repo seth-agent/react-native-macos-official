@@ -1,0 +1,60 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/NativeAnimation/RCTNativeAnimatedModule.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/NativeAnimation/RCTNativeAnimatedModule.mm	2026-03-06 15:22:52
+@@ -118,9 +118,11 @@
+   }];
+ }
+ 
+-RCT_EXPORT_METHOD(
+-    startAnimatingNode : (double)animationId nodeTag : (double)nodeTag config : (NSDictionary<NSString *, id> *)
+-        config endCallback : (RCTResponseSenderBlock)callBack)
++RCT_EXPORT_METHOD(startAnimatingNode
++                  : (double)animationId nodeTag
++                  : (double)nodeTag config
++                  : (NSDictionary<NSString *, id> *)config endCallback
++                  : (RCTResponseSenderBlock)callBack)
+ {
+   [self addOperationBlock:^(RCTNativeAnimatedNodesManager *nodesManager) {
+     [nodesManager startAnimatingNode:[NSNumber numberWithDouble:animationId]
+@@ -226,9 +228,10 @@
+   }];
+ }
+ 
+-RCT_EXPORT_METHOD(
+-    addAnimatedEventToView : (double)viewTag eventName : (nonnull NSString *)
+-        eventName eventMapping : (JS::NativeAnimatedModule::EventMapping &)eventMapping)
++RCT_EXPORT_METHOD(addAnimatedEventToView
++                  : (double)viewTag eventName
++                  : (nonnull NSString *)eventName eventMapping
++                  : (JS::NativeAnimatedModule::EventMapping &)eventMapping)
+ {
+   NSMutableDictionary *eventMappingDict = [NSMutableDictionary new];
+   eventMappingDict[@"nativeEventPath"] = RCTConvertVecToArray(eventMapping.nativeEventPath());
+@@ -244,9 +247,10 @@
+   }];
+ }
+ 
+-RCT_EXPORT_METHOD(
+-    removeAnimatedEventFromView : (double)viewTag eventName : (nonnull NSString *)eventName animatedNodeTag : (double)
+-        animatedNodeTag)
++RCT_EXPORT_METHOD(removeAnimatedEventFromView
++                  : (double)viewTag eventName
++                  : (nonnull NSString *)eventName animatedNodeTag
++                  : (double)animatedNodeTag)
+ {
+   [self addOperationBlock:^(RCTNativeAnimatedNodesManager *nodesManager) {
+     [nodesManager removeAnimatedEventFromView:[NSNumber numberWithDouble:viewTag]
+@@ -346,12 +350,12 @@
+   _operations = [NSMutableArray new];
+ 
+   [uiManager
+-      prependUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
++      prependUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, RCTPlatformView *> *viewRegistry) { // [macOS]
+         for (AnimatedOperation operation in preOperations) {
+           operation(self->_nodesManager);
+         }
+       }];
+-  [uiManager addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
++  [uiManager addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, RCTPlatformView *> *viewRegistry) { // [macOS]
+     for (AnimatedOperation operation in operations) {
+       operation(self->_nodesManager);
+     }

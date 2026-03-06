@@ -1,0 +1,23 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Text/TextInput/RCTInputAccessoryView.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Text/TextInput/RCTInputAccessoryView.h	2026-03-06 15:22:52
+@@ -5,18 +5,13 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+-#ifndef RCT_REMOVE_LEGACY_ARCH
+-
+ @class RCTBridge;
+ @class RCTInputAccessoryViewContent;
+ 
+-__attribute__((deprecated("This API will be removed along with the legacy architecture.")))
+-@interface RCTInputAccessoryView : UIView
++@interface RCTInputAccessoryView : RCTUIView // [macOS]
+ 
+ - (instancetype)initWithBridge:(RCTBridge *)bridge;
+ 
+ @end
+-
+-#endif // RCT_REMOVE_LEGACY_ARCH

@@ -1,0 +1,79 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Modules/RCTRedBoxExtraDataViewController.m	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Modules/RCTRedBoxExtraDataViewController.m	2026-03-06 15:22:52
+@@ -5,18 +5,26 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
++
+ #import "RCTRedBoxExtraDataViewController.h"
+ #import "React/RCTUtils.h"
+ 
++#if !TARGET_OS_OSX // [macOS]
+ @interface RCTRedBoxExtraDataCell : UITableViewCell
++#else // [macOS
++@interface RCTRedBoxExtraDataCell : NSTableCellView
++#endif // macOS]
+ 
++#if !TARGET_OS_OSX // [macOS]
+ @property (nonatomic, strong) UILabel *keyLabel;
+ @property (nonatomic, strong) UILabel *valueLabel;
++#endif // macOS]
+ 
+ @end
+ 
+ @implementation RCTRedBoxExtraDataCell
+ 
++#if !TARGET_OS_OSX // [macOS]
+ - (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
+ {
+   if (self = [super initWithStyle:style reuseIdentifier:reuseIdentifier]) {
+@@ -53,6 +61,7 @@
+   }
+   return self;
+ }
++#endif // [macOS]
+ 
+ @end
+ 
+@@ -61,13 +70,18 @@
+ @end
+ 
+ @implementation RCTRedBoxExtraDataViewController {
++#if !TARGET_OS_OSX // [macOS]
+   UITableView *_tableView;
++#else // [macOS
++  NSTableView *_tableView;
++#endif // macOS]
+   NSMutableArray *_extraDataTitle;
+   NSMutableArray *_extraData;
+ }
+ 
+ @synthesize actionDelegate = _actionDelegate;
+ 
++#if !TARGET_OS_OSX // [macOS]
+ - (instancetype)init
+ {
+   if (self = [super init]) {
+@@ -219,6 +233,7 @@
+ {
+   return _extraDataTitle.count;
+ }
++#endif // [macOS]
+ 
+ - (void)addExtraData:(NSDictionary *)data forIdentifier:(NSString *)identifier
+ {
+@@ -243,6 +258,7 @@
+   });
+ }
+ 
++#if !TARGET_OS_OSX // [macOS]
+ - (void)dismiss
+ {
+   [self dismissViewControllerAnimated:YES completion:nil];
+@@ -264,5 +280,6 @@
+     [UIKeyCommand keyCommandWithInput:@"r" modifierFlags:UIKeyModifierCommand action:@selector(reload)]
+   ];
+ }
++#endif // [macOS]
+ 
+ @end

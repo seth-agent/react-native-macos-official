@@ -1,0 +1,26 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Text/TextInput/RCTInputAccessoryViewManager.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Text/TextInput/RCTInputAccessoryViewManager.mm	2026-03-06 15:22:52
+@@ -7,8 +7,6 @@
+ 
+ #import <React/RCTInputAccessoryViewManager.h>
+ 
+-#ifndef RCT_REMOVE_LEGACY_ARCH
+-
+ #import <React/RCTInputAccessoryShadowView.h>
+ #import <React/RCTInputAccessoryView.h>
+ 
+@@ -16,7 +14,7 @@
+ 
+ RCT_EXPORT_MODULE()
+ 
+-- (UIView *)view
++- (RCTPlatformView *)view // [macOS]
+ {
+   return [[RCTInputAccessoryView alloc] initWithBridge:self.bridge];
+ }
+@@ -29,5 +27,3 @@
+ RCT_REMAP_VIEW_PROPERTY(backgroundColor, inputAccessoryView.backgroundColor, UIColor)
+ 
+ @end
+-
+-#endif // RCT_REMOVE_LEGACY_ARCH

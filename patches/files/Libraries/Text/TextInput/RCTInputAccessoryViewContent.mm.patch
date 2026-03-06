@@ -1,0 +1,46 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Text/TextInput/RCTInputAccessoryViewContent.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Text/TextInput/RCTInputAccessoryViewContent.mm	2026-03-06 15:22:52
+@@ -7,19 +7,17 @@
+ 
+ #import <React/RCTInputAccessoryViewContent.h>
+ 
+-#ifndef RCT_REMOVE_LEGACY_ARCH
+-
+ #import <React/UIView+React.h>
+ 
+ @implementation RCTInputAccessoryViewContent {
+-  UIView *_safeAreaContainer;
++  RCTUIView *_safeAreaContainer; // [macOS]
+   NSLayoutConstraint *_heightConstraint;
+ }
+ 
+ - (instancetype)init
+ {
+   if (self = [super init]) {
+-    _safeAreaContainer = [UIView new];
++    _safeAreaContainer = [RCTUIView new]; // [macOS]
+     [self addSubview:_safeAreaContainer];
+ 
+     // Use autolayout to position the view properly and take into account
+@@ -58,13 +56,13 @@
+   [self layoutIfNeeded];
+ }
+ 
+-- (void)insertReactSubview:(UIView *)subview atIndex:(NSInteger)index
++- (void)insertReactSubview:(RCTUIView *)subview atIndex:(NSInteger)index // [macOS]
+ {
+   [super insertReactSubview:subview atIndex:index];
+   [_safeAreaContainer insertSubview:subview atIndex:index];
+ }
+ 
+-- (void)removeReactSubview:(UIView *)subview
++- (void)removeReactSubview:(RCTUIView *)subview // [macOS]
+ {
+   [super removeReactSubview:subview];
+   [subview removeFromSuperview];
+@@ -74,5 +72,3 @@
+ }
+ 
+ @end
+-
+-#endif // RCT_REMOVE_LEGACY_ARCH

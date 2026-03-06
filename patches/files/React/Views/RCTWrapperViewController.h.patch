@@ -1,0 +1,17 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Views/RCTWrapperViewController.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Views/RCTWrapperViewController.h	2026-03-06 15:22:52
+@@ -5,12 +5,12 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ @class RCTWrapperViewController;
+ 
+ @interface RCTWrapperViewController : UIViewController
+ 
+-- (instancetype)initWithContentView:(UIView *)contentView NS_DESIGNATED_INITIALIZER;
++- (instancetype)initWithContentView:(RCTUIView *)contentView NS_DESIGNATED_INITIALIZER; // [macOS]
+ 
+ @end

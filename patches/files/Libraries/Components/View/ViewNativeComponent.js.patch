@@ -1,0 +1,32 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Components/View/ViewNativeComponent.js	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Components/View/ViewNativeComponent.js	2026-03-06 15:22:52
+@@ -21,26 +21,16 @@
+   }));
+ 
+ interface NativeCommands {
+-  +focus: (viewRef: HostInstance) => void;
+-  +blur: (viewRef: HostInstance) => void;
++  +focus: () => void; // [macOS]
++  +blur: () => void; // [macOS]
+   +hotspotUpdate: (viewRef: HostInstance, x: number, y: number) => void;
+   +setPressed: (viewRef: HostInstance, pressed: boolean) => void;
+ }
+ 
+ export const Commands: NativeCommands = codegenNativeCommands<NativeCommands>({
+-  supportedCommands: ['focus', 'blur', 'hotspotUpdate', 'setPressed'],
++  supportedCommands: ['focus', 'blur', 'hotspotUpdate', 'setPressed'], // [macOS]
+ });
+ 
+-/**
+- * `ViewNativeComponent` is an internal React Native host component, and is
+- * exported to provide lower-level access for libraries.
+- *
+- * @warning `<unstable_NativeView>` provides no semver guarantees and is not
+- *   intended to be used in app code. Please use
+- *   [`<View>`](https://reactnative.dev/docs/view) instead.
+- */
+-// Additional note: Our long term plan is to reduce the overhead of the <Text>
+-// and <View> wrappers so that we no longer have any reason to export these APIs.
+ export default ViewNativeComponent;
+ 
+ export type ViewNativeComponentType = HostComponent<Props>;

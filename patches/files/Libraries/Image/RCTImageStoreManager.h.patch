@@ -1,0 +1,33 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Image/RCTImageStoreManager.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Image/RCTImageStoreManager.h	2026-03-06 15:22:52
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #import <React/RCTBridge.h>
+ #import <React/RCTBridgeProxy.h>
+@@ -27,7 +27,7 @@
+  * Convenience method to store an image directly (image is converted to data
+  * internally, so any metadata such as scale or orientation will be lost).
+  */
+-- (void)storeImage:(UIImage *)image withBlock:(void (^)(NSString *imageTag))block;
++- (void)storeImage:(RCTPlatformImage *)image withBlock:(void (^)(NSString *imageTag))block; // [macOS]
+ 
+ @end
+ 
+@@ -36,9 +36,9 @@
+ /**
+  * These methods are deprecated - use the data-based alternatives instead.
+  */
+-- (NSString *)storeImage:(UIImage *)image __deprecated;
+-- (UIImage *)imageForTag:(NSString *)imageTag __deprecated;
+-- (void)getImageForTag:(NSString *)imageTag withBlock:(void (^)(UIImage *image))block __deprecated;
++- (NSString *)storeImage:(RCTPlatformImage *)image __deprecated; // [macOS]
++- (RCTPlatformImage *)imageForTag:(NSString *)imageTag __deprecated; // [macOS]
++- (void)getImageForTag:(NSString *)imageTag withBlock:(void (^)(RCTPlatformImage *image))block __deprecated; // [macOS]
+ 
+ @end
+ 

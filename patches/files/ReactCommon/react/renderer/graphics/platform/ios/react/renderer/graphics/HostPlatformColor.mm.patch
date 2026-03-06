@@ -1,0 +1,191 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/ReactCommon/react/renderer/graphics/platform/ios/react/renderer/graphics/HostPlatformColor.mm	2026-03-06 15:51:55
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/ReactCommon/react/renderer/graphics/platform/ios/react/renderer/graphics/HostPlatformColor.mm	2026-03-06 15:22:53
+@@ -8,7 +8,7 @@
+ #import "HostPlatformColor.h"
+ 
+ #import <Foundation/Foundation.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ #import <objc/runtime.h>
+ #import <react/renderer/graphics/RCTPlatformColorUtils.h>
+ #import <react/utils/ManagedObjectWrapper.h>
+@@ -24,42 +24,43 @@
+ 
+ bool UIColorIsP3ColorSpace(const std::shared_ptr<void> &uiColor)
+ {
+-  UIColor *color = unwrapManagedObject(uiColor);
++  RCTUIColor *color = unwrapManagedObject(uiColor); // [macOS]
+   CGColorSpaceRef colorSpace = CGColorGetColorSpace(color.CGColor);
+ 
+   if (CGColorSpaceGetModel(colorSpace) == kCGColorSpaceModelRGB) {
+     CFStringRef name = CGColorSpaceGetName(colorSpace);
+-    if (name != NULL && (CFEqual(name, kCGColorSpaceDisplayP3) != 0u)) {
++    if (name != NULL && CFEqual(name, kCGColorSpaceDisplayP3)) {
+       return true;
+     }
+   }
+   return false;
+ }
+ 
+-UIColor *_Nullable UIColorFromInt32(int32_t intColor)
++RCTUIColor *_Nullable UIColorFromInt32(int32_t intColor) // [macOS]
+ {
+   CGFloat a = CGFloat((intColor >> 24) & 0xFF) / 255.0;
+   CGFloat r = CGFloat((intColor >> 16) & 0xFF) / 255.0;
+   CGFloat g = CGFloat((intColor >> 8) & 0xFF) / 255.0;
+   CGFloat b = CGFloat(intColor & 0xFF) / 255.0;
+ 
+-  UIColor *color = [UIColor colorWithRed:r green:g blue:b alpha:a];
++  RCTUIColor *color = [RCTUIColor colorWithRed:r green:g blue:b alpha:a]; // [macOS]
+   return color;
+ }
+ 
+-UIColor *_Nullable UIColorFromDynamicColor(const facebook::react::DynamicColor &dynamicColor)
++RCTUIColor *_Nullable UIColorFromDynamicColor(const facebook::react::DynamicColor &dynamicColor) // [macOS]
+ {
+   int32_t light = dynamicColor.lightColor;
+   int32_t dark = dynamicColor.darkColor;
+   int32_t highContrastLight = dynamicColor.highContrastLightColor;
+   int32_t highContrastDark = dynamicColor.highContrastDarkColor;
+ 
+-  UIColor *lightColor = UIColorFromInt32(light);
+-  UIColor *darkColor = UIColorFromInt32(dark);
+-  UIColor *highContrastLightColor = UIColorFromInt32(highContrastLight);
+-  UIColor *highContrastDarkColor = UIColorFromInt32(highContrastDark);
++  RCTUIColor *lightColor = UIColorFromInt32(light); // [macOS]
++  RCTUIColor *darkColor = UIColorFromInt32(dark); // [macOS]
++  RCTUIColor *highContrastLightColor = UIColorFromInt32(highContrastLight); // [macOS]
++  RCTUIColor *highContrastDarkColor = UIColorFromInt32(highContrastDark); // [macOS]
+ 
+   if (lightColor != nil && darkColor != nil) {
++#if !TARGET_OS_OSX // [macOS]
+     UIColor *color = [UIColor colorWithDynamicProvider:^UIColor *_Nonnull(UITraitCollection *_Nonnull collection) {
+       if (collection.userInterfaceStyle == UIUserInterfaceStyleDark) {
+         if (collection.accessibilityContrast == UIAccessibilityContrastHigh && highContrastDark != 0) {
+@@ -76,6 +77,30 @@
+       }
+     }];
+     return color;
++#else // [macOS
++    NSColor *color = [NSColor colorWithName:nil dynamicProvider:^NSColor * _Nonnull(NSAppearance * _Nonnull appearance) {
++      NSMutableArray<NSAppearanceName> *appearances = [NSMutableArray arrayWithArray:@[NSAppearanceNameAqua,NSAppearanceNameDarkAqua]];
++      if (highContrastLightColor != nil) {
++        [appearances addObject:NSAppearanceNameAccessibilityHighContrastAqua];
++      }
++      if (highContrastDarkColor != nil) {
++        [appearances addObject:NSAppearanceNameAccessibilityHighContrastDarkAqua];
++      }
++      NSAppearanceName bestMatchingAppearance = [appearance bestMatchFromAppearancesWithNames:appearances];
++      if (bestMatchingAppearance == NSAppearanceNameAqua) {
++        return lightColor;
++      } else if (bestMatchingAppearance == NSAppearanceNameDarkAqua) {
++        return darkColor;
++      } else if (bestMatchingAppearance == NSAppearanceNameAccessibilityHighContrastAqua) {
++        return highContrastLightColor;
++      } else if (bestMatchingAppearance == NSAppearanceNameAccessibilityHighContrastDarkAqua) {
++        return highContrastDarkColor;
++      } else {
++        return lightColor;
++      }
++    }];
++    return color;
++#endif // macOS]
+   } else {
+     return nil;
+   }
+@@ -92,42 +117,48 @@
+   return color;
+ }
+ 
+-int32_t ColorFromUIColor(UIColor *color)
++int32_t ColorFromUIColor(RCTUIColor *color) // [macOS]
+ {
+   CGFloat rgba[4];
+   [color getRed:&rgba[0] green:&rgba[1] blue:&rgba[2] alpha:&rgba[3]];
+-  return ColorFromColorComponents(
+-      {.red = (float)rgba[0], .green = (float)rgba[1], .blue = (float)rgba[2], .alpha = (float)rgba[3]});
++  return ColorFromColorComponents({(float)rgba[0], (float)rgba[1], (float)rgba[2], (float)rgba[3]});
+ }
+ 
++#if !TARGET_OS_OSX // [macOS]
+ int32_t ColorFromUIColorForSpecificTraitCollection(
+     const std::shared_ptr<void> &uiColor,
+     UITraitCollection *traitCollection)
+ {
+-  UIColor *color = (UIColor *)unwrapManagedObject(uiColor);
+-  if (color != nullptr) {
++  RCTUIColor *color = (RCTUIColor *)unwrapManagedObject(uiColor); // [macOS]
++  if (color) {
+     color = [color resolvedColorWithTraitCollection:traitCollection];
+     return ColorFromUIColor(color);
+   }
+ 
+   return 0;
+ }
++#endif // [macOS]
+ 
+ int32_t ColorFromUIColor(const std::shared_ptr<void> &uiColor)
+ {
++#if !TARGET_OS_OSX // [macOS]
+   return ColorFromUIColorForSpecificTraitCollection(uiColor, [UITraitCollection currentTraitCollection]);
++#else // [macOS
++  RCTUIColor *color = (RCTUIColor *)unwrapManagedObject(uiColor);
++  return ColorFromUIColor(color);
++#endif // macOS]
+ }
+ 
+-UIColor *_Nullable UIColorFromComponentsColor(const facebook::react::ColorComponents &components)
++RCTUIColor *_Nullable UIColorFromComponentsColor(const facebook::react::ColorComponents &components) // [macOS]
+ {
+-  UIColor *uiColor = nil;
++  RCTUIColor *uiColor = nil; // [macOS]
+   if (components.colorSpace == ColorSpace::DisplayP3) {
+-    uiColor = [UIColor colorWithDisplayP3Red:components.red
++    uiColor = [RCTUIColor colorWithDisplayP3Red:components.red // [macOS]
+                                        green:components.green
+                                         blue:components.blue
+                                        alpha:components.alpha];
+   } else {
+-    uiColor = [UIColor colorWithRed:components.red green:components.green blue:components.blue alpha:components.alpha];
++    uiColor = [RCTUIColor colorWithRed:components.red green:components.green blue:components.blue alpha:components.alpha]; // [macOS]
+   }
+ 
+   return uiColor;
+@@ -139,6 +170,9 @@
+     return 0;
+   }
+ 
++#if TARGET_OS_OSX // [macOS]
++  return ColorFromUIColor(uiColor);
++#else // [macOS
+   static UITraitCollection *darkModeTraitCollection =
+       [UITraitCollection traitCollectionWithUserInterfaceStyle:UIUserInterfaceStyleDark];
+   auto darkColor = ColorFromUIColorForSpecificTraitCollection(uiColor, darkModeTraitCollection);
+@@ -168,6 +202,7 @@
+       darkAccessibilityContrastColor,
+       lightAccessibilityContrastColor,
+       UIColorIsP3ColorSpace(uiColor));
++#endif // macOS]
+ }
+ 
+ } // anonymous namespace
+@@ -198,8 +233,8 @@
+ 
+ Color::Color(std::shared_ptr<void> uiColor)
+ {
+-  UIColor *color = ((UIColor *)unwrapManagedObject(uiColor));
+-  if (color != nullptr) {
++  RCTUIColor *color = ((RCTUIColor *)unwrapManagedObject(uiColor)); // [macOS]
++  if (color) {
+     auto colorHash = hashFromUIColor(uiColor);
+     uiColorHashValue_ = colorHash;
+   }
+@@ -225,7 +260,7 @@
+ float Color::getChannel(int channelId) const
+ {
+   CGFloat rgba[4];
+-  UIColor *color = (__bridge UIColor *)getUIColor().get();
++  RCTUIColor *color = (__bridge RCTUIColor *)getUIColor().get(); // [macOS]
+   [color getRed:&rgba[0] green:&rgba[1] blue:&rgba[2] alpha:&rgba[3]];
+   return static_cast<float>(rgba[channelId]);
+ }

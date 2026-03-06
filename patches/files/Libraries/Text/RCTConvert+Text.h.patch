@@ -1,0 +1,31 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Text/RCTConvert+Text.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Text/RCTConvert+Text.h	2026-03-06 15:22:52
+@@ -11,12 +11,28 @@
+ 
+ NS_ASSUME_NONNULL_BEGIN
+ 
++#if TARGET_OS_OSX // [macOS
++typedef enum UITextAutocorrectionType : NSInteger {
++    UITextAutocorrectionTypeDefault,
++    UITextAutocorrectionTypeNo,
++    UITextAutocorrectionTypeYes,
++} UITextAutocorrectionType;
++
++typedef enum UITextSpellCheckingType : NSInteger {
++    UITextSpellCheckingTypeDefault,
++    UITextSpellCheckingTypeNo,
++    UITextSpellCheckingTypeYes,
++} UITextSpellCheckingType;
++#endif // macOS]
++
+ @interface RCTConvert (Text)
+ 
+ + (UITextAutocorrectionType)UITextAutocorrectionType:(nullable id)json;
+ + (UITextSpellCheckingType)UITextSpellCheckingType:(nullable id)json;
+ + (RCTTextTransform)RCTTextTransform:(nullable id)json;
++#if !TARGET_OS_OSX // [macOS]
+ + (UITextSmartInsertDeleteType)UITextSmartInsertDeleteType:(nullable id)json;
++#endif // [macOS]
+ 
+ @end
+ 

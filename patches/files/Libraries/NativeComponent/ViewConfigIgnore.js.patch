@@ -1,0 +1,19 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/NativeComponent/ViewConfigIgnore.js	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/NativeComponent/ViewConfigIgnore.js	2026-03-06 15:22:52
+@@ -37,13 +37,14 @@
+ export function ConditionallyIgnoredEventHandlers<
+   const T: {+[name: string]: true},
+ >(value: T): T | void {
+-  if (Platform.OS === 'ios') {
++  if (Platform.OS === 'ios' || Platform.OS === 'macos') {
++    // [macOS]
+     return value;
+   }
+   return undefined;
+ }
+ 
+-export function isIgnored(value: unknown): boolean {
++export function isIgnored(value: mixed): boolean {
+   if (typeof value === 'object' && value != null) {
+     return ignoredViewConfigProps.has(value);
+   }

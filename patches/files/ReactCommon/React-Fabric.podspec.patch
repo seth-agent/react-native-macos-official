@@ -1,0 +1,71 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/ReactCommon/React-Fabric.podspec	2026-03-06 15:51:55
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/ReactCommon/React-Fabric.podspec	2026-03-06 15:22:53
+@@ -32,7 +32,10 @@
+                             "CLANG_CXX_LANGUAGE_STANDARD" => rct_cxx_language_standard(),
+                             "DEFINES_MODULE" => "YES" }
+ 
+-  resolve_use_frameworks(s, header_mappings_dir: "./", module_name: "React_Fabric")
++  if ENV['USE_FRAMEWORKS']
++    s.header_mappings_dir     = './'
++    s.module_name             = 'React_Fabric'
++  end
+ 
+   s.dependency "React-jsiexecutor"
+   s.dependency "RCTRequired"
+@@ -53,25 +56,13 @@
+ 
+   depend_on_js_engine(s)
+   add_rn_third_party_dependencies(s)
+-  add_rncore_dependency(s)
+ 
+-  s.subspec "animated" do |ss|
+-    ss.source_files         = podspec_sources("react/renderer/animated/**/*.{m,mm,cpp,h}", "react/renderer/animated/**/*.{h}")
+-    ss.exclude_files        = "react/renderer/animated/tests"
+-    ss.header_dir           = "react/renderer/animated"
+-  end
+-
+   s.subspec "animations" do |ss|
+     ss.source_files         = podspec_sources("react/renderer/animations/**/*.{m,mm,cpp,h}", "react/renderer/animations/**/*.{h}")
+     ss.exclude_files        = "react/renderer/animations/tests"
+     ss.header_dir           = "react/renderer/animations"
+   end
+ 
+-  s.subspec "animationbackend" do |ss|
+-    ss.source_files         = podspec_sources("react/renderer/animationbackend/**/*.{m,mm,cpp,h}", "react/renderer/animationbackend/**/*.{h}")
+-    ss.header_dir           = "react/renderer/animationbackend"
+-  end
+-
+   s.subspec "attributedstring" do |ss|
+     ss.source_files         = podspec_sources("react/renderer/attributedstring/**/*.{m,mm,cpp,h}", "react/renderer/attributedstring/**/*.{h}")
+     ss.exclude_files        = "react/renderer/attributedstring/tests"
+@@ -129,7 +120,8 @@
+     ss.subspec "view" do |sss|
+       sss.dependency             "React-renderercss"
+       sss.dependency             "Yoga"
+-      sss.source_files         = podspec_sources(["react/renderer/components/view/*.{m,mm,cpp,h}", "react/renderer/components/view/platform/cxx/**/*.{m,mm,cpp,h}"], ["react/renderer/components/view/*.{h}", "react/renderer/components/view/platform/cxx/**/*.{h}"])
++      sss.source_files         = "react/renderer/components/view/**/*.{m,mm,cpp,h}" # [macOS]
++      sss.exclude_files        = "react/renderer/components/view/tests", "react/renderer/components/view/platform/android", "react/renderer/components/view/platform/windows" # [macOS]
+       sss.header_dir           = "react/renderer/components/view"
+     end
+ 
+@@ -157,7 +149,6 @@
+     ss.source_files         = podspec_sources("react/renderer/scheduler/**/*.{m,mm,cpp,h}", "react/renderer/scheduler/**/*.h")
+     ss.header_dir           = "react/renderer/scheduler"
+ 
+-    ss.dependency             "React-performancecdpmetrics"
+     ss.dependency             "React-performancetimeline"
+     ss.dependency             "React-Fabric/observers/events"
+   end
+@@ -179,12 +170,6 @@
+       sss.exclude_files        = "react/renderer/observers/events/tests"
+       sss.header_dir           = "react/renderer/observers/events"
+     end
+-
+-    ss.subspec "intersection" do |sss|
+-      sss.source_files         = podspec_sources("react/renderer/observers/intersection/**/*.{m,mm,cpp,h}", "react/renderer/observers/intersection/**/*.h")
+-      sss.exclude_files        = "react/renderer/observers/intersection/tests"
+-      sss.header_dir           = "react/renderer/observers/intersection"
+-    end
+   end
+ 
+   s.subspec "templateprocessor" do |ss|

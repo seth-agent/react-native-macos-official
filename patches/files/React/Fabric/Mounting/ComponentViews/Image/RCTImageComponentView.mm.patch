@@ -1,0 +1,47 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Mounting/ComponentViews/Image/RCTImageComponentView.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Fabric/Mounting/ComponentViews/Image/RCTImageComponentView.mm	2026-03-06 15:22:52
+@@ -124,7 +124,7 @@
+ 
+ #pragma mark - RCTImageResponseDelegate
+ 
+-- (void)didReceiveImage:(UIImage *)image metadata:(id)metadata fromObserver:(const void *)observer
++- (void)didReceiveImage:(RCTPlatformImage *)image metadata:(id)metadata fromObserver:(const void *)observer // [macOS]
+ {
+   if (!_eventEmitter || !_state) {
+     // Notifications are delivered asynchronously and might arrive after the view is already recycled.
+@@ -134,13 +134,14 @@
+   }
+ 
+   auto imageSource = _state->getData().getImageSource();
+-  imageSource.size = {.width = image.size.width, .height = image.size.height};
++  imageSource.size = {image.size.width, image.size.height};
+ 
+   static_cast<const ImageEventEmitter &>(*_eventEmitter).onLoad(imageSource);
+   static_cast<const ImageEventEmitter &>(*_eventEmitter).onLoadEnd();
+ 
+   const auto &imageProps = static_cast<const ImageProps &>(*_props);
+ 
++#if !TARGET_OS_OSX // [macOS]
+   if (imageProps.tintColor) {
+     image = [image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+   }
+@@ -153,12 +154,18 @@
+     image = [image resizableImageWithCapInsets:RCTUIEdgeInsetsFromEdgeInsets(imageProps.capInsets)
+                                   resizingMode:UIImageResizingModeStretch];
+   }
++#else
++  if (imageProps.resizeMode == ImageResizeMode::Repeat) {
++    image.capInsets = RCTUIEdgeInsetsFromEdgeInsets(imageProps.capInsets);
++    image.resizingMode = NSImageResizingModeTile;
++  }
++#endif // [macOS]
+ 
+   if (imageProps.blurRadius > __FLT_EPSILON__) {
+     // Blur on a background thread to avoid blocking interaction.
+     CGFloat blurRadius = imageProps.blurRadius;
+     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+-      UIImage *blurredImage = RCTBlurredImageWithRadius(image, blurRadius);
++      RCTPlatformImage *blurredImage = RCTBlurredImageWithRadius(image, blurRadius); // [macOS]
+       RCTExecuteOnMainQueue(^{
+         self->_imageView.image = blurredImage;
+       });

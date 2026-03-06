@@ -1,0 +1,133 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm	2026-03-06 15:51:55
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm	2026-03-06 15:22:53
+@@ -22,8 +22,6 @@
+ #import <React/RCTComponentViewFactory.h>
+ #import <React/RCTConstants.h>
+ #import <React/RCTCxxUtils.h>
+-#import <React/RCTDevMenu.h>
+-#import <React/RCTDevMenuConfigurationDecorator.h>
+ #import <React/RCTDevSettings.h>
+ #import <React/RCTDisplayLink.h>
+ #import <React/RCTEventDispatcherProtocol.h>
+@@ -121,7 +119,6 @@
+ 
+   // APIs supporting interop with native modules and view managers
+   RCTBridgeModuleDecorator *_bridgeModuleDecorator;
+-  RCTDevMenuConfigurationDecorator *_devMenuConfigurationDecorator;
+ 
+   jsinspector_modern::HostTarget *_parentInspectorTarget;
+ }
+@@ -136,25 +133,6 @@
+            parentInspectorTarget:(jsinspector_modern::HostTarget *)parentInspectorTarget
+                    launchOptions:(nullable NSDictionary *)launchOptions
+ {
+-  return [self initWithDelegate:delegate
+-                jsRuntimeFactory:jsRuntimeFactory
+-                   bundleManager:bundleManager
+-      turboModuleManagerDelegate:tmmDelegate
+-                  moduleRegistry:moduleRegistry
+-           parentInspectorTarget:parentInspectorTarget
+-                   launchOptions:launchOptions
+-            devMenuConfiguration:[RCTDevMenuConfiguration defaultConfiguration]];
+-}
+-
+-- (instancetype)initWithDelegate:(id<RCTInstanceDelegate>)delegate
+-                jsRuntimeFactory:(std::shared_ptr<facebook::react::JSRuntimeFactory>)jsRuntimeFactory
+-                   bundleManager:(RCTBundleManager *)bundleManager
+-      turboModuleManagerDelegate:(id<RCTTurboModuleManagerDelegate>)tmmDelegate
+-                  moduleRegistry:(RCTModuleRegistry *)moduleRegistry
+-           parentInspectorTarget:(jsinspector_modern::HostTarget *)parentInspectorTarget
+-                   launchOptions:(nullable NSDictionary *)launchOptions
+-            devMenuConfiguration:(RCTDevMenuConfiguration *)devMenuConfiguration
+-{
+   if (self = [super init]) {
+     _performanceLogger = [RCTPerformanceLogger new];
+     registerPerformanceLoggerHooks(_performanceLogger);
+@@ -168,13 +146,6 @@
+                                                                      moduleRegistry:moduleRegistry
+                                                                       bundleManager:bundleManager
+                                                                   callableJSModules:[RCTCallableJSModules new]];
+-    _devMenuConfigurationDecorator =
+-#if RCT_DEV_MENU
+-        [[RCTDevMenuConfigurationDecorator alloc] initWithDevMenuConfiguration:devMenuConfiguration];
+-#else
+-        nil;
+-#endif
+-
+     _parentInspectorTarget = parentInspectorTarget;
+     {
+       __weak __typeof(self) weakSelf = self;
+@@ -189,11 +160,12 @@
+           }];
+     }
+     _launchOptions = launchOptions;
+-
++#if !TARGET_OS_OSX // [macOS]
+     [[NSNotificationCenter defaultCenter] addObserver:self
+                                              selector:@selector(_handleMemoryWarning)
+                                                  name:UIApplicationDidReceiveMemoryWarningNotification
+                                                object:nil];
++#endif // [macOS]
+ 
+     [self _start];
+   }
+@@ -202,9 +174,11 @@
+ 
+ - (void)dealloc
+ {
++#if !TARGET_OS_OSX // [macOS]
+   [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                   name:UIApplicationDidReceiveMemoryWarningNotification
+                                                 object:nil];
++#endif // [macOS]
+ }
+ 
+ - (void)callFunctionOnJSModule:(NSString *)moduleName method:(NSString *)method args:(NSArray *)args
+@@ -355,8 +329,7 @@
+   _turboModuleManager = [[RCTTurboModuleManager alloc] initWithBridgeProxy:bridgeProxy
+                                                      bridgeModuleDecorator:_bridgeModuleDecorator
+                                                                   delegate:self
+-                                                                 jsInvoker:jsCallInvoker
+-                                             devMenuConfigurationDecorator:_devMenuConfigurationDecorator];
++                                                                 jsInvoker:jsCallInvoker];
+ 
+ #if RCT_DEV
+   /**
+@@ -371,7 +344,7 @@
+   // Initialize RCTModuleRegistry so that TurboModules can require other TurboModules.
+   [_bridgeModuleDecorator.moduleRegistry setTurboModuleRegistry:_turboModuleManager];
+ 
+-  if (ReactNativeFeatureFlags::enableEagerMainQueueModulesOnIOS()) {
++  if (ReactNativeFeatureFlags::enableMainQueueModulesOnIOS()) {
+     /**
+      * Some native modules need to capture uikit objects on the main thread.
+      * Start initializing those modules on the main queue here. The JavaScript thread
+@@ -396,7 +369,6 @@
+ 
+       RCTScreenSize();
+       RCTScreenScale();
+-      RCTSwitchSize();
+ 
+       std::lock_guard<std::mutex> lock(*mutex);
+       *isReady = true;
+@@ -426,7 +398,7 @@
+ 
+   // This enables RCTViewRegistry in modules to return UIViews from its viewForReactTag method
+   __weak RCTSurfacePresenter *weakSurfacePresenter = _surfacePresenter;
+-  [_bridgeModuleDecorator.viewRegistry_DEPRECATED setBridgelessComponentViewProvider:^UIView *(NSNumber *reactTag) {
++  [_bridgeModuleDecorator.viewRegistry_DEPRECATED setBridgelessComponentViewProvider:^RCTPlatformView *(NSNumber *reactTag) { // [macOS]
+     RCTSurfacePresenter *strongSurfacePresenter = weakSurfacePresenter;
+     if (strongSurfacePresenter == nil) {
+       return nil;
+@@ -662,7 +634,11 @@
+                             name:errorData[@"name"]
+                   componentStack:errorData[@"componentStack"]
+                      exceptionId:error.id
++#if !TARGET_OS_OSX // [macOS]
++                         isFatal:errorData[@"isFatal"]
++#else // [macOS Use boolValue for isFatal to ensure type safety
+                          isFatal:[errorData[@"isFatal"] boolValue]
++#endif // macOS]
+                        extraData:errorData[@"extraData"]]) {
+     JS::NativeExceptionsManager::ExceptionData jsErrorData{errorData};
+     id<NativeExceptionsManagerSpec> exceptionsManager = [_turboModuleManager moduleForName:"ExceptionsManager"];

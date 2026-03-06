@@ -1,0 +1,70 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/CoreModules/RCTDevMenu.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/CoreModules/RCTDevMenu.h	2026-03-06 15:22:52
+@@ -5,33 +5,19 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #import <React/RCTBridge.h>
+ #import <React/RCTBridgeModule.h>
+ #import <React/RCTBridgeProxy.h>
+ #import <React/RCTDefines.h>
+ 
+-RCT_EXTERN NSString *const RCTShowDevMenuNotification;
+-
+-@interface RCTDevMenuConfiguration : NSObject
+-
+ #if RCT_DEV_MENU
+ 
+-@property (nonatomic, readonly) BOOL devMenuEnabled;
+-@property (nonatomic, readonly) BOOL shakeGestureEnabled;
+-@property (nonatomic, readonly) BOOL keyboardShortcutsEnabled;
++RCT_EXTERN NSString *const RCTShowDevMenuNotification;
+ 
+-- (instancetype)initWithDevMenuEnabled:(BOOL)devMenuEnabled
+-                   shakeGestureEnabled:(BOOL)shakeGestureEnabled
+-              keyboardShortcutsEnabled:(BOOL)keyboardShortcutsEnabled;
+-
+ #endif
+ 
+-+ (instancetype)defaultConfiguration;
+-
+-@end
+-
+ @class RCTDevMenuItem;
+ 
+ /**
+@@ -60,16 +46,6 @@
+ @property (nonatomic, assign) BOOL hotkeysEnabled;
+ 
+ /**
+- * Whether the developer menu is enabled.
+- */
+-@property (nonatomic, assign) BOOL devMenuEnabled;
+-
+-/**
+- * Whether keyboard shortcuts are enabled.
+- */
+-@property (nonatomic, assign) BOOL keyboardShortcutsEnabled;
+-
+-/**
+  * Presented items in development menu
+  */
+ @property (nonatomic, copy, readonly) NSArray<RCTDevMenuItem *> *presentedItems;
+@@ -100,10 +76,12 @@
+  */
+ - (void)addItem:(RCTDevMenuItem *)item;
+ 
++#if TARGET_OS_OSX // [macOS
+ /**
+- * Disable the reload command (Cmd+R) in the simulator.
++ * Creates the NSMenu for macOS.
+  */
+-- (void)disableReloadCommand;
++- (NSMenu *)menu;
++#endif // macOS]
+ 
+ @end
+ 

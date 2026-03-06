@@ -1,0 +1,124 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Base/RCTConvert.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Base/RCTConvert.h	2026-03-06 15:22:52
+@@ -6,7 +6,7 @@
+  */
+ 
+ #import <QuartzCore/QuartzCore.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #import <React/RCTAnimationType.h>
+ #import <React/RCTBorderCurve.h>
+@@ -27,6 +27,8 @@
+ RCTColorSpace RCTGetDefaultColorSpace(void);
+ RCT_EXTERN void RCTSetDefaultColorSpace(RCTColorSpace colorSpace);
+ 
++@class RCTHandledKey; // [macOS]
++
+ /**
+  * This class provides a collection of conversion functions for mapping
+  * JSON objects to native types and classes. These are useful when writing
+@@ -73,15 +75,14 @@
+ + (NSUnderlineStyle)NSUnderlineStyle:(id)json;
+ + (NSWritingDirection)NSWritingDirection:(id)json;
+ + (NSLineBreakStrategy)NSLineBreakStrategy:(id)json;
++#if !TARGET_OS_OSX // [macOS]
+ + (UITextAutocapitalizationType)UITextAutocapitalizationType:(id)json;
+ + (UITextFieldViewMode)UITextFieldViewMode:(id)json;
+ + (UIKeyboardType)UIKeyboardType:(id)json;
+ + (UIKeyboardAppearance)UIKeyboardAppearance:(id)json;
+ + (UIReturnKeyType)UIReturnKeyType:(id)json;
+ + (UIUserInterfaceStyle)UIUserInterfaceStyle:(id)json API_AVAILABLE(ios(12));
+-#if !TARGET_OS_TV
+ + (UIInterfaceOrientationMask)UIInterfaceOrientationMask:(NSString *)orientation;
+-#endif
+ + (UIModalPresentationStyle)UIModalPresentationStyle:(id)json;
+ 
+ #if !TARGET_OS_TV
+@@ -89,7 +90,12 @@
+ #endif
+ 
+ + (UIViewContentMode)UIViewContentMode:(id)json;
++#endif // [macOS]
+ 
++#if TARGET_OS_OSX // [macOS
+++ (NSTextCheckingTypes)NSTextCheckingTypes:(id)json;
++#endif // macOS]
++
+ + (RCTCursor)RCTCursor:(id)json;
+ 
+ + (CGFloat)CGFloat:(id)json;
+@@ -103,14 +109,15 @@
+ 
+ + (CGAffineTransform)CGAffineTransform:(id)json;
+ 
+-+ (UIColor *)UIColorWithRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue alpha:(CGFloat)alpha;
+-+ (UIColor *)UIColorWithRed:(CGFloat)red
+-                      green:(CGFloat)green
+-                       blue:(CGFloat)blue
+-                      alpha:(CGFloat)alpha
+-              andColorSpace:(RCTColorSpace)colorSpace;
+++ (RCTUIColor *)UIColorWithRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue alpha:(CGFloat)alpha; // [macOS]
+++ (RCTUIColor *)UIColorWithRed:(CGFloat)red // [macOS]
++                         green:(CGFloat)green
++                          blue:(CGFloat)blue
++                         alpha:(CGFloat)alpha
++                 andColorSpace:(RCTColorSpace)colorSpace;
+ + (RCTColorSpace)RCTColorSpaceFromString:(NSString *)colorSpace;
+-+ (UIColor *)UIColor:(id)json;
+++ (RCTUIColor *)UIColor:(id)json; // [macOS]
+++ (RCTUIColor *)NSColor:(id)json; // [macOS]
+ + (CGColorRef)CGColor:(id)json CF_RETURNS_NOT_RETAINED;
+ 
+ + (YGValue)YGValue:(id)json;
+@@ -122,7 +129,10 @@
+ + (NSArray<NSURL *> *)NSURLArray:(id)json;
+ + (NSArray<RCTFileURL *> *)RCTFileURLArray:(id)json;
+ + (NSArray<NSNumber *> *)NSNumberArray:(id)json;
+-+ (NSArray<UIColor *> *)UIColorArray:(id)json;
+++ (NSArray<RCTUIColor *> *)UIColorArray:(id)json; // [macOS]
++#if TARGET_OS_OSX // [macOS
+++ (NSArray<NSPasteboardType> *)NSPasteboardTypeArray:(id)json;
++#endif // macOS]
+ 
+ typedef NSArray CGColorArray;
+ + (CGColorArray *)CGColorArray:(id)json;
+@@ -150,6 +160,11 @@
+ + (RCTBorderCurve)RCTBorderCurve:(id)json;
+ + (RCTTextDecorationLineType)RCTTextDecorationLineType:(id)json;
+ 
++#if TARGET_OS_OSX // [macOS
+++ (NSString *)accessibilityRoleFromTraits:(id)json useAriaMappings:(BOOL) useAriaMappings;
++
+++ (NSArray<RCTHandledKey *> *)RCTHandledKeyArray:(id)json;
++#endif // macOS]
+ @end
+ 
+ @interface RCTConvert (Deprecated)
+@@ -171,7 +186,7 @@
+  * If you need to pass image references, try to use `RCTImageSource` and then
+  * `RCTImageLoader` instead of converting directly to a UIImage.
+  */
+-+ (UIImage *)UIImage:(id)json;
+++ (RCTPlatformImage *)UIImage:(id)json; // [macOS]
+ + (CGImageRef)CGImage:(id)json CF_RETURNS_NOT_RETAINED;
+ 
+ @end
+@@ -179,14 +194,9 @@
+ /**
+  * Underlying implementations of RCT_XXX_CONVERTER macros. Ignore these.
+  */
+-RCT_EXTERN NSNumber *
+-RCTConvertEnumValue(const char * /*typeName*/, NSDictionary * /*mapping*/, NSNumber * /*defaultValue*/, id /*json*/);
+-RCT_EXTERN NSNumber *RCTConvertMultiEnumValue(
+-    const char * /*typeName*/,
+-    NSDictionary * /*mapping*/,
+-    NSNumber * /*defaultValue*/,
+-    id /*json*/);
+-RCT_EXTERN NSArray *RCTConvertArrayValue(SEL /*type*/, id /*json*/);
++RCT_EXTERN NSNumber *RCTConvertEnumValue(const char *, NSDictionary *, NSNumber *, id);
++RCT_EXTERN NSNumber *RCTConvertMultiEnumValue(const char *, NSDictionary *, NSNumber *, id);
++RCT_EXTERN NSArray *RCTConvertArrayValue(SEL, id);
+ 
+ /**
+  * This macro is used for logging conversion errors. This is just used to

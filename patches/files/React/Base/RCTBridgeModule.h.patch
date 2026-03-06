@@ -1,0 +1,118 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Base/RCTBridgeModule.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Base/RCTBridgeModule.h	2026-03-06 15:22:52
+@@ -6,7 +6,7 @@
+  */
+ 
+ #import <Foundation/Foundation.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #import <React/RCTDefines.h>
+ #import <React/RCTJSThread.h>
+@@ -69,7 +69,6 @@
+  * will be used as the JS module name. If omitted, the JS module name will
+  * match the Objective-C class name.
+  */
+-#ifndef RCT_DISABLE_STATIC_MODULE_REGISTRATION
+ #define RCT_EXPORT_MODULE(js_name)          \
+   RCT_EXTERN void RCTRegisterModule(Class); \
+   +(NSString *)moduleName                   \
+@@ -81,17 +80,6 @@
+     RCTRegisterModule(self);                \
+   }
+ 
+-#else
+-
+-#define RCT_EXPORT_MODULE(js_name)          \
+-  RCT_EXTERN void RCTRegisterModule(Class); \
+-  +(NSString *)moduleName                   \
+-  {                                         \
+-    return @ #js_name;                      \
+-  }
+-
+-#endif // RCT_DISABLE_STATIC_MODULE_REGISTRATION
+-
+ /**
+  * Same as RCT_EXPORT_MODULE, but uses __attribute__((constructor)) for module
+  * registration. Useful for registering swift classes that forbids use of load
+@@ -103,10 +91,13 @@
+   {                                                                                 \
+     return @ #js_name;                                                              \
+   }                                                                                 \
++  _Pragma("clang diagnostic push")                                                  \
++  _Pragma("clang diagnostic ignored \"-Wglobal-constructors\"")                     \
+   __attribute__((constructor)) static void RCT_CONCAT(initialize_, objc_name)(void) \
+   {                                                                                 \
+     RCTRegisterModule([objc_name class]);                                           \
+-  }
++  }                                                                                 \
++  _Pragma("clang diagnostic pop")
+ 
+ // Implemented by RCT_EXPORT_MODULE
+ + (NSString *)moduleName;
+@@ -295,12 +286,10 @@
+ /**
+  * Like RCT_EXTERN_MODULE, but allows setting a custom JavaScript name.
+  */
+-#define RCT_EXTERN_REMAP_MODULE(js_name, objc_name, objc_supername) \
+-  objc_name:                                                        \
+-  objc_supername @                                                  \
+-  end @interface objc_name(RCTExternModule)<RCTBridgeModule>        \
+-  @end                                                              \
+-  @implementation objc_name (RCTExternModule)                       \
++#define RCT_EXTERN_REMAP_MODULE(js_name, objc_name, objc_supername)                      \
++  objc_name : objc_supername @end @interface objc_name(RCTExternModule)<RCTBridgeModule> \
++  @end                                                                                   \
++  @implementation objc_name (RCTExternModule)                                            \
+   RCT_EXPORT_MODULE_NO_LOAD(js_name, objc_name)
+ 
+ /**
+@@ -368,9 +357,9 @@
+  * A class that allows NativeModules and TurboModules to look up one another.
+  */
+ @interface RCTModuleRegistry : NSObject
+-#ifndef RCT_REMOVE_LEGACY_ARCH
++#ifndef RCT_FIT_RM_OLD_RUNTIME
+ - (void)setBridge:(RCTBridge *)bridge;
+-#endif // RCT_REMOVE_LEGACY_ARCH
++#endif // RCT_FIT_RM_OLD_RUNTIME
+ - (void)setTurboModuleRegistry:(id<RCTTurboModuleRegistry>)turboModuleRegistry;
+ 
+ - (id)moduleForName:(const char *)moduleName;
+@@ -381,7 +370,7 @@
+ - (id)moduleForClass:(Class)moduleClass;
+ @end
+ 
+-typedef UIView * (^RCTBridgelessComponentViewProvider)(NSNumber *);
++typedef RCTPlatformView * (^RCTBridgelessComponentViewProvider)(NSNumber *); // [macOS]
+ 
+ typedef void (^RCTViewRegistryUIBlock)(RCTViewRegistry *viewRegistry);
+ 
+@@ -389,12 +378,12 @@
+  * A class that allows NativeModules to query for views, given React Tags.
+  */
+ @interface RCTViewRegistry : NSObject
+-#ifndef RCT_REMOVE_LEGACY_ARCH
++#ifndef RCT_FIT_RM_OLD_RUNTIME
+ - (void)setBridge:(RCTBridge *)bridge;
+-#endif // RCT_REMOVE_LEGACY_ARCH
++#endif // RCT_FIT_RM_OLD_RUNTIME
+ - (void)setBridgelessComponentViewProvider:(RCTBridgelessComponentViewProvider)bridgelessComponentViewProvider;
+ 
+-- (UIView *)viewForReactTag:(NSNumber *)reactTag;
++- (RCTPlatformView *)viewForReactTag:(NSNumber *)reactTag; // [macOS]
+ - (void)addUIBlock:(RCTViewRegistryUIBlock)block;
+ @end
+ 
+@@ -409,9 +398,9 @@
+  * as callable with React Native.
+  */
+ @interface RCTCallableJSModules : NSObject
+-#ifndef RCT_REMOVE_LEGACY_ARCH
++#ifndef RCT_FIT_RM_OLD_RUNTIME
+ - (void)setBridge:(RCTBridge *)bridge;
+-#endif // RCT_REMOVE_LEGACY_ARCH
++#endif // RCT_FIT_RM_OLD_RUNTIME
+ - (void)setBridgelessJSModuleMethodInvoker:(RCTBridgelessJSModuleMethodInvoker)bridgelessJSModuleMethodInvoker;
+ 
+ - (void)invokeModule:(NSString *)moduleName method:(NSString *)methodName withArgs:(NSArray *)args;

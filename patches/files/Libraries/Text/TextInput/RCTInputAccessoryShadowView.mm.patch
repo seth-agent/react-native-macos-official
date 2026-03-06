@@ -1,0 +1,23 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Text/TextInput/RCTInputAccessoryShadowView.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Text/TextInput/RCTInputAccessoryShadowView.mm	2026-03-06 15:22:52
+@@ -7,8 +7,6 @@
+ 
+ #import <React/RCTInputAccessoryShadowView.h>
+ 
+-#ifndef RCT_REMOVE_LEGACY_ARCH
+-
+ #import <React/RCTUtils.h>
+ 
+ @implementation RCTInputAccessoryShadowView
+@@ -16,9 +14,9 @@
+ - (void)insertReactSubview:(RCTShadowView *)subview atIndex:(NSInteger)atIndex
+ {
+   [super insertReactSubview:subview atIndex:atIndex];
++#if !TARGET_OS_OSX // [macOS]
+   subview.width = (YGValue){static_cast<float>(RCTScreenSize().width), YGUnitPoint};
++#endif // [macOS]
+ }
+ 
+ @end
+-
+-#endif // RCT_REMOVE_LEGACY_ARCH

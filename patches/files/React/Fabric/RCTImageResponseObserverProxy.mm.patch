@@ -1,0 +1,11 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/RCTImageResponseObserverProxy.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Fabric/RCTImageResponseObserverProxy.mm	2026-03-06 15:22:52
+@@ -21,7 +21,7 @@
+ 
+ void RCTImageResponseObserverProxy::didReceiveImage(const ImageResponse &imageResponse) const
+ {
+-  UIImage *image = (UIImage *)unwrapManagedObject(imageResponse.getImage());
++  RCTPlatformImage *image = (RCTPlatformImage *)unwrapManagedObject(imageResponse.getImage()); // [macOS]
+   id metadata = unwrapManagedObject(imageResponse.getMetadata());
+   id<RCTImageResponseDelegate> delegate = delegate_;
+   auto this_ = this;

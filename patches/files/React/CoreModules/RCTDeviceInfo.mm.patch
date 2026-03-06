@@ -1,0 +1,180 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/CoreModules/RCTDeviceInfo.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/CoreModules/RCTDeviceInfo.mm	2026-03-06 15:22:52
+@@ -15,6 +15,7 @@
+ #import <React/RCTInitializing.h>
+ #import <React/RCTInvalidating.h>
+ #import <React/RCTUtils.h>
++#import "UIView+React.h" // [macOS]
+ #import <atomic>
+ 
+ #import "CoreModulesPlugins.h"
+@@ -25,14 +26,15 @@
+ @end
+ 
+ @implementation RCTDeviceInfo {
++#if !TARGET_OS_OSX // [macOS]
+   UIInterfaceOrientation _currentInterfaceOrientation;
++#endif // [macOS]
+   NSDictionary *_currentInterfaceDimensions;
+   BOOL _isFullscreen;
+   std::atomic<BOOL> _invalidated;
+   NSDictionary *_constants;
+ 
+-  __weak UIWindow *_applicationWindow;
+-  NSDictionary * (^_dimensionsProvider)(void);
++  __weak RCTPlatformWindow *_applicationWindow; // [macOS]
+ }
+ 
+ static NSString *const kFrameKeyPath = @"frame";
+@@ -50,14 +52,6 @@
+   return self;
+ }
+ 
+-- (instancetype)initWithDimensionsProvider:(NSDictionary * (^)(void))dimensionsProvider
+-{
+-  if (self = [self init]) {
+-    _dimensionsProvider = dimensionsProvider;
+-  }
+-  return self;
+-}
+-
+ - (void)observeValueForKeyPath:(NSString *)keyPath
+                       ofObject:(id)object
+                         change:(NSDictionary *)change
+@@ -81,17 +75,21 @@
+ 
+ - (void)initialize
+ {
++#if !TARGET_OS_OSX // [macOS]
+   [[NSNotificationCenter defaultCenter] addObserver:self
+                                            selector:@selector(didReceiveNewContentSizeMultiplier)
+                                                name:RCTAccessibilityManagerDidUpdateMultiplierNotification
+                                              object:[_moduleRegistry moduleForName:"AccessibilityManager"]];
++#endif // [macOS]
+ 
+   _currentInterfaceDimensions = [self _exportedDimensions];
+ 
++#if !TARGET_OS_OSX // [macOS]
+   [[NSNotificationCenter defaultCenter] addObserver:self
+                                            selector:@selector(interfaceOrientationDidChange)
+                                                name:UIApplicationDidBecomeActiveNotification
+                                              object:nil];
++#endif // [macOS]
+ 
+   [[NSNotificationCenter defaultCenter] addObserver:self
+                                            selector:@selector(interfaceFrameDidChange)
+@@ -180,27 +178,54 @@
+   return isIPhoneNotched;
+ }
+ 
++
+ static NSDictionary *RCTExportedDimensions(CGFloat fontScale)
+ {
+   RCTAssertMainQueue();
++
++#if !TARGET_OS_OSX // [macOS]
++#if !TARGET_OS_VISION // [visionOS]
+   UIScreen *mainScreen = UIScreen.mainScreen;
+   CGSize screenSize = mainScreen.bounds.size;
++#else // [visionOS
++  CGSize screenSize = CGSizeZero;
++#endif // visionOS]
+   UIView *mainWindow = RCTKeyWindow();
++#else // [macOS
++  NSScreen *mainScreen = NSScreen.mainScreen;
++  CGSize screenSize = mainScreen.frame.size;
++  NSWindow *mainWindow = RCTKeyWindow();
++#endif // macOS]
+ 
+   // We fallback to screen size if a key window is not found.
+-  CGSize windowSize = mainWindow ? mainWindow.bounds.size : screenSize;
++#if !TARGET_OS_OSX // [macOS]
++  CGSize windowSize = mainWindow ? mainWindow.bounds.size : screenSize; //[macOS]
++#else // [macOS
++  CGSize windowSize = mainWindow ? mainWindow.frame.size : screenSize; //[macOS]
++#endif // macOS]
++
++
++#if !TARGET_OS_OSX // [macOS]
++#if !TARGET_OS_VISION // [visionOS]
++  const CGFloat scale = mainScreen.scale;
++#else // [visionOS
++  CGFloat scale = [UITraitCollection currentTraitCollection].displayScale;
++#endif // visionOS]
++#else //  [macOS
++  const CGFloat scale = mainScreen != nil ? mainScreen.backingScaleFactor : [NSScreen mainScreen].backingScaleFactor;
++#endif // macOS]
+ 
+   NSDictionary<NSString *, NSNumber *> *dimsWindow = @{
+     @"width" : @(windowSize.width),
+     @"height" : @(windowSize.height),
+-    @"scale" : @(mainScreen.scale),
++    @"scale" : @(scale), // [macOS]
+     @"fontScale" : @(fontScale)
+   };
+ 
+   NSDictionary<NSString *, NSNumber *> *dimsScreen = @{
+     @"width" : @(screenSize.width),
+     @"height" : @(screenSize.height),
+-    @"scale" : @(mainScreen.scale),
++    @"scale" : @(scale), // [macOS]
+     @"fontScale" : @(fontScale)
+   };
+   return @{@"window" : dimsWindow, @"screen" : dimsScreen};
+@@ -208,24 +233,20 @@
+ 
+ - (NSDictionary *)_exportedDimensions
+ {
+-  // if a window size provider has been set, use that. If nil is returned from the provider
+-  // it will fall back to the default behavior.
+-  if (_dimensionsProvider != nil) {
+-    auto dimensions = _dimensionsProvider();
+-    if (dimensions != nil) {
+-      return dimensions;
+-    }
+-  }
+-
+   RCTAssert(!_invalidated, @"Failed to get exported dimensions: RCTDeviceInfo has been invalidated");
+   RCTAssert(_moduleRegistry, @"Failed to get exported dimensions: RCTModuleRegistry is nil");
+   RCTAccessibilityManager *accessibilityManager =
+       (RCTAccessibilityManager *)[_moduleRegistry moduleForName:"AccessibilityManager"];
++#if !TARGET_OS_OSX // [macOS]
+   // TOOD(T225745315): For some reason, accessibilityManager is nil in some cases.
+   // We default the fontScale to 1.0 in this case. This should be okay: if we assume
+   // that accessibilityManager will eventually become available, js will eventually
+   // be updated with the correct fontScale.
+   CGFloat fontScale = accessibilityManager ? accessibilityManager.multiplier : 1.0;
++#else // [macOS
++  CGFloat fontScale = 1.0;
++#endif // macOS]
++
+   return RCTExportedDimensions(fontScale);
+ }
+ 
+@@ -253,13 +274,15 @@
+   });
+ }
+ 
++#if TARGET_OS_IOS // [macOS] [visionOS]
+ - (void)interfaceOrientationDidChange
+ {
+ #if TARGET_OS_IOS && !TARGET_OS_MACCATALYST
+-  UIWindow *window = RCTKeyWindow();
+-  UIInterfaceOrientation nextOrientation = window.windowScene.interfaceOrientation;
++  UIApplication *application = RCTSharedApplication();
++  UIInterfaceOrientation nextOrientation = RCTKeyWindow().windowScene.interfaceOrientation;
+ 
+-  BOOL isRunningInFullScreen = window ? CGRectEqualToRect(window.frame, window.screen.bounds) : YES;
++  BOOL isRunningInFullScreen =
++      CGRectEqualToRect(application.delegate.window.frame, application.delegate.window.screen.bounds);
+   // We are catching here two situations for multitasking view:
+   // a) The app is in Split View and the container gets resized -> !isRunningInFullScreen
+   // b) The app changes to/from fullscreen example: App runs in slide over mode and goes into fullscreen->
+@@ -286,6 +309,7 @@
+   }
+ #endif
+ }
++#endif // [macOS] [visionOS]
+ 
+ - (void)interfaceFrameDidChange
+ {

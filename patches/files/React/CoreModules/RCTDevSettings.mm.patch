@@ -1,0 +1,211 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/CoreModules/RCTDevSettings.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/CoreModules/RCTDevSettings.mm	2026-03-06 15:22:52
+@@ -20,6 +20,7 @@
+ #import <React/RCTProfile.h>
+ #import <React/RCTReloadCommand.h>
+ #import <React/RCTUtils.h>
++#import <React/RCTBundleURLProvider.h> // [macOS]
+ #import <atomic>
+ 
+ #import "CoreModulesPlugins.h"
+@@ -29,15 +30,13 @@
+ static NSString *const kRCTDevSettingIsInspectorShown = @"showInspector";
+ static NSString *const kRCTDevSettingShakeToShowDevMenu = @"shakeToShow";
+ static NSString *const kRCTDevSettingIsPerfMonitorShown = @"RCTPerfMonitorKey";
++static NSString *const kRCTDevSettingSecondClickToShowDevMenu = @"secondClickToShow"; // [macOS]
+ 
+ static NSString *const kRCTDevSettingsUserDefaultsKey = @"RCTDevMenu";
+ 
+-#if RCT_DEV
+-#import <React/RCTPackagerConnection.h>
+-#endif
+-
+ #if RCT_DEV_SETTINGS_ENABLE_PACKAGER_CONNECTION
+ #import <React/RCTPackagerClient.h>
++#import <React/RCTPackagerConnection.h>
+ #endif
+ 
+ #if RCT_ENABLE_INSPECTOR
+@@ -112,7 +111,11 @@
+       _settings[key] = defaultValues[key];
+     }
+   }
+-  [_userDefaults setObject:_settings forKey:kRCTDevSettingsUserDefaultsKey];
++
++  // [macOS] protect against race conditions where another thread holds a mutext trying to set this at the same time
++  RCTExecuteOnMainQueue(^{
++    [self->_userDefaults setObject:self->_settings forKey:kRCTDevSettingsUserDefaultsKey];
++  });
+ }
+ 
+ @end
+@@ -128,7 +131,7 @@
+ }
+ 
+ @property (nonatomic, strong) Class executorClass;
+-@property (nonatomic, readwrite, strong) id<RCTDevSettingsDataSource> dataSource;
++@property (atomic, readwrite, strong) id<RCTDevSettingsDataSource> dataSource; // [macOS] protect against race conditions where another thread changes the _dataSource
+ 
+ @end
+ 
+@@ -145,13 +148,10 @@
+   NSDictionary *defaultValues = @{
+     kRCTDevSettingShakeToShowDevMenu : @YES,
+     kRCTDevSettingHotLoadingEnabled : @YES,
++    kRCTDevSettingSecondClickToShowDevMenu: @YES, // [macOS]
+   };
+   RCTDevSettingsUserDefaultsDataSource *dataSource =
+       [[RCTDevSettingsUserDefaultsDataSource alloc] initWithDefaultValues:defaultValues];
+-#if RCT_DEV
+-  _packagerConnection = [RCTPackagerConnection new];
+-#endif
+-  _isShakeGestureEnabled = true;
+   return [self initWithDataSource:dataSource];
+ }
+ 
+@@ -184,27 +184,18 @@
+ 
+ - (void)initialize
+ {
+-#if RCT_DEV
+-  [_packagerConnection startWithBundleManager:_bundleManager];
+-#endif
+-
+ #if RCT_DEV_SETTINGS_ENABLE_PACKAGER_CONNECTION
+   if (numInitializedModules++ == 0) {
+-    reloadToken = [self
++    reloadToken = [[RCTPackagerConnection sharedPackagerConnection]
+         addNotificationHandler:^(id params) {
+           RCTTriggerReloadCommandListeners(@"Global hotkey");
+         }
+                          queue:dispatch_get_main_queue()
+                      forMethod:@"reload"];
+ #if RCT_DEV_MENU
+-    __weak __typeof(self) weakSelf = self;
+-    devMenuToken = [self
++    devMenuToken = [[RCTPackagerConnection sharedPackagerConnection]
+         addNotificationHandler:^(id params) {
+-          __typeof(self) strongSelf = weakSelf;
+-          if (strongSelf == nullptr) {
+-            return;
+-          }
+-          [[strongSelf.moduleRegistry moduleForName:"DevMenu"] show];
++          [[self.moduleRegistry moduleForName:"DevMenu"] show];
+         }
+                          queue:dispatch_get_main_queue()
+                      forMethod:@"devMenu"];
+@@ -255,9 +246,9 @@
+   [super invalidate];
+ #if RCT_DEV_SETTINGS_ENABLE_PACKAGER_CONNECTION
+   if (--numInitializedModules == 0) {
+-    [_packagerConnection removeHandler:reloadToken];
++    [[RCTPackagerConnection sharedPackagerConnection] removeHandler:reloadToken];
+ #if RCT_DEV_MENU
+-    [_packagerConnection removeHandler:devMenuToken];
++    [[RCTPackagerConnection sharedPackagerConnection] removeHandler:devMenuToken];
+ #endif
+   }
+ #endif
+@@ -270,18 +261,12 @@
+ 
+ - (void)_updateSettingWithValue:(id)value forKey:(NSString *)key
+ {
+-  [_dataSource updateSettingWithValue:value forKey:key];
++  [[self dataSource] updateSettingWithValue:value forKey:key]; // [macOS] protect against race conditions where another thread changes the _dataSource
+ }
+ 
+ - (id)settingForKey:(NSString *)key
+-{
+-  return [_dataSource settingForKey:key];
+-}
+-
+-- (void)setIsShakeGestureEnabled:(BOOL)isShakeGestureEnabled
+ {
+-  _isShakeGestureEnabled = isShakeGestureEnabled;
+-  [self setIsShakeToShowDevMenuEnabled:isShakeGestureEnabled];
++  return [[self dataSource] settingForKey:key]; // [macOS] protect against race conditions where another thread changes the _dataSource
+ }
+ 
+ - (BOOL)isDeviceDebuggingAvailable
+@@ -327,9 +312,21 @@
+ 
+ - (BOOL)isShakeToShowDevMenuEnabled
+ {
+-  return _isShakeGestureEnabled && [[self settingForKey:kRCTDevSettingShakeToShowDevMenu] boolValue];
++  return [[self settingForKey:kRCTDevSettingShakeToShowDevMenu] boolValue];
+ }
+ 
++// [macOS
++RCT_EXPORT_METHOD(setIsSecondaryClickToShowDevMenuEnabled:(BOOL)enabled)
++{
++  [self _updateSettingWithValue:@(enabled) forKey:kRCTDevSettingSecondClickToShowDevMenu];
++}
++
++- (BOOL)isSecondaryClickToShowDevMenuEnabled
++{
++  return [[self settingForKey:kRCTDevSettingSecondClickToShowDevMenu] boolValue];
++}
++// macOS]
++
+ RCT_EXPORT_METHOD(setProfilingEnabled : (BOOL)enabled)
+ {
+   [self _updateSettingWithValue:@(enabled) forKey:kRCTDevSettingProfilingEnabled];
+@@ -435,29 +432,12 @@
+     self.bridge.executorClass = executorClass;
+     RCTTriggerReloadCommandListeners(@"Custom executor class reset");
+   }
+-}
+-
+-#if RCT_DEV
+-- (RCTHandlerToken)addNotificationHandler:(RCTNotificationHandler)handler
+-                                    queue:(dispatch_queue_t)queue
+-                                forMethod:(NSString *)method
+-{
+-  return [_packagerConnection addNotificationHandler:handler queue:queue forMethod:method];
+ }
+ 
+-- (RCTHandlerToken)addRequestHandler:(RCTRequestHandler)handler
+-                               queue:(dispatch_queue_t)queue
+-                           forMethod:(NSString *)method
+-{
+-  return [_packagerConnection addRequestHandler:handler queue:queue forMethod:method];
+-}
+-
+-#endif
+-
+ - (void)addHandler:(id<RCTPackagerClientMethod>)handler forPackagerMethod:(NSString *)name
+ {
+ #if RCT_DEV_SETTINGS_ENABLE_PACKAGER_CONNECTION
+-  [_packagerConnection addHandler:handler forMethod:name];
++  [[RCTPackagerConnection sharedPackagerConnection] addHandler:handler forMethod:name];
+ #endif
+ }
+ 
+@@ -544,13 +524,15 @@
+ 
+ @end
+ 
+-#else // #if RCT_DEV_MENU || RCT_REMOTE_PROFILE
++#else // #if RCT_DEV_MENU
+ 
+ @interface RCTDevSettings () <NativeDevSettingsSpec>
+ @end
+ 
+ @implementation RCTDevSettings
+ 
++RCT_EXPORT_MODULE()	// [macOS]
++
+ - (instancetype)initWithDataSource:(id<RCTDevSettingsDataSource>)dataSource
+ {
+   return [super init];
+@@ -610,10 +592,6 @@
+   return std::make_shared<facebook::react::NativeDevSettingsSpecJSI>(params);
+ }
+ 
+-- (void)addHandler:(id<RCTPackagerClientMethod>)handler forPackagerMethod:(NSString *)name
+-{
+-}
+-
+ @end
+ 
+ #endif // #if RCT_DEV_MENU

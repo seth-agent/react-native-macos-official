@@ -1,0 +1,167 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Components/ScrollView/ScrollView.js	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Components/ScrollView/ScrollView.js	2026-03-06 15:22:52
+@@ -31,7 +31,6 @@
+   VScrollContentViewNativeComponent,
+   VScrollViewNativeComponent,
+ } from '../../../src/private/components/scrollview/VScrollViewNativeComponents';
+-import * as ReactNativeFeatureFlags from '../../../src/private/featureflags/ReactNativeFeatureFlags';
+ import AnimatedImplementation from '../../Animated/AnimatedImplementation';
+ import FrameRateLogger from '../../Interaction/FrameRateLogger';
+ import {findNodeHandle} from '../../ReactNative/RendererProxy';
+@@ -456,12 +455,22 @@
+    * instead of vertically in a column. The default value is false.
+    */
+   horizontal?: ?boolean,
++  /**
++   * When true, the scroll view's indicator is shown in an overlay. // [macOS
++   * This does does not take up any content view space.
++   * https://developer.apple.com/documentation/appkit/nsscrollerstyle/nsscrollerstyleoverlay // macOS]
++   */
++  hasOverlayStyleIndicator?: ?boolean, // [macOS]
+   /**
+    * If sticky headers should stick at the bottom instead of the top of the
+    * ScrollView. This is usually used with inverted ScrollViews.
+    */
+   invertStickyHeaders?: ?boolean,
+   /**
++   * Reverses the direction of scroll. Uses native inversion on macOS and scale transforms of -1 elsewhere // [macOS]
++   */
++  inverted?: ?boolean, // [macOS]
++  /**
+    * Determines whether the keyboard gets dismissed in response to a drag.
+    *
+    * *Cross platform*
+@@ -681,6 +690,7 @@
+ }>;
+ 
+ type ScrollViewState = {
++  contentKey: number, // [macOS]
+   layoutHeight: ?number,
+ };
+ 
+@@ -768,6 +778,7 @@
+   _subscriptionKeyboardDidHide: ?EventSubscription = null;
+ 
+   state: ScrollViewState = {
++    contentKey: 1, // [macOS]
+     layoutHeight: null,
+   };
+ 
+@@ -995,7 +1006,10 @@
+       },
+       animated?: boolean, // deprecated, put this inside the rect argument instead
+     ) => {
+-      invariant(Platform.OS === 'ios', 'zoomToRect is not implemented');
++      invariant(
++        Platform.OS === 'ios' || Platform.OS === 'macos', // [macOS]
++        'zoomToRect is not implemented',
++      );
+       if ('animated' in rect) {
+         this._animated = rect.animated;
+         delete rect.animated;
+@@ -1134,6 +1148,16 @@
+     }
+   }
+ 
++  // [macOS
++  _handlePreferredScrollerStyleDidChange = (event: ScrollEvent) => {
++    this.setState({contentKey: this.state.contentKey + 1});
++  }; // macOS]
++
++  // [macOS
++  _handleInvertedDidChange = () => {
++    this.setState({contentKey: this.state.contentKey + 1});
++  }; // macOS]
++
+   _handleScroll = (e: ScrollEvent) => {
+     this._observedScrollSinceBecomingResponder = true;
+     this.props.onScroll && this.props.onScroll(e);
+@@ -1170,7 +1194,6 @@
+       // they are callable from the ref.
+ 
+       // $FlowFixMe[prop-missing] - Known issue with appending custom methods.
+-      // $FlowFixMe[incompatible-type]
+       // $FlowFixMe[unsafe-object-assign]
+       const publicInstance: PublicScrollViewInstance = Object.assign(
+         nativeInstance,
+@@ -1504,7 +1527,7 @@
+         keyboardNeverPersistTaps &&
+         this._keyboardIsDismissible() &&
+         e.target != null &&
+-        // $FlowFixMe[incompatible-type] Error supressed during the migration of HostInstance to ReactNativeElement
++        // $FlowFixMe[incompatible-type]
+         !TextInputState.isTextInput(e.target)
+       ) {
+         return true;
+@@ -1690,7 +1713,6 @@
+           return (
+             <StickyHeaderComponent
+               key={key}
+-              /* $FlowFixMe[incompatible-type] */
+               ref={ref => this._setStickyHeaderRef(key, ref)}
+               nextHeaderLayoutY={this._headerLayoutYs.get(
+                 this._getKeyForIndex(nextIndex, children),
+@@ -1736,6 +1758,8 @@
+             ? false
+             : this.props.removeClippedSubviews
+         }
++        key={this.state.contentKey} // [macOS]
++        inverted={this.props.inverted} // [macOS]
+         collapsable={false}
+         collapsableChildren={!preserveChildren}>
+         {children}
+@@ -1754,11 +1778,8 @@
+ 
+     const baseStyle = horizontal ? styles.baseHorizontal : styles.baseVertical;
+ 
+-    const {
+-      experimental_endDraggingSensitivityMultiplier,
+-      maintainVisibleContentPosition,
+-      ...otherProps
+-    } = this.props;
++    const {experimental_endDraggingSensitivityMultiplier, ...otherProps} =
++      this.props;
+     const props = {
+       ...otherProps,
+       alwaysBounceHorizontal,
+@@ -1767,6 +1788,9 @@
+       // Override the onContentSizeChange from props, since this event can
+       // bubble up from TextInputs
+       onContentSizeChange: null,
++      onInvertedDidChange: this._handleInvertedDidChange, // [macOS]
++      onPreferredScrollerStyleDidChange:
++        this._handlePreferredScrollerStyleDidChange, // [macOS]
+       onLayout: this._handleLayout,
+       onMomentumScrollBegin: this._handleMomentumScrollBegin,
+       onMomentumScrollEnd: this._handleMomentumScrollEnd,
+@@ -1805,16 +1829,17 @@
+           this.props.pagingEnabled === true &&
+           this.props.snapToInterval == null &&
+           this.props.snapToOffsets == null,
++        // [macOS
++        macos:
++          this.props.pagingEnabled === true &&
++          this.props.snapToInterval == null &&
++          this.props.snapToOffsets == null, // macOS]
+         // on Android, pagingEnabled must be set to true to have snapToInterval / snapToOffsets work
+         android:
+           this.props.pagingEnabled === true ||
+           this.props.snapToInterval != null ||
+           this.props.snapToOffsets != null,
+       }),
+-      maintainVisibleContentPosition:
+-        ReactNativeFeatureFlags.disableMaintainVisibleContentPosition()
+-          ? undefined
+-          : this.props.maintainVisibleContentPosition,
+     };
+ 
+     const {decelerationRate} = this.props;
+@@ -1844,7 +1869,7 @@
+         // Note: we should split props.style on the inner and outer props
+         // however, the ScrollView still needs the baseStyle to be scrollable
+         const {outer, inner} = splitLayoutProps(flattenStyle(props.style));
+-        // $FlowFixMe[incompatible-type]
++        // $FlowFixMe[incompatible-call]
+         return cloneElement(
+           refreshControl,
+           {style: StyleSheet.compose(baseStyle, outer)},

@@ -1,0 +1,373 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/CoreModules/RCTAccessibilityManager.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/CoreModules/RCTAccessibilityManager.mm	2026-03-06 15:22:52
+@@ -20,6 +20,8 @@
+ NSString *const RCTAccessibilityManagerDidUpdateMultiplierNotification =
+     @"RCTAccessibilityManagerDidUpdateMultiplierNotification";
+ 
++static void *AccessibilityVoiceOverChangeContext = &AccessibilityVoiceOverChangeContext; // [macOS]
++
+ @interface RCTAccessibilityManager () <NativeAccessibilityManagerSpec>
+ 
+ @property (nonatomic, copy) NSString *contentSizeCategory;
+@@ -45,6 +47,7 @@
+   if (self = [super init]) {
+     _multiplier = 1.0;
+ 
++#if !TARGET_OS_OSX // [macOS]
+     // TODO: can this be moved out of the startup path?
+     [[NSNotificationCenter defaultCenter] addObserver:self
+                                              selector:@selector(didReceiveNewContentSizeCategory:)
+@@ -90,7 +93,18 @@
+                                              selector:@selector(voiceVoiceOverStatusDidChange:)
+                                                  name:UIAccessibilityVoiceOverStatusDidChangeNotification
+                                                object:nil];
++#else // [macOS
++        [[NSWorkspace sharedWorkspace] addObserver:self
++                                        forKeyPath:@"voiceOverEnabled"
++                                           options:(NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld)
++                                           context:AccessibilityVoiceOverChangeContext];
++        [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self
++                                                 selector:@selector(accessibilityDisplayOptionsChange:)
++                                                     name:NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification
++                                                   object:nil];
++#endif // macOS]
+ 
++#if !TARGET_OS_OSX // [macOS]
+     self.contentSizeCategory = RCTSharedApplication().preferredContentSizeCategory;
+     _isBoldTextEnabled = UIAccessibilityIsBoldTextEnabled();
+     _isGrayscaleEnabled = UIAccessibilityIsGrayscaleEnabled();
+@@ -99,10 +113,28 @@
+     _isDarkerSystemColorsEnabled = UIAccessibilityDarkerSystemColorsEnabled();
+     _isReduceTransparencyEnabled = UIAccessibilityIsReduceTransparencyEnabled();
+     _isVoiceOverEnabled = UIAccessibilityIsVoiceOverRunning();
++#else // [macOS
++    NSWorkspace *sharedWorkspace = [NSWorkspace sharedWorkspace];
++    _isInvertColorsEnabled = [sharedWorkspace accessibilityDisplayShouldInvertColors];
++    _isReduceMotionEnabled = [sharedWorkspace accessibilityDisplayShouldReduceMotion];
++    _isReduceTransparencyEnabled = [sharedWorkspace accessibilityDisplayShouldReduceTransparency];
++    _isVoiceOverEnabled = [sharedWorkspace isVoiceOverEnabled];
++    _isHighContrastEnabled = [sharedWorkspace accessibilityDisplayShouldIncreaseContrast];
++#endif // macOS]
+   }
+   return self;
+ }
+ 
++#if TARGET_OS_OSX // [macOS
++- (void)dealloc
++{
++  [[NSWorkspace sharedWorkspace] removeObserver:self
++                                     forKeyPath:@"voiceOverEnabled"
++                                        context:AccessibilityVoiceOverChangeContext];
++}
++#endif // macOS]
++
++#if !TARGET_OS_OSX // [macOS]
+ - (void)didReceiveNewContentSizeCategory:(NSNotification *)note
+ {
+   self.contentSizeCategory = note.userInfo[UIContentSizeCategoryNewValueKey];
+@@ -184,6 +216,11 @@
+ #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+     [[_moduleRegistry moduleForName:"EventDispatcher"] sendDeviceEventWithName:@"darkerSystemColorsChanged"
+                                                                           body:@(_isDarkerSystemColorsEnabled)];
++    // [macOS Also fire the highContrastChanged event for iOS
++    _isHighContrastEnabled = newDarkerSystemColorsEnabled;
++    [[_moduleRegistry moduleForName:"EventDispatcher"] sendDeviceEventWithName:@"highContrastChanged"
++                                                                          body:@(_isDarkerSystemColorsEnabled)];
++    // macOS]
+ 
+ #pragma clang diagnostic pop
+   }
+@@ -207,7 +244,72 @@
+   BOOL isVoiceOverEnabled = UIAccessibilityIsVoiceOverRunning();
+   [self _setIsVoiceOverEnabled:isVoiceOverEnabled];
+ }
++#else // [macOS
++- (void)accessibilityDisplayOptionsChange:(NSNotification *)notification
++{
++  BOOL newInvertColorsEnabled = [[NSWorkspace sharedWorkspace] accessibilityDisplayShouldInvertColors];
++  BOOL newReduceMotionEnabled = [[NSWorkspace sharedWorkspace] accessibilityDisplayShouldReduceMotion];
++  BOOL newReduceTransparencyEnabled = [[NSWorkspace sharedWorkspace] accessibilityDisplayShouldReduceTransparency];
++  BOOL newHighContrastEnabled = [[NSWorkspace sharedWorkspace] accessibilityDisplayShouldIncreaseContrast];
+ 
++
++  if (_isHighContrastEnabled != newHighContrastEnabled) {
++    _isHighContrastEnabled = newHighContrastEnabled;
++#pragma clang diagnostic push
++#pragma clang diagnostic ignored "-Wdeprecated-declarations"
++    [[_moduleRegistry moduleForName:"EventDispatcher"] sendDeviceEventWithName:@"highContrastChanged"
++                                                                          body:@(_isHighContrastEnabled)];
++#pragma clang diagnostic pop
++  }
++  if (_isInvertColorsEnabled != newInvertColorsEnabled) {
++    _isInvertColorsEnabled = newInvertColorsEnabled;
++#pragma clang diagnostic push
++#pragma clang diagnostic ignored "-Wdeprecated-declarations"
++    [[_moduleRegistry moduleForName:"EventDispatcher"] sendDeviceEventWithName:@"invertColorsChanged"
++                                                                          body:@(_isInvertColorsEnabled)];
++#pragma clang diagnostic pop
++  }
++  if (_isReduceMotionEnabled != newReduceMotionEnabled) {
++    _isReduceMotionEnabled = newReduceMotionEnabled;
++#pragma clang diagnostic push
++#pragma clang diagnostic ignored "-Wdeprecated-declarations"
++    [[_moduleRegistry moduleForName:"EventDispatcher"] sendDeviceEventWithName:@"reduceMotionChanged"
++                                                                          body:@(_isReduceMotionEnabled)];
++#pragma clang diagnostic pop
++  }
++  if (_isReduceTransparencyEnabled != newReduceTransparencyEnabled) {
++    _isReduceTransparencyEnabled = newReduceTransparencyEnabled;
++#pragma clang diagnostic push
++#pragma clang diagnostic ignored "-Wdeprecated-declarations"
++    [[_moduleRegistry moduleForName:"EventDispatcher"] sendDeviceEventWithName:@"reduceTransparencyChanged"
++                                                                          body:@(_isReduceTransparencyEnabled)];
++#pragma clang diagnostic pop
++  }
++}
++
++- (void)observeValueForKeyPath:(NSString *)keyPath
++                      ofObject:(id)object
++                        change:(NSDictionary *)change
++                       context:(void *)context {
++  if (context == AccessibilityVoiceOverChangeContext) {
++    BOOL newIsVoiceOverEnabled = [[NSWorkspace sharedWorkspace] isVoiceOverEnabled];
++    if (_isVoiceOverEnabled != newIsVoiceOverEnabled) {
++      _isVoiceOverEnabled = newIsVoiceOverEnabled;
++#pragma clang diagnostic push
++#pragma clang diagnostic ignored "-Wdeprecated-declarations"
++      [[_moduleRegistry moduleForName:"EventDispatcher"] sendDeviceEventWithName:@"screenReaderChanged"
++                                                                            body:@(_isVoiceOverEnabled)];
++#pragma clang diagnostic pop
++    }
++  } else {
++    [super observeValueForKeyPath:keyPath
++                         ofObject:object
++                           change:change
++                          context:context];
++  }
++}
++#endif // macOS]
++
+ - (void)_setIsVoiceOverEnabled:(BOOL)isVoiceOverEnabled
+ {
+   if (_isVoiceOverEnabled != isVoiceOverEnabled) {
+@@ -255,6 +357,7 @@
+ 
+ - (NSDictionary<NSString *, NSNumber *> *)multipliers
+ {
++#if !TARGET_OS_OSX // [macOS]
+   if (_multipliers == nil) {
+     _multipliers = @{
+       UIContentSizeCategoryExtraSmall : @0.823,
+@@ -271,14 +374,16 @@
+       UIContentSizeCategoryAccessibilityExtraExtraExtraLarge : @3.571
+     };
+   }
++#endif // [macOS]
+   return _multipliers;
+ }
+ 
+-RCT_EXPORT_METHOD(
+-    setAccessibilityContentSizeMultipliers : (
+-        JS::NativeAccessibilityManager::SpecSetAccessibilityContentSizeMultipliersJSMultipliers &)JSMultipliers)
++RCT_EXPORT_METHOD(setAccessibilityContentSizeMultipliers
++                  : (JS::NativeAccessibilityManager::SpecSetAccessibilityContentSizeMultipliersJSMultipliers &)
++                      JSMultipliers)
+ {
+   NSMutableDictionary<NSString *, NSNumber *> *multipliers = [NSMutableDictionary new];
++#if !TARGET_OS_OSX // [macOS]
+   setMultipliers(multipliers, UIContentSizeCategoryExtraSmall, JSMultipliers.extraSmall());
+   setMultipliers(multipliers, UIContentSizeCategorySmall, JSMultipliers.small());
+   setMultipliers(multipliers, UIContentSizeCategoryMedium, JSMultipliers.medium());
+@@ -295,6 +400,7 @@
+       multipliers,
+       UIContentSizeCategoryAccessibilityExtraExtraExtraLarge,
+       JSMultipliers.accessibilityExtraExtraExtraLarge());
++#endif // [macOS]
+   self.multipliers = multipliers;
+ }
+ 
+@@ -311,42 +417,43 @@
+ RCT_EXPORT_METHOD(setAccessibilityFocus : (double)reactTag)
+ {
+   dispatch_async(dispatch_get_main_queue(), ^{
+-    UIView *view = [self.viewRegistry_DEPRECATED viewForReactTag:@(reactTag)];
++    RCTPlatformView *view = [self.viewRegistry_DEPRECATED viewForReactTag:@(reactTag)]; // [macOS]
++#if !TARGET_OS_OSX // [macOS]
+     UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, view);
++#else // [macOS
++    [[view window] makeFirstResponder:view];
++    NSAccessibilityPostNotification(view, NSAccessibilityLayoutChangedNotification);
++#endif // macOS]
+   });
+ }
+ 
+ RCT_EXPORT_METHOD(announceForAccessibility : (NSString *)announcement)
+ {
++#if !TARGET_OS_OSX // [macOS]
+   UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, announcement);
++#else // [macOS
++  dispatch_async(dispatch_get_main_queue(), ^{
++    NSAccessibilityPostNotificationWithUserInfo(
++                                                NSApp,
++                                                NSAccessibilityAnnouncementRequestedNotification,
++                                                @{NSAccessibilityAnnouncementKey : announcement,
++                                                  NSAccessibilityPriorityKey : @(NSAccessibilityPriorityHigh)
++                                                }
++                                                );
++  });
++#endif // macOS]
+ }
+ 
+-RCT_EXPORT_METHOD(
+-    announceForAccessibilityWithOptions : (NSString *)announcement options : (
+-        JS::NativeAccessibilityManager::SpecAnnounceForAccessibilityWithOptionsOptions &)options)
++RCT_EXPORT_METHOD(announceForAccessibilityWithOptions
++                  : (NSString *)announcement options
++                  : (JS::NativeAccessibilityManager::SpecAnnounceForAccessibilityWithOptionsOptions &)options)
+ {
+-  NSMutableDictionary<NSString *, id> *attrsDictionary = [NSMutableDictionary new];
++#if !TARGET_OS_OSX // [macOS]
++  NSMutableDictionary<NSString *, NSNumber *> *attrsDictionary = [NSMutableDictionary new];
+   if (options.queue()) {
+     attrsDictionary[UIAccessibilitySpeechAttributeQueueAnnouncement] = @(*(options.queue()) ? YES : NO);
+   }
+ 
+-  if (options.priority() != nil) {
+-    NSString *priorityString = options.priority();
+-    if (@available(iOS 17.0, *)) {
+-      NSString *priorityValue = nil;
+-      if ([priorityString isEqualToString:@"low"]) {
+-        priorityValue = UIAccessibilityPriorityLow;
+-      } else if ([priorityString isEqualToString:@"default"]) {
+-        priorityValue = UIAccessibilityPriorityDefault;
+-      } else if ([priorityString isEqualToString:@"high"]) {
+-        priorityValue = UIAccessibilityPriorityHigh;
+-      }
+-      if (priorityValue != nil) {
+-        attrsDictionary[UIAccessibilitySpeechAttributeAnnouncementPriority] = priorityValue;
+-      }
+-    }
+-  }
+-
+   if (attrsDictionary.count > 0) {
+     NSAttributedString *announcementWithAttrs = [[NSAttributedString alloc] initWithString:announcement
+                                                                                 attributes:attrsDictionary];
+@@ -354,6 +461,18 @@
+   } else {
+     UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, announcement);
+   }
++#else // [macOS
++  NSAccessibilityPriorityLevel announcementPriority = options.queue() ? NSAccessibilityPriorityLow : NSAccessibilityPriorityHigh;
++  dispatch_async(dispatch_get_main_queue(), ^{
++    NSAccessibilityPostNotificationWithUserInfo(
++                                                NSApp,
++                                                NSAccessibilityAnnouncementRequestedNotification,
++                                                @{NSAccessibilityAnnouncementKey : announcement,
++                                                  NSAccessibilityPriorityKey : @(announcementPriority)
++                                                }
++                                                );
++  });
++#endif // macOS]
+ }
+ 
+ RCT_EXPORT_METHOD(getMultiplier : (RCTResponseSenderBlock)callback)
+@@ -363,61 +482,80 @@
+   }
+ }
+ 
+-RCT_EXPORT_METHOD(
+-    getCurrentBoldTextState : (RCTResponseSenderBlock)onSuccess onError : (__unused RCTResponseSenderBlock)onError)
++RCT_EXPORT_METHOD(getCurrentBoldTextState
++                  : (RCTResponseSenderBlock)onSuccess onError
++                  : (__unused RCTResponseSenderBlock)onError)
+ {
+   onSuccess(@[ @(_isBoldTextEnabled) ]);
+ }
+ 
+-RCT_EXPORT_METHOD(
+-    getCurrentGrayscaleState : (RCTResponseSenderBlock)onSuccess onError : (__unused RCTResponseSenderBlock)onError)
++RCT_EXPORT_METHOD(getCurrentGrayscaleState
++                  : (RCTResponseSenderBlock)onSuccess onError
++                  : (__unused RCTResponseSenderBlock)onError)
+ {
+   onSuccess(@[ @(_isGrayscaleEnabled) ]);
+ }
+ 
+-RCT_EXPORT_METHOD(
+-    getCurrentInvertColorsState : (RCTResponseSenderBlock)onSuccess onError : (__unused RCTResponseSenderBlock)onError)
++RCT_EXPORT_METHOD(getCurrentInvertColorsState
++                  : (RCTResponseSenderBlock)onSuccess onError
++                  : (__unused RCTResponseSenderBlock)onError)
+ {
+   onSuccess(@[ @(_isInvertColorsEnabled) ]);
+ }
+ 
+-RCT_EXPORT_METHOD(
+-    getCurrentReduceMotionState : (RCTResponseSenderBlock)onSuccess onError : (__unused RCTResponseSenderBlock)onError)
++RCT_EXPORT_METHOD(getCurrentReduceMotionState
++                  : (RCTResponseSenderBlock)onSuccess onError
++                  : (__unused RCTResponseSenderBlock)onError)
+ {
+   onSuccess(@[ @(_isReduceMotionEnabled) ]);
+ }
+ 
+-RCT_EXPORT_METHOD(
+-    getCurrentDarkerSystemColorsState : (RCTResponseSenderBlock)onSuccess onError : (__unused RCTResponseSenderBlock)
+-        onError)
++RCT_EXPORT_METHOD(getCurrentDarkerSystemColorsState
++                  : (RCTResponseSenderBlock)onSuccess onError
++                  : (__unused RCTResponseSenderBlock)onError)
+ {
+   onSuccess(@[ @(_isDarkerSystemColorsEnabled) ]);
+ }
+ 
+-RCT_EXPORT_METHOD(
+-    getCurrentPrefersCrossFadeTransitionsState : (RCTResponseSenderBlock)
+-        onSuccess onError : (__unused RCTResponseSenderBlock)onError)
++RCT_EXPORT_METHOD(getCurrentPrefersCrossFadeTransitionsState
++                  : (RCTResponseSenderBlock)onSuccess onError
++                  : (__unused RCTResponseSenderBlock)onError)
+ {
++#if !TARGET_OS_OSX // [macOS]
+   if (@available(iOS 14.0, *)) {
+     onSuccess(@[ @(UIAccessibilityPrefersCrossFadeTransitions()) ]);
+   } else {
+     onSuccess(@[ @(false) ]);
+   }
++#else // [macOS
++  onSuccess(@[ @(false) ]); // iOS only
++#endif // macOS]
+ }
+ 
+-RCT_EXPORT_METHOD(
+-    getCurrentReduceTransparencyState : (RCTResponseSenderBlock)onSuccess onError : (__unused RCTResponseSenderBlock)
+-        onError)
++RCT_EXPORT_METHOD(getCurrentReduceTransparencyState
++                  : (RCTResponseSenderBlock)onSuccess onError
++                  : (__unused RCTResponseSenderBlock)onError)
+ {
+   onSuccess(@[ @(_isReduceTransparencyEnabled) ]);
+ }
+ 
+-RCT_EXPORT_METHOD(
+-    getCurrentVoiceOverState : (RCTResponseSenderBlock)onSuccess onError : (__unused RCTResponseSenderBlock)onError)
++RCT_EXPORT_METHOD(getCurrentVoiceOverState
++                  : (RCTResponseSenderBlock)onSuccess onError
++                  : (__unused RCTResponseSenderBlock)onError)
+ {
+   onSuccess(@[ @(_isVoiceOverEnabled) ]);
+ }
+ 
++// [macOS Implement for both iOS and macOS
++RCT_EXPORT_METHOD(getCurrentHighContrastState
++                  : (RCTResponseSenderBlock)onSuccess onError
++                  : (__unused RCTResponseSenderBlock)onError)
++{
++  onSuccess(@[ @(_isHighContrastEnabled) ]);
++}
++// macOS]
++
++
+ - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
+     (const facebook::react::ObjCTurboModule::InitParams &)params
+ {

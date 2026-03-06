@@ -1,0 +1,49 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Image/RCTAnimatedImage.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Image/RCTAnimatedImage.mm	2026-03-06 15:22:52
+@@ -42,6 +42,7 @@
+ 
+     _imageSource = imageSource;
+ 
++#if !TARGET_OS_OSX // [macOS]
+     // grab image at the first index
+     UIImage *image = [self animatedImageFrameAtIndex:0];
+     if (!image) {
+@@ -53,6 +54,9 @@
+                                              selector:@selector(didReceiveMemoryWarning:)
+                                                  name:UIApplicationDidReceiveMemoryWarningNotification
+                                                object:nil];
++#else // [macOS
++    self = [super initWithData:data];
++#endif // macOS]
+   }
+ 
+   return self;
+@@ -144,13 +148,17 @@
+   return _frames[index].duration;
+ }
+ 
+-- (UIImage *)animatedImageFrameAtIndex:(NSUInteger)index
++- (RCTPlatformImage *)animatedImageFrameAtIndex:(NSUInteger)index // [macOS]
+ {
+   CGImageRef imageRef = CGImageSourceCreateImageAtIndex(_imageSource, index, NULL);
+   if (!imageRef) {
+     return nil;
+   }
++#if !TARGET_OS_OSX // [macOS]
+   UIImage *image = [[UIImage alloc] initWithCGImage:imageRef scale:_scale orientation:UIImageOrientationUp];
++#else // [macOS
++  NSImage *image = [[NSImage alloc] initWithCGImage:imageRef size:CGSizeMake(CGImageGetWidth(imageRef), CGImageGetHeight(imageRef))];
++#endif // macOS]
+   CGImageRelease(imageRef);
+   return image;
+ }
+@@ -170,6 +178,9 @@
+     CFRelease(_imageSource);
+     _imageSource = NULL;
+   }
++#if !TARGET_OS_OSX // [macOS]
++  [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidReceiveMemoryWarningNotification object:nil];
++#endif // [macOS]
+ }
+ 
+ @end

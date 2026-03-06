@@ -1,0 +1,61 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/CoreModules/RCTTiming.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/CoreModules/RCTTiming.mm	2026-03-06 15:22:52
+@@ -129,13 +129,18 @@
+   _timers = [NSMutableDictionary new];
+   _inBackground = NO;
+   RCTExecuteOnMainQueue(^{
+-    if (!self->_inBackground &&
++#if !TARGET_OS_OSX // [macOS]
++     if (!self->_inBackground &&
+         ([RCTSharedApplication() applicationState] == UIApplicationStateBackground ||
+          [UIDevice currentDevice].proximityState)) {
++#else // [macOS
++    if (!self->_inBackground && ![RCTSharedApplication() isHidden]) {
++#endif
+       [self appDidMoveToBackground];
+     }
+   });
+ 
++#if !TARGET_OS_OSX // [macOS]
+   for (NSString *name in @[
+          UIApplicationWillResignActiveNotification,
+          UIApplicationDidEnterBackgroundNotification,
+@@ -158,6 +163,7 @@
+                                            selector:@selector(proximityChanged)
+                                                name:UIDeviceProximityStateDidChangeNotification
+                                              object:nil];
++#endif // [macOS]
+ }
+ 
+ - (void)dealloc
+@@ -194,6 +200,7 @@
+   [self startTimers];
+ }
+ 
++#if !TARGET_OS_OSX // [macOS]
+ - (void)proximityChanged
+ {
+   BOOL isClose = [UIDevice currentDevice].proximityState;
+@@ -203,6 +210,7 @@
+     [self appDidMoveToForeground];
+   }
+ }
++#endif // [macOS]
+ 
+ - (void)stopTimers
+ {
+@@ -353,9 +361,11 @@
+  * calculating the timer's target time. We calculate this by passing in
+  * Date.now() from JS and then subtracting that from the current time here.
+  */
+-RCT_EXPORT_METHOD(
+-    createTimer : (double)callbackID duration : (NSTimeInterval)jsDuration jsSchedulingTime : (double)
+-        jsSchedulingTime repeats : (BOOL)repeats)
++RCT_EXPORT_METHOD(createTimer
++                  : (double)callbackID duration
++                  : (NSTimeInterval)jsDuration jsSchedulingTime
++                  : (double)jsSchedulingTime repeats
++                  : (BOOL)repeats)
+ {
+   NSNumber *callbackIdObjc = [NSNumber numberWithDouble:callbackID];
+   NSDate *schedulingTime = [RCTConvert NSDate:[NSNumber numberWithDouble:jsSchedulingTime]];

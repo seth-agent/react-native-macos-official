@@ -1,0 +1,23 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Views/RCTFont.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Views/RCTFont.h	2026-03-06 15:22:52
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <Foundation/Foundation.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #import <React/RCTConvert.h>
+ 
+@@ -17,10 +17,8 @@
+  * provide a different base font, use this override. The font weight supplied to your
+  * handler will be one of "ultralight", "thin", "light", "regular", "medium",
+  * "semibold", "extrabold", "bold", "heavy", or "black".
+- *
+- * @deprecated Use RCTSetDefaultFontResolver
+  */
+-RCT_EXTERN void RCTSetDefaultFontHandler(RCTFontHandler handler) __attribute__((deprecated));
++RCT_EXTERN void RCTSetDefaultFontHandler(RCTFontHandler handler);
+ RCT_EXTERN BOOL RCTHasFontHandlerSet(void);
+ RCT_EXTERN RCTFontWeight RCTGetFontWeight(UIFont *font);
+ 

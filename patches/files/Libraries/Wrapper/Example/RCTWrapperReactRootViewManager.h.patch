@@ -1,0 +1,23 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Wrapper/Example/RCTWrapperReactRootViewManager.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Wrapper/Example/RCTWrapperReactRootViewManager.h	2026-03-06 15:22:52
+@@ -5,19 +5,14 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+-#ifndef RCT_REMOVE_LEGACY_ARCH
+-
+ #import <RCTWrapper/RCTWrapperViewManager.h>
+ 
+ NS_ASSUME_NONNULL_BEGIN
+ 
+-__attribute__((deprecated("This API will be removed along with the legacy architecture.")))
+ @interface RCTWrapperReactRootViewManager : RCTWrapperViewManager
+ 
+ @end
+ 
+ NS_ASSUME_NONNULL_END
+-
+-#endif // RCT_REMOVE_LEGACY_ARCH

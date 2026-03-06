@@ -1,0 +1,42 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Text/TextInput/RCTBackedTextInputDelegateAdapter.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Text/TextInput/RCTBackedTextInputDelegateAdapter.h	2026-03-06 15:22:52
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTTextUIKit.h> // [macOS]
+ 
+ #import "RCTBackedTextInputDelegate.h"
+ #import "RCTBackedTextInputViewProtocol.h"
+@@ -14,11 +14,18 @@
+ 
+ #pragma mark - RCTBackedTextFieldDelegateAdapter (for UITextField)
+ 
++@protocol RCTBackedTextInputViewProtocol; // [macOS]
++@protocol RCTBackedTextInputDelegate; // [macOS]
++
+ @interface RCTBackedTextFieldDelegateAdapter : NSObject
+ 
+ - (instancetype)initWithTextField:(UITextField<RCTBackedTextInputViewProtocol> *)backedTextInputView;
+ 
++#if !TARGET_OS_OSX // [macOS]
+ - (void)skipNextTextInputDidChangeSelectionEventWithTextRange:(UITextRange *)textRange;
++#else // [macOS
++- (void)skipNextTextInputDidChangeSelectionEventWithTextRange:(NSRange)textRange;
++#endif // macOS]
+ - (void)selectedTextRangeWasSet;
+ 
+ @end
+@@ -29,7 +36,11 @@
+ 
+ - (instancetype)initWithTextView:(UITextView<RCTBackedTextInputViewProtocol> *)backedTextInputView;
+ 
++#if !TARGET_OS_OSX // [macOS]
+ - (void)skipNextTextInputDidChangeSelectionEventWithTextRange:(UITextRange *)textRange;
++#else // [macOS
++- (void)skipNextTextInputDidChangeSelectionEventWithTextRange:(NSRange)textRange;
++#endif // macOS]
+ 
+ @end
+ 

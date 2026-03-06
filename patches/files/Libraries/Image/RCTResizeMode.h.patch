@@ -1,0 +1,48 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Image/RCTResizeMode.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Image/RCTResizeMode.h	2026-03-06 15:22:52
+@@ -8,12 +8,21 @@
+ #import <React/RCTConvert.h>
+ 
+ typedef NS_ENUM(NSInteger, RCTResizeMode) {
++#if !TARGET_OS_OSX // [macOS]
+   RCTResizeModeCover = UIViewContentModeScaleAspectFill,
+   RCTResizeModeContain = UIViewContentModeScaleAspectFit,
+   RCTResizeModeStretch = UIViewContentModeScaleToFill,
+   RCTResizeModeCenter = UIViewContentModeCenter,
+-  RCTResizeModeRepeat = -1, // Use negative values to avoid conflicts with iOS enum values.
++  RCTResizeModeRepeat = -1, // Use negative values to avoid
+   RCTResizeModeNone = UIViewContentModeTopLeft,
++#else // [macOS
++  RCTResizeModeCover = -2, // Not supported by NSImageView
++  RCTResizeModeContain = NSImageScaleProportionallyUpOrDown,
++  RCTResizeModeStretch = NSImageScaleAxesIndependently,
++  RCTResizeModeCenter = -3, // assumes NSImageAlignmentCenter
++  RCTResizeModeRepeat = -1,
++  RCTResizeModeNone = NSImageScaleNone,
++#endif // macOS]
+ };
+ 
+ static inline RCTResizeMode RCTResizeModeFromUIViewContentMode(UIViewContentMode mode)
+@@ -27,6 +36,7 @@
+       return RCTResizeModeCover;
+     case UIViewContentModeTopLeft:
+       return RCTResizeModeNone;
++#if !TARGET_OS_OSX // [macOS]
+     case UIViewContentModeRedraw:
+     case UIViewContentModeTop:
+     case UIViewContentModeBottom:
+@@ -36,6 +46,7 @@
+     case UIViewContentModeBottomLeft:
+     case UIViewContentModeBottomRight:
+       return RCTResizeModeRepeat;
++#endif // [macOS]
+     case UIViewContentModeCenter:
+     default:
+       return RCTResizeModeCenter;
+@@ -46,4 +57,4 @@
+ 
+ + (RCTResizeMode)RCTResizeMode:(id)json;
+ 
+-@end
++@end
+\ No newline at end of file

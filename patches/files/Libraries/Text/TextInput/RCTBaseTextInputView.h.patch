@@ -1,0 +1,84 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Text/TextInput/RCTBaseTextInputView.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Text/TextInput/RCTBaseTextInputView.h	2026-03-06 15:22:52
+@@ -5,10 +5,8 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+-#ifndef RCT_REMOVE_LEGACY_ARCH
+-
+ #import <React/RCTView.h>
+ 
+ #import "RCTBackedTextInputDelegate.h"
+@@ -20,8 +18,7 @@
+ 
+ NS_ASSUME_NONNULL_BEGIN
+ 
+-__attribute__((deprecated("This API will be removed along with the legacy architecture.")))
+-@interface RCTBaseTextInputView : RCTView<RCTBackedTextInputDelegate>
++@interface RCTBaseTextInputView : RCTView <RCTBackedTextInputDelegate>
+ 
+ - (instancetype)initWithBridge:(RCTBridge *)bridge NS_DESIGNATED_INITIALIZER;
+ 
+@@ -29,8 +26,12 @@
+ - (instancetype)initWithCoder:(NSCoder *)decoder NS_UNAVAILABLE;
+ - (instancetype)initWithFrame:(CGRect)frame NS_UNAVAILABLE;
+ 
+-@property (nonatomic, readonly) UIView<RCTBackedTextInputViewProtocol> *backedTextInputView;
++@property (nonatomic, readonly) RCTUIView<RCTBackedTextInputViewProtocol> *backedTextInputView; // [macOS]
+ 
++/**
++ Whether this text input ignores the `textAttributes` property. Defaults to `NO`. If set to `YES`, the value of `textAttributes` will be ignored in favor of standard text input behavior.
++ */
++@property (nonatomic) BOOL ignoresTextAttributes; // [macOS]
+ @property (nonatomic, strong, nullable) RCTTextAttributes *textAttributes;
+ @property (nonatomic, assign) UIEdgeInsets reactPaddingInsets;
+ @property (nonatomic, assign) UIEdgeInsets reactBorderInsets;
+@@ -38,9 +39,18 @@
+ @property (nonatomic, copy, nullable) RCTDirectEventBlock onContentSizeChange;
+ @property (nonatomic, copy, nullable) RCTDirectEventBlock onSelectionChange;
+ @property (nonatomic, copy, nullable) RCTDirectEventBlock onChange;
++@property (nonatomic, copy, nullable) RCTDirectEventBlock onPaste; // [macOS]
+ @property (nonatomic, copy, nullable) RCTDirectEventBlock onChangeSync;
+ @property (nonatomic, copy, nullable) RCTDirectEventBlock onScroll;
+-
++#if TARGET_OS_OSX // [macOS
++@property (nonatomic, copy, nullable) RCTBubblingEventBlock onAutoCorrectChange;
++@property (nonatomic, copy, nullable) RCTBubblingEventBlock onSpellCheckChange;
++@property (nonatomic, copy, nullable) RCTBubblingEventBlock onGrammarCheckChange;
++@property (nonatomic, assign) BOOL clearTextOnSubmit;
++@property (nonatomic, copy, nullable) RCTDirectEventBlock onSubmitEditing;
++@property (nonatomic, copy) NSArray<NSDictionary *> *submitKeyEvents;
++@property (nonatomic, strong, nullable) RCTUIColor *cursorColor;
++#endif // macOS]
+ @property (nonatomic, assign) NSInteger mostRecentEventCount;
+ @property (nonatomic, assign, readonly) NSInteger nativeEventCount;
+ @property (nonatomic, assign) BOOL autoFocus;
+@@ -51,11 +61,16 @@
+ @property (nonatomic, copy) RCTTextSelection *selection;
+ @property (nonatomic, strong, nullable) NSNumber *maxLength;
+ @property (nonatomic, copy, nullable) NSAttributedString *attributedText;
++@property (nonatomic, copy) NSString *predictedText; // [macOS]
+ @property (nonatomic, copy) NSString *inputAccessoryViewID;
++#if !TARGET_OS_OSX // [macOS]
+ @property (nonatomic, strong) NSString *inputAccessoryViewButtonLabel;
+ @property (nonatomic, assign) UIKeyboardType keyboardType;
+ @property (nonatomic, assign) BOOL showSoftInputOnFocus;
++#endif // [macOS]
+ 
++@property (nonatomic, copy, nullable) NSString *ghostText; // [macOS]
++
+ /**
+  Sets selection intext input if both start and end are within range of the text input.
+  **/
+@@ -63,6 +78,4 @@
+ 
+ @end
+ 
+-NS_ASSUME_NONNULL_END
+-
+-#endif // RCT_REMOVE_LEGACY_ARCH
++NS_ASSUME_NONNULL_END
+\ No newline at end of file

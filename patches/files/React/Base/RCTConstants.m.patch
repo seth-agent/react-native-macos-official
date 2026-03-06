@@ -1,0 +1,21 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Base/RCTConstants.m	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Base/RCTConstants.m	2026-03-06 15:22:52
+@@ -7,10 +7,18 @@
+ 
+ #import "RCTConstants.h"
+ 
++#if !TARGET_OS_OSX // [macOS]
+ NSString *const RCTPlatformName = @"ios";
++#else // [macOS
++NSString *const RCTPlatformName = @"macos";
++#endif // macOS]
+ 
+ NSString *const RCTUserInterfaceStyleDidChangeNotification = @"RCTUserInterfaceStyleDidChangeNotification";
++#if !TARGET_OS_OSX // [macOS]
+ NSString *const RCTUserInterfaceStyleDidChangeNotificationTraitCollectionKey = @"traitCollection";
++#else // [macOS
++NSString *const RCTUserInterfaceStyleDidChangeNotificationAppearanceKey = @"appearance";
++#endif // macOS]
+ 
+ NSString *const RCTWindowFrameDidChangeNotification = @"RCTWindowFrameDidChangeNotification";
+ 

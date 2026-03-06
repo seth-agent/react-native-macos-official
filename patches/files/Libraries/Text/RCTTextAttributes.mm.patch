@@ -1,0 +1,132 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Text/RCTTextAttributes.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Text/RCTTextAttributes.mm	2026-03-06 15:22:52
+@@ -7,9 +7,8 @@
+ 
+ #import <React/RCTTextAttributes.h>
+ 
+-#ifndef RCT_REMOVE_LEGACY_ARCH
+-
+ #import <React/RCTAssert.h>
++#import <React/RCTCursor.h> // [macOS]
+ #import <React/RCTFont.h>
+ #import <React/RCTLog.h>
+ 
+@@ -18,6 +17,13 @@
+ 
+ @implementation RCTTextAttributes
+ 
++// [macOS
+++ (RCTUIColor *)defaultForegroundColor
++{
++  return [RCTUIColor labelColor];
++}
++// macOS]
++
+ - (instancetype)init
+ {
+   if (self = [super init]) {
+@@ -34,6 +40,10 @@
+     _textShadowRadius = NAN;
+     _opacity = NAN;
+     _textTransform = RCTTextTransformUndefined;
++    _foregroundColor = [RCTTextAttributes defaultForegroundColor]; // [macOS]
++#if TARGET_OS_OSX // [macOS
++    _cursor = RCTCursorAuto;
++#endif // macOS]
+   }
+ 
+   return self;
+@@ -46,7 +56,7 @@
+   // We will address this in the future.
+ 
+   // Color
+-  _foregroundColor = textAttributes->_foregroundColor ?: _foregroundColor;
++  _foregroundColor = textAttributes->_foregroundColor == [RCTTextAttributes defaultForegroundColor] ? _foregroundColor : textAttributes->_foregroundColor;
+   _backgroundColor = textAttributes->_backgroundColor ?: _backgroundColor;
+   _opacity =
+       !isnan(textAttributes->_opacity) ? (isnan(_opacity) ? 1.0 : _opacity) * textAttributes->_opacity : _opacity;
+@@ -99,6 +109,9 @@
+       : _layoutDirection;
+   _textTransform =
+       textAttributes->_textTransform != RCTTextTransformUndefined ? textAttributes->_textTransform : _textTransform;
++#if TARGET_OS_OSX // [macOS
++  _cursor = textAttributes->_cursor != RCTCursorAuto ? textAttributes->_cursor : _cursor;
++#endif // macOS]
+ }
+ 
+ - (NSParagraphStyle *)effectiveParagraphStyle
+@@ -162,7 +175,7 @@
+   }
+ 
+   // Colors
+-  UIColor *effectiveForegroundColor = self.effectiveForegroundColor;
++  RCTUIColor *effectiveForegroundColor = self.effectiveForegroundColor; // [macOS]
+ 
+   if (_foregroundColor || !isnan(_opacity)) {
+     attributes[NSForegroundColorAttributeName] = effectiveForegroundColor;
+@@ -220,6 +233,12 @@
+     attributes[RCTTextAttributesTagAttributeName] = _tag;
+   }
+ 
++#if TARGET_OS_OSX // [macOS
++  if (_cursor != RCTCursorAuto) {
++    attributes[NSCursorAttributeName] = NSCursorFromRCTCursor(_cursor);
++  }
++#endif // macOS]
++
+   return [attributes copy];
+ }
+ 
+@@ -241,12 +260,14 @@
+ 
+   if (fontScalingEnabled) {
+     CGFloat fontSizeMultiplier = !isnan(_fontSizeMultiplier) ? _fontSizeMultiplier : 1.0;
++#if !TARGET_OS_OSX // [macOS]
+     if (_dynamicTypeRamp != RCTDynamicTypeRampUndefined) {
+       UIFontMetrics *fontMetrics = RCTUIFontMetricsForDynamicTypeRamp(_dynamicTypeRamp);
+       // Using a specific font size reduces rounding errors from -scaledValueForValue:
+       CGFloat requestedSize = isnan(_fontSize) ? RCTBaseSizeForDynamicTypeRamp(_dynamicTypeRamp) : _fontSize;
+       fontSizeMultiplier = [fontMetrics scaledValueForValue:requestedSize] / requestedSize;
+     }
++#endif // [macOS]
+     CGFloat maxFontSizeMultiplier = !isnan(_maxFontSizeMultiplier) ? _maxFontSizeMultiplier : 0.0;
+     return maxFontSizeMultiplier >= 1.0 ? fminf(maxFontSizeMultiplier, fontSizeMultiplier) : fontSizeMultiplier;
+   } else {
+@@ -254,9 +275,9 @@
+   }
+ }
+ 
+-- (UIColor *)effectiveForegroundColor
++- (RCTUIColor *)effectiveForegroundColor // [macOS]
+ {
+-  UIColor *effectiveForegroundColor = _foregroundColor ?: [UIColor blackColor];
++  RCTUIColor *effectiveForegroundColor = _foregroundColor ?: [RCTUIColor blackColor]; // [macOS]
+ 
+   if (!isnan(_opacity)) {
+     effectiveForegroundColor =
+@@ -266,16 +287,16 @@
+   return effectiveForegroundColor;
+ }
+ 
+-- (UIColor *)effectiveBackgroundColor
++- (RCTUIColor *)effectiveBackgroundColor // [macOS]
+ {
+-  UIColor *effectiveBackgroundColor = _backgroundColor; // ?: [[UIColor whiteColor] colorWithAlphaComponent:0];
++  RCTUIColor *effectiveBackgroundColor = _backgroundColor; // ?: [[UIColor whiteColor] colorWithAlphaComponent:0]; // [macOS]
+ 
+   if (effectiveBackgroundColor && !isnan(_opacity)) {
+     effectiveBackgroundColor =
+         [effectiveBackgroundColor colorWithAlphaComponent:CGColorGetAlpha(effectiveBackgroundColor.CGColor) * _opacity];
+   }
+ 
+-  return effectiveBackgroundColor ?: [UIColor clearColor];
++  return effectiveBackgroundColor ?: [RCTUIColor clearColor]; // [macOS]
+ }
+ 
+ static NSString *capitalizeText(NSString *text)
+@@ -354,5 +375,3 @@
+ }
+ 
+ @end
+-
+-#endif // RCT_REMOVE_LEGACY_ARCH

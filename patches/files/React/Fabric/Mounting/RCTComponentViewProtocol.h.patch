@@ -1,0 +1,51 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Mounting/RCTComponentViewProtocol.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Fabric/Mounting/RCTComponentViewProtocol.h	2026-03-06 15:22:52
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #import <react/renderer/componentregistry/ComponentDescriptorProvider.h>
+ #import <react/renderer/core/EventEmitter.h>
+@@ -54,14 +54,14 @@
+  * component view.
+  * Receiver must add `childComponentView` as a subview.
+  */
+-- (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index;
++- (void)mountChildComponentView:(RCTUIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index; // [macOS]
+ 
+ /*
+  * Called for unmounting (detaching) a child component view from `self`
+  * component view.
+  * Receiver must remove `childComponentView` as a subview.
+  */
+-- (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index;
++- (void)unmountChildComponentView:(RCTUIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index; // [macOS]
+ 
+ /*
+  * Called for updating component's props.
+@@ -112,12 +112,6 @@
+ - (void)prepareForRecycle;
+ 
+ /*
+- * Called for unmounted components that won't be moved to a recycle pool.
+- * Useful for releasing any associated resources.
+- */
+-- (void)invalidate;
+-
+-/*
+  * Read the last props used to update the view.
+  */
+ - (facebook::react::Props::Shared)props;
+@@ -125,6 +119,9 @@
+ - (BOOL)isJSResponder;
+ - (void)setIsJSResponder:(BOOL)isJSResponder;
+ 
++- (NSNumber *)reactTag; // [macOS]
++- (void)setReactTag:(NSNumber *)reactTag; // [macOS]
++
+ /*
+  * This is broken. Do not use.
+  */

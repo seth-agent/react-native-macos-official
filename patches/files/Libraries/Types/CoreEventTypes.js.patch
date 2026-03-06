@@ -1,0 +1,134 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Types/CoreEventTypes.js	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Types/CoreEventTypes.js	2026-03-06 15:22:52
+@@ -242,6 +242,7 @@
+    * The Y position of the touch, relative to the element
+    */
+   locationY: number,
++
+   /**
+    * The X position of the touch, relative to the screen
+    */
+@@ -262,6 +263,13 @@
+    * Array of all current touches on the screen
+    */
+   touches: $ReadOnlyArray<NativeTouchEvent>,
++  // [macOS
++  ctrlKey?: ?boolean,
++  altKey?: ?boolean,
++  shiftKey?: ?boolean,
++  metaKey?: ?boolean,
++  button?: ?number,
++  // macOS]
+ }>;
+ 
+ export type GestureResponderEvent = ResponderSyntheticEvent<NativeTouchEvent>;
+@@ -296,6 +304,7 @@
+   velocity?: NativeScrollVelocity,
+   zoomScale?: number,
+   responderIgnoreScroll?: boolean,
++  preferredScrollerStyle?: string, // [macOS]
+   /**
+    * @platform ios
+    */
+@@ -323,33 +332,74 @@
+   }>,
+ >;
+ 
+-export type KeyEvent = $ReadOnly<{
+-  /**
+-   * The actual key that was pressed. For example, F would be "f" or "F" depending on the shift key.
+-   * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key
+-   */
+-  key: string,
+-  /**
+-   * The key code of the key that was pressed. For example, F would be "KeyF"
+-   * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/code
+-   */
+-  code: string,
+-  altKey: boolean,
+-  ctrlKey: boolean,
+-  metaKey: boolean,
+-  shiftKey: boolean,
+-  /**
+-   * A boolean value that is true if the given key is being held down such that it is automatically repeating.
+-   * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/repeat
+-   */
+-  repeat?: boolean,
+-  /**
+-   * Returns a boolean value indicating if the event is fired within a composition session
+-   * @see https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent/isComposing
+-   */
+-  isComposing?: boolean,
++// [macOS
++export type DataTransferFile = $ReadOnly<{
++  name: string,
++  type: ?string,
++  uri: string,
++  size?: number,
++  width?: number,
++  height?: number,
+ }>;
+ 
+-export type KeyUpEvent = NativeSyntheticEvent<KeyEvent>;
++export type DataTransferItem = $ReadOnly<{
++  kind: string,
++  type: ?string,
++}>;
+ 
+-export type KeyDownEvent = NativeSyntheticEvent<KeyEvent>;
++export type DataTransfer = $ReadOnly<{
++  files: $ReadOnlyArray<DataTransferFile>,
++  items: $ReadOnlyArray<DataTransferItem>,
++  types: $ReadOnlyArray<?string>,
++}>;
++
++export type DragEvent = NativeSyntheticEvent<
++  $ReadOnly<{
++    clientX: number,
++    clientY: number,
++    pageX: number,
++    pageY: number,
++    timestamp: number,
++    dataTransfer?: DataTransfer,
++  }>,
++>;
++
++export type KeyEvent = NativeSyntheticEvent<
++  $ReadOnly<{|
++    // Modifier keys
++    capsLockKey: boolean,
++    shiftKey: boolean,
++    ctrlKey: boolean,
++    altKey: boolean,
++    metaKey: boolean,
++    numericPadKey: boolean,
++    helpKey: boolean,
++    functionKey: boolean,
++    // Key options
++    ArrowLeft: boolean,
++    ArrowRight: boolean,
++    ArrowUp: boolean,
++    ArrowDown: boolean,
++    key: string,
++  |}>,
++>;
++
++/**
++ * Represents a key that could be passed to `KeyDownEvents` and `KeyUpEvents`.
++ *
++ * `key` is the actual key, such as "a", or one of the special values:
++ * "Tab", "Escape", "Enter", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown",
++ * "Backspace", "Delete", "Home", "End", "PageUp", "PageDown".
++ *
++ * The rest are modifiers that when absent mean false.
++ *
++ * @platform macos
++ */
++export type HandledKeyEvent = $ReadOnly<{|
++  ctrlKey?: ?boolean,
++  altKey?: ?boolean,
++  shiftKey?: ?boolean,
++  metaKey?: ?boolean,
++  key: string,
++|}>;
++// macOS]

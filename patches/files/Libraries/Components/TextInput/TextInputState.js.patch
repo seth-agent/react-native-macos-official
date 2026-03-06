@@ -1,0 +1,34 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Components/TextInput/TextInputState.js	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Components/TextInput/TextInputState.js	2026-03-06 15:22:52
+@@ -87,15 +87,19 @@
+ 
+   if (textField != null) {
+     const fieldCanBeFocused =
+-      currentlyFocusedInputRef !== textField &&
+-      // $FlowFixMe[prop-missing] - `currentProps` is missing in `NativeMethods`
++      // [macOS currentlyFocusedInputRef does not account for the fact that any arbritrary view can
++      // recieve focus on desktop. https://github.com/facebook/react-native/pull/52472/ fixes this,
++      // disable the check for now
++      (Platform.OS === 'macos' || currentlyFocusedInputRef !== textField) &&
++      // macOS]
++      // $FlowFixMe - `currentProps` is missing in `NativeMethods`
+       textField.currentProps?.editable !== false;
+ 
+     if (!fieldCanBeFocused) {
+       return;
+     }
+     focusInput(textField);
+-    if (Platform.OS === 'ios') {
++    if (Platform.OS === 'ios' || Platform.OS === 'macos' /* [macOS] */) {
+       // This isn't necessarily a single line text input
+       // But commands don't actually care as long as the thing being passed in
+       // actually has a command with that name. So this should work with single
+@@ -126,7 +130,7 @@
+ 
+   if (currentlyFocusedInputRef === textField && textField != null) {
+     blurInput(textField);
+-    if (Platform.OS === 'ios') {
++    if (Platform.OS === 'ios' || Platform.OS === 'macos' /* [macOS] */) {
+       // This isn't necessarily a single line text input
+       // But commands don't actually care as long as the thing being passed in
+       // actually has a command with that name. So this should work with single

@@ -3,6 +3,11 @@
   "version": "0.84.0-alpha.0",
   "description": "Out-of-tree React Native platform for macOS",
   "main": "index.js",
+  "scripts": {
+    "postinstall": "node scripts/postinstall.js",
+    "apply-patches": "node scripts/postinstall.js --verbose",
+    "apply-patches-dry": "node scripts/postinstall.js --dry-run --verbose"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/seth-agent/react-native-macos-official.git"

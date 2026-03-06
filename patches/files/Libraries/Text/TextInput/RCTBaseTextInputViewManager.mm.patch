@@ -1,0 +1,192 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Text/TextInput/RCTBaseTextInputViewManager.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Text/TextInput/RCTBaseTextInputViewManager.mm	2026-03-06 15:22:52
+@@ -7,8 +7,6 @@
+ 
+ #import <React/RCTBaseTextInputViewManager.h>
+ 
+-#ifndef RCT_REMOVE_LEGACY_ARCH
+-
+ #import <React/RCTBridge.h>
+ #import <React/RCTConvert.h>
+ #import <React/RCTFont.h>
+@@ -20,7 +18,10 @@
+ 
+ #import <React/RCTBaseTextInputShadowView.h>
+ #import <React/RCTBaseTextInputView.h>
++#if !TARGET_OS_OSX // [macOS]
+ #import <React/RCTConvert+Text.h>
++#endif // [macOS]
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ @interface RCTBaseTextInputViewManager () <RCTUIManagerObserver>
+ 
+@@ -34,28 +35,31 @@
+ 
+ #pragma mark - Unified <TextInput> properties
+ 
+-RCT_REMAP_VIEW_PROPERTY(autoCapitalize, backedTextInputView.autocapitalizationType, UITextAutocapitalizationType)
+-RCT_REMAP_VIEW_PROPERTY(autoCorrect, backedTextInputView.autocorrectionType, UITextAutocorrectionType)
++RCT_REMAP_NOT_OSX_VIEW_PROPERTY(autoCapitalize, backedTextInputView.autocapitalizationType, UITextAutocapitalizationType) // [macOS]
++RCT_REMAP_NOT_OSX_VIEW_PROPERTY(autoCorrect, backedTextInputView.autocorrectionType, UITextAutocorrectionType) // [macOS]
++RCT_REMAP_OSX_VIEW_PROPERTY(autoCorrect, backedTextInputView.automaticSpellingCorrectionEnabled, BOOL) // [macOS]
+ RCT_REMAP_VIEW_PROPERTY(contextMenuHidden, backedTextInputView.contextMenuHidden, BOOL)
+ RCT_REMAP_VIEW_PROPERTY(editable, backedTextInputView.editable, BOOL)
+-RCT_REMAP_VIEW_PROPERTY(enablesReturnKeyAutomatically, backedTextInputView.enablesReturnKeyAutomatically, BOOL)
+-RCT_REMAP_VIEW_PROPERTY(keyboardAppearance, backedTextInputView.keyboardAppearance, UIKeyboardAppearance)
++RCT_REMAP_NOT_OSX_VIEW_PROPERTY(enablesReturnKeyAutomatically, backedTextInputView.enablesReturnKeyAutomatically, BOOL) // [macOS]
++RCT_REMAP_NOT_OSX_VIEW_PROPERTY(keyboardAppearance, backedTextInputView.keyboardAppearance, UIKeyboardAppearance) // [macOS]
+ RCT_REMAP_VIEW_PROPERTY(placeholder, backedTextInputView.placeholder, NSString)
+ RCT_REMAP_VIEW_PROPERTY(placeholderTextColor, backedTextInputView.placeholderColor, UIColor)
+-RCT_REMAP_VIEW_PROPERTY(returnKeyType, backedTextInputView.returnKeyType, UIReturnKeyType)
+-RCT_REMAP_VIEW_PROPERTY(selectionColor, backedTextInputView.tintColor, UIColor)
+-RCT_REMAP_VIEW_PROPERTY(spellCheck, backedTextInputView.spellCheckingType, UITextSpellCheckingType)
+-RCT_REMAP_VIEW_PROPERTY(caretHidden, backedTextInputView.caretHidden, BOOL)
+-RCT_REMAP_VIEW_PROPERTY(clearButtonMode, backedTextInputView.clearButtonMode, UITextFieldViewMode)
++RCT_REMAP_NOT_OSX_VIEW_PROPERTY(returnKeyType, backedTextInputView.returnKeyType, UIReturnKeyType) // [macOS]
++RCT_REMAP_NOT_OSX_VIEW_PROPERTY(selectionColor, backedTextInputView.tintColor, UIColor) // [macOS]
++RCT_REMAP_OSX_VIEW_PROPERTY(selectionColor, backedTextInputView.selectionColor, UIColor) // [macOS]
++RCT_REMAP_OSX_VIEW_PROPERTY(grammarCheck, backedTextInputView.grammarCheckingEnabled, BOOL) // [macOS]
++RCT_REMAP_NOT_OSX_VIEW_PROPERTY(spellCheck, backedTextInputView.spellCheckingType, UITextSpellCheckingType)// [macOS]
++RCT_REMAP_OSX_VIEW_PROPERTY(spellCheck, backedTextInputView.continuousSpellCheckingEnabled, BOOL) // [macOS]
++RCT_REMAP_NOT_OSX_VIEW_PROPERTY(caretHidden, backedTextInputView.caretHidden, BOOL) // [macOS]
++RCT_REMAP_NOT_OSX_VIEW_PROPERTY(clearButtonMode, backedTextInputView.clearButtonMode, UITextFieldViewMode) // [macOS]
+ RCT_REMAP_VIEW_PROPERTY(scrollEnabled, backedTextInputView.scrollEnabled, BOOL)
+-RCT_REMAP_VIEW_PROPERTY(secureTextEntry, backedTextInputView.secureTextEntry, BOOL)
+-RCT_REMAP_VIEW_PROPERTY(smartInsertDelete, backedTextInputView.smartInsertDeleteType, UITextSmartInsertDeleteType)
+-
++RCT_REMAP_NOT_OSX_VIEW_PROPERTY(secureTextEntry, backedTextInputView.secureTextEntry, BOOL) // [macOS]
++RCT_REMAP_NOT_OSX_VIEW_PROPERTY(smartInsertDelete, backedTextInputView.smartInsertDeleteType, UITextSmartInsertDeleteType) // [macOS]
+ RCT_EXPORT_VIEW_PROPERTY(autoFocus, BOOL)
+ RCT_EXPORT_VIEW_PROPERTY(submitBehavior, NSString)
+ RCT_EXPORT_VIEW_PROPERTY(clearTextOnFocus, BOOL)
+-RCT_EXPORT_VIEW_PROPERTY(keyboardType, UIKeyboardType)
+-RCT_EXPORT_VIEW_PROPERTY(showSoftInputOnFocus, BOOL)
++RCT_REMAP_NOT_OSX_VIEW_PROPERTY(keyboardType, backedTextInputView.keyboardType, UIKeyboardType) // [macOS]
++RCT_EXPORT_NOT_OSX_VIEW_PROPERTY(showSoftInputOnFocus, BOOL) // [macOS]
+ RCT_EXPORT_VIEW_PROPERTY(maxLength, NSNumber)
+ RCT_EXPORT_VIEW_PROPERTY(selectTextOnFocus, BOOL)
+ RCT_EXPORT_VIEW_PROPERTY(selection, RCTTextSelection)
+@@ -67,6 +71,21 @@
+ RCT_EXPORT_VIEW_PROPERTY(disableKeyboardShortcuts, BOOL)
+ RCT_EXPORT_VIEW_PROPERTY(acceptDragAndDropTypes, NSArray<NSString *>)
+ 
++#if TARGET_OS_OSX // [macOS
++RCT_EXPORT_VIEW_PROPERTY(onAutoCorrectChange, RCTDirectEventBlock);
++RCT_EXPORT_VIEW_PROPERTY(onSpellCheckChange, RCTDirectEventBlock);
++RCT_EXPORT_VIEW_PROPERTY(onGrammarCheckChange, RCTDirectEventBlock);
++
++RCT_EXPORT_VIEW_PROPERTY(onPaste, RCTDirectEventBlock)
++
++// Specifically for clearing text on enter key press
++RCT_EXPORT_VIEW_PROPERTY(clearTextOnSubmit, BOOL);
++RCT_EXPORT_VIEW_PROPERTY(onSubmitEditing, RCTBubblingEventBlock);
++RCT_EXPORT_VIEW_PROPERTY(submitKeyEvents, NSArray<NSDictionary *>);
++
++RCT_REMAP_VIEW_PROPERTY(cursorColor, backedTextInputView.cursorColor, UIColor)
++#endif // macOS]
++
+ RCT_EXPORT_VIEW_PROPERTY(onChange, RCTBubblingEventBlock)
+ RCT_EXPORT_VIEW_PROPERTY(onKeyPressSync, RCTDirectEventBlock)
+ RCT_EXPORT_VIEW_PROPERTY(onChangeSync, RCTDirectEventBlock)
+@@ -77,7 +96,7 @@
+ RCT_EXPORT_SHADOW_PROPERTY(placeholder, NSString)
+ RCT_EXPORT_SHADOW_PROPERTY(onContentSizeChange, RCTDirectEventBlock)
+ 
+-RCT_CUSTOM_VIEW_PROPERTY(multiline, BOOL, UIView)
++RCT_CUSTOM_VIEW_PROPERTY(multiline, BOOL, RCTUIView) // [macOS]
+ {
+   // No op.
+   // This View Manager doesn't use this prop but it must be exposed here via ViewConfig to enable Fabric component use
+@@ -87,9 +106,11 @@
+ - (RCTShadowView *)shadowView
+ {
+   RCTBaseTextInputShadowView *shadowView = [[RCTBaseTextInputShadowView alloc] initWithBridge:self.bridge];
++#if !TARGET_OS_OSX // [macOS]
+   shadowView.textAttributes.fontSizeMultiplier =
+       [[[self.bridge moduleForName:@"AccessibilityManager"
+              lazilyLoadIfNecessary:YES] valueForKey:@"multiplier"] floatValue];
++#endif // [macOS]
+   [_shadowViews addObject:shadowView];
+   return shadowView;
+ }
+@@ -102,34 +123,39 @@
+ 
+   [bridge.uiManager.observerCoordinator addObserver:self];
+ 
++#if !TARGET_OS_OSX // [macOS]
+   [[NSNotificationCenter defaultCenter] addObserver:self
+                                            selector:@selector(handleDidUpdateMultiplierNotification)
+                                                name:@"RCTAccessibilityManagerDidUpdateMultiplierNotification"
+                                              object:[bridge moduleForName:@"AccessibilityManager"
+                                                         lazilyLoadIfNecessary:YES]];
++#endif // [macOS]
+ }
+ 
+ RCT_EXPORT_METHOD(focus : (nonnull NSNumber *)viewTag)
+ {
+-  [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+-    UIView *view = viewRegistry[viewTag];
++  [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTPlatformView *> *viewRegistry) { // [macOS]
++    RCTUIView *view = viewRegistry[viewTag]; // [macOS]
+     [view reactFocus];
+   }];
+ }
+ 
+ RCT_EXPORT_METHOD(blur : (nonnull NSNumber *)viewTag)
+ {
+-  [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+-    UIView *view = viewRegistry[viewTag];
++  [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTPlatformView *> *viewRegistry) { // [macOS]
++    RCTUIView *view = viewRegistry[viewTag]; // [macOS]
+     [view reactBlur];
+   }];
+ }
+ 
+-RCT_EXPORT_METHOD(
+-    setTextAndSelection : (nonnull NSNumber *)viewTag mostRecentEventCount : (NSInteger)
+-        mostRecentEventCount value : (NSString *)value start : (NSInteger)start end : (NSInteger)end)
++RCT_EXPORT_METHOD(setTextAndSelection
++                  : (nonnull NSNumber *)viewTag mostRecentEventCount
++                  : (NSInteger)mostRecentEventCount value
++                  : (NSString *)value start
++                  : (NSInteger)start end
++                  : (NSInteger)end)
+ {
+-  [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
++  [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTPlatformView *> *viewRegistry) { // [macOS]
+     RCTBaseTextInputView *view = (RCTBaseTextInputView *)viewRegistry[viewTag];
+     NSInteger eventLag = view.nativeEventCount - mostRecentEventCount;
+     if (eventLag != 0) {
+@@ -138,7 +164,7 @@
+     RCTExecuteOnUIManagerQueue(^{
+       RCTBaseTextInputShadowView *shadowView =
+           (RCTBaseTextInputShadowView *)[self.bridge.uiManager shadowViewForReactTag:viewTag];
+-      if (value != nullptr) {
++      if (value) {
+         [shadowView setText:value];
+       }
+       [self.bridge.uiManager setNeedsLayout];
+@@ -149,6 +175,17 @@
+   }];
+ }
+ 
++// [macOS
++RCT_EXPORT_METHOD(setGhostText
++				  :(nonnull NSNumber *)reactTag
++				  :(NSString *)text) {
++
++	[self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTPlatformView *> *viewRegistry) {
++		[(RCTBaseTextInputView *)viewRegistry[reactTag] setGhostText:text];
++	}];
++}
++// macOS]
++
+ #pragma mark - RCTUIManagerObserver
+ 
+ - (void)uiManagerWillPerformMounting:(__unused RCTUIManager *)uiManager
+@@ -177,5 +214,3 @@
+ }
+ 
+ @end
+-
+-#endif // RCT_REMOVE_LEGACY_ARCH

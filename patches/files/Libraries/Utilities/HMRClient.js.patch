@@ -1,0 +1,119 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Utilities/HMRClient.js	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Utilities/HMRClient.js	2026-03-06 15:22:52
+@@ -26,7 +26,7 @@
+ let hmrOrigin: string | null = null;
+ let currentCompileErrorMessage: string | null = null;
+ let didConnect: boolean = false;
+-let pendingLogs: Array<[LogLevel, $ReadOnlyArray<unknown>]> = [];
++let pendingLogs: Array<[LogLevel, $ReadOnlyArray<mixed>]> = [];
+ 
+ type LogLevel =
+   | 'trace'
+@@ -43,7 +43,7 @@
+   enable(): void,
+   disable(): void,
+   registerBundle(requestUrl: string): void,
+-  log(level: LogLevel, data: $ReadOnlyArray<unknown>): void,
++  log(level: LogLevel, data: $ReadOnlyArray<mixed>): void,
+   setup(
+     platform: string,
+     bundleEntry: string,
+@@ -113,7 +113,7 @@
+     registerBundleEntryPoints(hmrClient);
+   },
+ 
+-  log(level: LogLevel, data: $ReadOnlyArray<unknown>) {
++  log(level: LogLevel, data: $ReadOnlyArray<mixed>) {
+     if (!hmrClient) {
+       // Catch a reasonable number of early logs
+       // in case hmrClient gets initialized later.
+@@ -128,6 +128,7 @@
+         JSON.stringify({
+           type: 'log',
+           level,
++          mode: global.RN$Bridgeless === true ? 'NOBRIDGE' : 'BRIDGE',
+           data: data.map(item =>
+             typeof item === 'string'
+               ? item
+@@ -165,8 +166,6 @@
+     // Moving to top gives errors due to NativeModules not being initialized
+     const DevLoadingView = require('./DevLoadingView').default;
+ 
+-    /* $FlowFixMe[invalid-compare] Error discovered during Constant Condition
+-     * roll out. See https://fburl.com/workplace/5whu3i34. */
+     const serverHost = port !== null && port !== '' ? `${host}:${port}` : host;
+ 
+     const serverScheme = scheme;
+@@ -192,7 +191,7 @@
+ Try the following to fix the issue:
+ - Ensure that Metro is running and available on the same network`;
+ 
+-      if (Platform.OS === 'ios') {
++      if (Platform.OS === 'ios' || Platform.OS === 'macos' /* [macOS] */) {
+         error += `
+ - Ensure that the Metro URL is correctly set in AppDelegate`;
+       } else {
+@@ -211,9 +210,7 @@
+       setHMRUnavailableReason(error);
+     });
+ 
+-    let pendingUpdatesCount = 0;
+     client.on('update-start', ({isInitialUpdate}) => {
+-      pendingUpdatesCount++;
+       currentCompileErrorMessage = null;
+       didConnect = true;
+ 
+@@ -230,13 +227,12 @@
+     });
+ 
+     client.on('update-done', () => {
+-      pendingUpdatesCount--;
+-      if (pendingUpdatesCount === 0) {
+-        DevLoadingView.hide();
+-      }
++      DevLoadingView.hide();
+     });
+ 
+     client.on('error', data => {
++      DevLoadingView.hide();
++
+       if (data.type === 'GraphNotFoundError') {
+         client.close();
+         setHMRUnavailableReason(
+@@ -256,6 +252,8 @@
+     });
+ 
+     client.on('close', closeEvent => {
++      DevLoadingView.hide();
++
+       // https://www.rfc-editor.org/rfc/rfc6455.html#section-7.4.1
+       // https://www.rfc-editor.org/rfc/rfc6455.html#section-7.1.5
+       const isNormalOrUnsetCloseReason =
+@@ -297,18 +295,10 @@
+   }
+   hmrUnavailableReason = reason;
+ 
+-  const DevLoadingView = require('./DevLoadingView').default;
+-  DevLoadingView.hide();
+-
+   // We only want to show a warning if Fast Refresh is on *and* if we ever
+   // previously managed to connect successfully. We don't want to show
+   // the warning to native engineers who use cached bundles without Metro.
+   if (hmrClient.isEnabled() && didConnect) {
+-    DevLoadingView.showMessage(
+-      'Fast Refresh disconnected. Reload app to reconnect.',
+-      'error',
+-      {dismissButton: true},
+-    );
+     console.warn(reason);
+     // (Not using the `warning` module to prevent a Buck cycle.)
+   }
+@@ -343,7 +333,7 @@
+ 
+ function dismissRedbox() {
+   if (
+-    Platform.OS === 'ios' &&
++    (Platform.OS === 'ios' || Platform.OS === 'macos') /* [macOS] */ &&
+     NativeRedBox != null &&
+     NativeRedBox.dismiss != null
+   ) {

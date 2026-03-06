@@ -1,0 +1,122 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Mounting/RCTMountingManager.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Fabric/Mounting/RCTMountingManager.mm	2026-03-06 15:22:52
+@@ -27,7 +27,7 @@
+ 
+ using namespace facebook::react;
+ 
+-static SurfaceId RCTSurfaceIdForView(UIView *view)
++static SurfaceId RCTSurfaceIdForView(RCTUIView *view) // [macOS]
+ {
+   do {
+     if (RCTIsReactRootView(@(view.tag))) {
+@@ -75,7 +75,7 @@
+         auto &newChildViewDescriptor = [registry componentViewDescriptorWithTag:newChildShadowView.tag];
+         auto &parentViewDescriptor = [registry componentViewDescriptorWithTag:mutation.parentTag];
+ 
+-        UIView<RCTComponentViewProtocol> *newChildComponentView = newChildViewDescriptor.view;
++        RCTUIView<RCTComponentViewProtocol> *newChildComponentView = newChildViewDescriptor.view; // [macOS]
+ 
+         RCTAssert(newChildShadowView.props, @"`newChildShadowView.props` must not be null.");
+ 
+@@ -102,7 +102,7 @@
+         auto &oldChildShadowView = mutation.oldChildShadowView;
+         auto &newChildShadowView = mutation.newChildShadowView;
+         auto &newChildViewDescriptor = [registry componentViewDescriptorWithTag:newChildShadowView.tag];
+-        UIView<RCTComponentViewProtocol> *newChildComponentView = newChildViewDescriptor.view;
++        RCTUIView<RCTComponentViewProtocol> *newChildComponentView = newChildViewDescriptor.view; // [macOS]
+ 
+         auto mask = RNComponentViewUpdateMask{};
+ 
+@@ -143,7 +143,7 @@
+   RCTMountingTransactionObserverCoordinator _observerCoordinator;
+   BOOL _transactionInFlight;
+   BOOL _followUpTransactionRequired;
+-  std::shared_ptr<const ContextContainer> _contextContainer;
++  ContextContainer::Shared _contextContainer;
+ }
+ 
+ - (instancetype)init
+@@ -155,12 +155,12 @@
+   return self;
+ }
+ 
+-- (void)setContextContainer:(std::shared_ptr<const ContextContainer>)contextContainer
++- (void)setContextContainer:(ContextContainer::Shared)contextContainer
+ {
+   _contextContainer = contextContainer;
+ }
+ 
+-- (void)attachSurfaceToView:(UIView *)view surfaceId:(SurfaceId)surfaceId
++- (void)attachSurfaceToView:(RCTPlatformView *)view surfaceId:(SurfaceId)surfaceId // [macOS]
+ {
+   RCTAssertMainQueue();
+ 
+@@ -171,7 +171,7 @@
+   [view addSubview:rootViewDescriptor.view];
+ }
+ 
+-- (void)detachSurfaceFromView:(UIView *)view surfaceId:(SurfaceId)surfaceId
++- (void)detachSurfaceFromView:(RCTPlatformView *)view surfaceId:(SurfaceId)surfaceId // [macOS]
+ {
+   RCTAssertMainQueue();
+   RCTComponentViewDescriptor rootViewDescriptor = [_componentViewRegistry componentViewDescriptorWithTag:surfaceId];
+@@ -276,7 +276,7 @@
+ {
+   ReactTag reactTag = shadowView.tag;
+   RCTExecuteOnMainQueue(^{
+-    UIView<RCTComponentViewProtocol> *componentView = [self->_componentViewRegistry findComponentViewWithTag:reactTag];
++    RCTUIView<RCTComponentViewProtocol> *componentView = [self->_componentViewRegistry findComponentViewWithTag:reactTag]; // [macOS]
+     [componentView setIsJSResponder:isJSResponder];
+   });
+ }
+@@ -290,7 +290,7 @@
+   bool updatesTransform = props.find("transform") != props.items().end();
+   bool updatesOpacity = props.find("opacity") != props.items().end();
+ 
+-  UIView<RCTComponentViewProtocol> *componentView = [_componentViewRegistry findComponentViewWithTag:reactTag];
++  RCTUIView<RCTComponentViewProtocol> *componentView = [_componentViewRegistry findComponentViewWithTag:reactTag]; // [macOS]
+   if (!componentView) {
+     RCTLogWarn(@"Attempted to update view with tag %ld, but it no longer exists", (long)reactTag);
+     return;
+@@ -299,7 +299,7 @@
+   SurfaceId surfaceId = RCTSurfaceIdForView(componentView);
+   Props::Shared oldProps = [componentView props];
+   Props::Shared newProps = componentDescriptor.cloneProps(
+-      PropsParserContext{surfaceId, *_contextContainer}, oldProps, RawProps(std::move(props)));
++      PropsParserContext{surfaceId, *_contextContainer.get()}, oldProps, RawProps(std::move(props)));
+ 
+   NSSet<NSString *> *propKeys = componentView.propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN ?: [NSSet new];
+   propKeys = [propKeys setByAddingObjectsFromArray:propsKeysToBeUpdated];
+@@ -314,6 +314,12 @@
+     layoutMetrics.frame.size.width = componentView.layer.bounds.size.width;
+     layoutMetrics.frame.size.height = componentView.layer.bounds.size.height;
+     CATransform3D newTransform = RCTCATransform3DFromTransformMatrix(newViewProps.resolveTransform(layoutMetrics));
++#if TARGET_OS_OSX // [macOS]
++    if (CGPointEqualToPoint(componentView.layer.anchorPoint, CGPointZero) && !CATransform3DEqualToTransform(newTransform, CATransform3DIdentity)) {
++      CATransform3D originAdjust = CATransform3DTranslate(CATransform3DIdentity, componentView.frame.size.width / 2, componentView.frame.size.height / 2, 0);
++      newTransform = CATransform3DConcat(CATransform3DConcat(CATransform3DInvert(originAdjust), newTransform), originAdjust);
++    }
++#endif // macOS]
+     if (!CATransform3DEqualToTransform(newTransform, componentView.layer.transform)) {
+       componentView.layer.transform = newTransform;
+     }
+@@ -330,15 +336,17 @@
+                                           args:(NSArray *)args
+ {
+   RCTAssertMainQueue();
+-  UIView<RCTComponentViewProtocol> *componentView = [_componentViewRegistry findComponentViewWithTag:reactTag];
++  RCTUIView<RCTComponentViewProtocol> *componentView = [_componentViewRegistry findComponentViewWithTag:reactTag]; // [macOS]
+   [componentView handleCommand:commandName args:args];
+ }
+ 
+ - (void)synchronouslyDispatchAccessbilityEventOnUIThread:(ReactTag)reactTag eventType:(NSString *)eventType
+ {
+   if ([@"focus" isEqualToString:eventType]) {
+-    UIView<RCTComponentViewProtocol> *componentView = [_componentViewRegistry findComponentViewWithTag:reactTag];
++    RCTUIView<RCTComponentViewProtocol> *componentView = [_componentViewRegistry findComponentViewWithTag:reactTag]; // [macOS]
++#if !TARGET_OS_OSX // [macOS]
+     UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, componentView);
++#endif // [macOS]
+   }
+ }
+ 

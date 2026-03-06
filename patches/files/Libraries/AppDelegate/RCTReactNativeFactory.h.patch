@@ -1,0 +1,84 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/AppDelegate/RCTReactNativeFactory.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/AppDelegate/RCTReactNativeFactory.h	2026-03-06 15:22:52
+@@ -7,7 +7,7 @@
+ 
+ #import <React/RCTBridgeDelegate.h>
+ #import <React/RCTConvert.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ #import "RCTArchConfiguratorProtocol.h"
+ #import "RCTDependencyProvider.h"
+ #import "RCTJSRuntimeConfiguratorProtocol.h"
+@@ -24,8 +24,6 @@
+ @class RCTBridge;
+ @protocol RCTComponentViewProtocol;
+ @class RCTSurfacePresenterBridgeAdapter;
+-@class RCTBundleConfiguration;
+-@class RCTDevMenuConfiguration;
+ 
+ NS_ASSUME_NONNULL_BEGIN
+ 
+@@ -58,10 +56,7 @@
+  *
+  * @returns: a newly created instance of RCTBridge.
+  */
+-- (RCTBridge *)createBridgeWithDelegate:(id<RCTBridgeDelegate>)delegate
+-                          launchOptions:(NSDictionary *)launchOptions
+-    __attribute__((deprecated(
+-        "createBridgeWithDelegate:launchOptions: is deprecated and will be removed when removing the legacy architecture.")));
++- (RCTBridge *)createBridgeWithDelegate:(id<RCTBridgeDelegate>)delegate launchOptions:(NSDictionary *)launchOptions;
+ 
+ /**
+  * It creates a `UIView` starting from a bridge, a module name and a set of initial properties.
+@@ -75,11 +70,9 @@
+  *
+  * @returns: a UIView properly configured with a bridge for React Native.
+  */
+-- (UIView *)createRootViewWithBridge:(RCTBridge *)bridge
+-                          moduleName:(NSString *)moduleName
+-                           initProps:(NSDictionary *)initProps
+-    __attribute__((deprecated(
+-        "createRootViewWithBridge:moduleName:initProps is deprecated and will be removed when removing the legacy architecture.")));
++- (RCTPlatformView *)createRootViewWithBridge:(RCTBridge *)bridge
++                                   moduleName:(NSString *)moduleName
++                                    initProps:(NSDictionary *)initProps;
+ 
+ /// This method returns a map of Component Descriptors and Components classes that needs to be registered in the
+ /// new renderer. The Component Descriptor is a string which represent the name used in JS to refer to the native
+@@ -97,31 +90,24 @@
+ 
+ - (instancetype)initWithDelegate:(id<RCTReactNativeFactoryDelegate>)delegate releaseLevel:(RCTReleaseLevel)releaseLevel;
+ 
+-- (void)startReactNativeWithModuleName:(NSString *)moduleName inWindow:(UIWindow *_Nullable)window;
++- (void)startReactNativeWithModuleName:(NSString *)moduleName inWindow:(RCTPlatformWindow *_Nullable)window; // [macOS]
+ 
+ - (void)startReactNativeWithModuleName:(NSString *)moduleName
+-                              inWindow:(UIWindow *_Nullable)window
++                              inWindow:(RCTPlatformWindow *_Nullable)window // [macOS]
+                          launchOptions:(NSDictionary *_Nullable)launchOptions;
+ 
+ - (void)startReactNativeWithModuleName:(NSString *)moduleName
+-                              inWindow:(UIWindow *_Nullable)window
++                              inWindow:(RCTPlatformWindow *_Nullable)window // [macOS]
+                      initialProperties:(NSDictionary *_Nullable)initialProperties
+                          launchOptions:(NSDictionary *_Nullable)launchOptions;
+ 
+-@property (nonatomic, nullable) RCTBridge *bridge
+-    __attribute__((deprecated("The bridge is deprecated and will be removed when removing the legacy architecture.")));
++@property (nonatomic, nullable) RCTBridge *bridge;
+ @property (nonatomic, strong, nonnull) RCTRootViewFactory *rootViewFactory;
+ 
+-@property (nonatomic, nullable) RCTSurfacePresenterBridgeAdapter *bridgeAdapter __attribute__((
+-    deprecated("The bridgeAdapter is deprecated and will be removed when removing the legacy architecture.")));
+-;
++@property (nonatomic, nullable) RCTSurfacePresenterBridgeAdapter *bridgeAdapter;
+ 
+ @property (nonatomic, weak) id<RCTReactNativeFactoryDelegate> delegate;
+ 
+-@property (nonatomic, strong, nonnull) RCTBundleConfiguration *bundleConfiguration;
+-
+-@property (nonatomic, nullable) RCTDevMenuConfiguration *devMenuConfiguration;
+-
+ @end
+ 
+ NS_ASSUME_NONNULL_END

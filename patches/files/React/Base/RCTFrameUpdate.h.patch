@@ -1,0 +1,22 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Base/RCTFrameUpdate.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Base/RCTFrameUpdate.h	2026-03-06 15:22:52
+@@ -6,9 +6,8 @@
+  */
+ 
+ #import <Foundation/Foundation.h>
++#import "RCTPlatformDisplayLink.h" // [macOS]
+ 
+-@class CADisplayLink;
+-
+ /**
+  * Interface containing the information about the last screen refresh.
+  */
+@@ -24,7 +23,7 @@
+  */
+ @property (nonatomic, readonly) NSTimeInterval deltaTime;
+ 
+-- (instancetype)initWithDisplayLink:(CADisplayLink *)displayLink NS_DESIGNATED_INITIALIZER;
++- (instancetype)initWithDisplayLink:(RCTPlatformDisplayLink *)displayLink NS_DESIGNATED_INITIALIZER; // [macOS]
+ 
+ @end
+ 

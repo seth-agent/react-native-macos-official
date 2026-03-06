@@ -1,0 +1,142 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Modules/RCTUIManager.h	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/Modules/RCTUIManager.h	2026-03-06 15:22:52
+@@ -5,13 +5,12 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
+-
+ #import <React/RCTBridge.h>
+ #import <React/RCTBridgeModule.h>
+ #import <React/RCTBridgeProxy.h>
+ #import <React/RCTInvalidating.h>
+ #import <React/RCTRootView.h>
++#import <React/RCTUIKit.h> // [macOS]
+ #import <React/RCTViewManager.h>
+ 
+ /**
+@@ -37,7 +36,7 @@
+ /**
+  * Register a root view with the RCTUIManager.
+  */
+-- (void)registerRootView:(UIView *)rootView;
++- (void)registerRootView:(RCTUIView *)rootView; // [macOS]
+ 
+ /**
+  * Gets the view name associated with a reactTag.
+@@ -47,7 +46,7 @@
+ /**
+  * Gets the view associated with a reactTag.
+  */
+-- (UIView *)viewForReactTag:(NSNumber *)reactTag;
++- (RCTPlatformView *)viewForReactTag:(NSNumber *)reactTag; // [macOS]
+ 
+ /**
+  * Gets the shadow view associated with a reactTag.
+@@ -61,7 +60,7 @@
+  * this value does not affect root node size style properties.
+  * Can be considered as something similar to `setSize:forView:` but applicable only for root view.
+  */
+-- (void)setAvailableSize:(CGSize)availableSize forRootView:(UIView *)rootView;
++- (void)setAvailableSize:(CGSize)availableSize forRootView:(RCTUIView *)rootView; // [macOS]
+ 
+ /**
+  * Sets local data for a shadow view corresponded with given view.
+@@ -72,20 +71,20 @@
+  * the shadow view.
+  * Please respect one-directional data flow of React.
+  */
+-- (void)setLocalData:(NSObject *)localData forView:(UIView *)view;
++- (void)setLocalData:(NSObject *)localData forView:(RCTPlatformView *)view; // [macOS]
+ 
+ /**
+  * Set the size of a view. This might be in response to a screen rotation
+  * or some other layout event outside of the React-managed view hierarchy.
+  */
+-- (void)setSize:(CGSize)size forView:(UIView *)view;
++- (void)setSize:(CGSize)size forView:(RCTPlatformView *)view; // [macOS]
+ 
+ /**
+  * Set the natural size of a view, which is used when no explicit size is set.
+  * Use `UIViewNoIntrinsicMetric` to ignore a dimension.
+  * The `size` must NOT include padding and border.
+  */
+-- (void)setIntrinsicContentSize:(CGSize)intrinsicContentSize forView:(UIView *)view;
++- (void)setIntrinsicContentSize:(CGSize)intrinsicContentSize forView:(RCTPlatformView *)view; // [macOS]
+ 
+ /**
+  * Sets up layout animation which will perform on next layout pass.
+@@ -124,7 +123,7 @@
+  * @param completion the completion block that will hand over the rootView, if any.
+  *
+  */
+-- (void)rootViewForReactTag:(NSNumber *)reactTag withCompletion:(void (^)(UIView *view))completion;
++- (void)rootViewForReactTag:(NSNumber *)reactTag withCompletion:(void (^)(RCTPlatformView *view))completion; // [macOS]
+ 
+ /**
+  * Finds a view that is tagged with nativeID as its nativeID prop
+@@ -134,7 +133,7 @@
+  * @param nativeID the id reference to native component relative to root view.
+  * @param rootTag the react tag of root view hierarchy from which to find the view.
+  */
+-- (UIView *)viewForNativeID:(NSString *)nativeID withRootTag:(NSNumber *)rootTag;
++- (RCTPlatformView *)viewForNativeID:(NSString *)nativeID withRootTag:(NSNumber *)rootTag; // [macOS]
+ 
+ /**
+  * Register a view that is tagged with nativeID as its nativeID prop
+@@ -142,12 +141,12 @@
+  * @param nativeID the id reference to native component relative to root view.
+  * @param view the view that is tagged with nativeID as its nativeID prop.
+  */
+-- (void)setNativeID:(NSString *)nativeID forView:(UIView *)view;
++- (void)setNativeID:(NSString *)nativeID forView:(RCTPlatformView *)view; // [macOS]
+ 
+ /**
+  * The view that is currently first responder, according to the JS context.
+  */
+-+ (UIView *)JSResponder;
+++ (RCTPlatformView *)JSResponder; // [macOS]
+ 
+ /**
+  * In some cases we might want to trigger layout from native side.
+@@ -156,6 +155,14 @@
+ - (void)setNeedsLayout;
+ 
+ /**
++ * This method is used to extract the wrapped view
++ * from a view that might be the Interop Layer view wrapper.
++ * If the view passed as parameter is the Interop Layer wrapper, this method returns the wrapped view
++ * Otherwise, it returns the view itself.
++ */
+++ (RCTPlatformView *)paperViewOrCurrentView:(RCTPlatformView *)view; // [macOS]
++
++/**
+  * Dedicated object for subscribing for UIManager events.
+  * See `RCTUIManagerObserver` protocol for more details.
+  */
+@@ -195,23 +202,15 @@
+  */
+ @interface RCTComposedViewRegistry : NSMutableDictionary
+ 
+-- (instancetype)initWithUIManager:(RCTUIManager *)uiManager andRegistry:(NSDictionary<NSNumber *, UIView *> *)registry;
++- (instancetype)initWithUIManager:(RCTUIManager *)uiManager andRegistry:(NSDictionary<NSNumber *, RCTPlatformView *> *)registry; // [macOS]
+ 
+ @end
+ 
+ // This protocol is needed to silence the "unknown selector" warning
+ @protocol RCTRendererInteropLayerAdapting
+-- (UIView *)paperView;
++- (RCTPlatformView *)paperView; // [macOS]
+ @end
+ 
+-/**
+- * This method is used to extract the wrapped view
+- * from a view that might be the Interop Layer view wrapper.
+- * If the view passed as parameter is the Interop Layer wrapper, this method returns the wrapped view
+- * Otherwise, it returns the view itself.
+- */
+-RCT_EXTERN UIView *RCTPaperViewOrCurrentView(UIView *view);
+-
+ RCT_EXTERN NSMutableDictionary<NSString *, id> *RCTModuleConstantsForDestructuredComponent(
+     NSMutableDictionary<NSString *, NSDictionary *> *directEvents,
+     NSMutableDictionary<NSString *, NSDictionary *> *bubblingEvents,

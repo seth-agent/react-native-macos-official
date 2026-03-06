@@ -1,0 +1,161 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/CxxBridge/RCTCxxBridge.mm	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/React/CxxBridge/RCTCxxBridge.mm	2026-03-06 15:22:52
+@@ -19,6 +19,7 @@
+ #import <React/RCTConstants.h>
+ #import <React/RCTConvert.h>
+ #import <React/RCTCxxBridgeDelegate.h>
++#import <React/RCTCxxModule.h>
+ #import <React/RCTCxxUtils.h>
+ #import <React/RCTDevSettings.h>
+ #import <React/RCTDisplayLink.h>
+@@ -32,6 +33,7 @@
+ #import <React/RCTReloadCommand.h>
+ #import <React/RCTTurboModuleRegistry.h>
+ #import <React/RCTUtils.h>
++#import <React/RCTBundleURLProvider.h> // [macOS]
+ #import <cxxreact/CxxNativeModule.h>
+ #import <cxxreact/Instance.h>
+ #import <cxxreact/JSBundleType.h>
+@@ -53,15 +55,19 @@
+ #import "RCTMessageThread.h"
+ #import "RCTObjcExecutor.h"
+ 
++#ifdef WITH_FBSYSTRACE
++#import <React/RCTFBSystrace.h>
++#endif
++
+ #if RCT_DEV_MENU && __has_include(<React/RCTDevLoadingViewProtocol.h>)
+ #import <React/RCTDevLoadingViewProtocol.h>
+ #endif
+ 
+-#ifndef RCT_REMOVE_LEGACY_ARCH
++#ifndef RCT_FIT_RM_OLD_RUNTIME
+ 
+ static NSString *const RCTJSThreadName = @"com.facebook.react.JavaScript";
+ 
+-using RCTPendingCall = void (^)();
++typedef void (^RCTPendingCall)();
+ 
+ using namespace facebook::jsi;
+ using namespace facebook::react;
+@@ -178,7 +184,7 @@
+ 
+ struct RCTInstanceCallback : public InstanceCallback {
+   __weak RCTCxxBridge *bridge_;
+-  RCTInstanceCallback(RCTCxxBridge *bridge) : bridge_(bridge) {};
++  RCTInstanceCallback(RCTCxxBridge *bridge) : bridge_(bridge){};
+   void onBatchComplete() override
+   {
+     [bridge_ batchDidComplete];
+@@ -296,6 +302,13 @@
+   return _jsMessageThread;
+ }
+ 
++// [macOS
++- (std::weak_ptr<Instance>)reactInstance
++{
++  return _reactInstance;
++}
++// macOS]
++
+ - (BOOL)isInspectable
+ {
+   return _reactInstance ? _reactInstance->isInspectable() : NO;
+@@ -336,10 +349,12 @@
+ 
+     [RCTBridge setCurrentBridge:self];
+ 
++#if !TARGET_OS_OSX // [macOS]
+     [[NSNotificationCenter defaultCenter] addObserver:self
+                                              selector:@selector(handleMemoryWarning)
+                                                  name:UIApplicationDidReceiveMemoryWarningNotification
+                                                object:nil];
++#endif // [macOS]
+ 
+     RCTLogSetBridgeModuleRegistry(_objCModuleRegistry);
+     RCTLogSetBridgeCallableJSModules(_callableJSModules);
+@@ -349,7 +364,9 @@
+ 
+ - (void)dealloc
+ {
++#if !TARGET_OS_OSX // [macOS]
+   [[NSNotificationCenter defaultCenter] removeObserver:self];
++#endif // [macOS]
+ }
+ 
+ + (void)runRunLoop
+@@ -741,7 +758,7 @@
+ {
+   std::lock_guard<std::mutex> guard(_moduleRegistryLock);
+ 
+-  // This is async, but any calls into JS are blocked by the m_syncReady CV in Instance
++    // This is async, but any calls into JS are blocked by the m_syncReady CV in Instance
+   _reactInstance->initializeBridge(
+       std::make_unique<RCTInstanceCallback>(self),
+       executorFactory,
+@@ -991,7 +1008,7 @@
+       // modules on the main thread in parallel with loading the JS code, so
+       // they will already be available before they are ever required.
+       dispatch_block_t block = ^{
+-        if (self.valid) {
++        if (self.valid && ![moduleData.moduleClass isSubclassOfClass:[RCTCxxModule class]]) {
+           [self->_performanceLogger appendStartForTag:RCTPLNativeModuleMainThread];
+           (void)[moduleData instance];
+           [moduleData gatherConstants];
+@@ -1119,12 +1136,16 @@
+   });
+ }
+ 
+-RCT_NOT_IMPLEMENTED(-(instancetype)initWithDelegate : (__unused id<RCTBridgeDelegate>)delegate bundleURL : (
+-    __unused NSURL *)bundleURL moduleProvider : (__unused RCTBridgeModuleListProvider)
+-                        block launchOptions : (__unused NSDictionary *)launchOptions)
++RCT_NOT_IMPLEMENTED(-(instancetype)initWithDelegate
++                    : (__unused id<RCTBridgeDelegate>)delegate bundleURL
++                    : (__unused NSURL *)bundleURL moduleProvider
++                    : (__unused RCTBridgeModuleListProvider)block launchOptions
++                    : (__unused NSDictionary *)launchOptions)
+ 
+-RCT_NOT_IMPLEMENTED(-(instancetype)initWithBundleURL : (__unused NSURL *)bundleURL moduleProvider : (
+-    __unused RCTBridgeModuleListProvider)block launchOptions : (__unused NSDictionary *)launchOptions)
++RCT_NOT_IMPLEMENTED(-(instancetype)initWithBundleURL
++                    : (__unused NSURL *)bundleURL moduleProvider
++                    : (__unused RCTBridgeModuleListProvider)block launchOptions
++                    : (__unused NSDictionary *)launchOptions)
+ 
+ /**
+  * Prevent super from calling setUp (that'd create another batchedBridge)
+@@ -1498,6 +1519,9 @@
+   RCTAssertMainQueue();
+ 
+   [self ensureOnJavaScriptThread:^{
++#if WITH_FBSYSTRACE
++    [RCTFBSystrace registerCallbacks];
++#endif
+     RCTProfileInit(self);
+ 
+     [self enqueueJSCall:@"Systrace" method:@"setEnabled" args:@[ @YES ] completion:NULL];
+@@ -1513,6 +1537,14 @@
+     RCTProfileEnd(self, ^(NSString *log) {
+       NSData *logData = [log dataUsingEncoding:NSUTF8StringEncoding];
+       callback(logData);
++#if WITH_FBSYSTRACE
++      if (![RCTFBSystrace verifyTraceSize:logData.length]) {
++        RCTLogWarn(
++            @"Your FBSystrace trace might be truncated, try to bump up the buffer size"
++             " in RCTFBSystrace.m or capture a shorter trace");
++      }
++      [RCTFBSystrace unregisterCallbacks];
++#endif
+     });
+   }];
+ }
+@@ -1566,7 +1598,7 @@
+ 
+ @end
+ 
+-#else // RCT_REMOVE_LEGACY_ARCH
++#else // RCT_FIT_RM_OLD_RUNTIME
+ @implementation RCTCxxBridge
+ @end
+-#endif // RCT_REMOVE_LEGACY_ARCH
++#endif // RCT_FIT_RM_OLD_RUNTIME

@@ -1,0 +1,36 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/WebSocket/WebSocketInterceptor.js	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/WebSocket/WebSocketInterceptor.js	2026-03-06 15:22:52
+@@ -33,10 +33,10 @@
+ 
+ /**
+  * A network interceptor which monkey-patches RCTWebSocketModule methods
+- * to gather all websocket network events.
+- *
+- * @deprecated Since React Native 0.84
++ * to gather all websocket network requests/responses, in order to show
++ * their information in the React Native inspector development tool.
+  */
++
+ const WebSocketInterceptor = {
+   /**
+    * Invoked when RCTWebSocketModule.close(...) is called.
+@@ -169,7 +169,9 @@
+     eventEmitter = new NativeEventEmitter(
+       // T88715063: NativeEventEmitter only used this parameter on iOS. Now it uses it on all platforms, so this code was modified automatically to preserve its behavior
+       // If you want to use the native module on other platforms, please remove this condition and test its behavior
+-      Platform.OS !== 'ios' ? null : NativeWebSocketModule,
++      Platform.OS !== 'ios' && Platform.OS !== 'macos' // [macOS] Also use this parameter on macOS
++        ? null
++        : NativeWebSocketModule,
+     );
+     WebSocketInterceptor._registerEvents();
+ 
+@@ -232,8 +234,6 @@
+ 
+   _arrayBufferToString(data: string): ArrayBuffer | string {
+     const value = base64.toByteArray(data).buffer;
+-    /* $FlowFixMe[invalid-compare] Error discovered during Constant Condition
+-     * roll out. See https://fburl.com/workplace/5whu3i34. */
+     if (value === undefined || value === null) {
+       return '(no value)';
+     }

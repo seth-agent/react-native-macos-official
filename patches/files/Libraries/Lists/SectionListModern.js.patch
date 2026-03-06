@@ -1,0 +1,15 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Lists/SectionListModern.js	2026-03-06 15:51:54
++++ /Users/sethagent/Developer/react-native-macos-fork/packages/react-native/Libraries/Lists/SectionListModern.js	2026-03-06 15:22:52
+@@ -16,10 +16,10 @@
+   SectionBase as _SectionBase,
+   SectionData,
+   VirtualizedSectionListProps,
+-} from '@react-native/virtualized-lists';
++} from '@react-native-macos/virtualized-lists'; // [macOS]
+ 
+ import Platform from '../Utilities/Platform';
+-import VirtualizedLists from '@react-native/virtualized-lists';
++import VirtualizedLists from '@react-native-macos/virtualized-lists'; // [macOS]
+ import * as React from 'react';
+ import {useImperativeHandle, useRef} from 'react';
+ 
