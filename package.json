@@ -1,0 +1,41 @@
+{
+  "name": "react-native-macos-official",
+  "version": "0.84.0-alpha.0",
+  "description": "Out-of-tree React Native platform for macOS",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seth-agent/react-native-macos-official.git"
+  },
+  "license": "MIT",
+  "keywords": [
+    "react-native",
+    "macos",
+    "appkit",
+    "out-of-tree-platform"
+  ],
+  "peerDependencies": {
+    "react": ">=19.0.0",
+    "react-native": "^0.84.0"
+  },
+  "dependencies": {
+    "@react-native-community/cli-platform-apple": "^15.0.0"
+  },
+  "devDependencies": {
+    "react": "19.1.0",
+    "react-native": "0.84.1"
+  },
+  "files": [
+    "index.js",
+    "src/",
+    "macos/",
+    "cpp/",
+    "cli/",
+    "template/",
+    "scripts/",
+    "patches/",
+    "metro.js",
+    "react-native.config.js",
+    "ReactNativeMacOS.podspec"
+  ]
+}
