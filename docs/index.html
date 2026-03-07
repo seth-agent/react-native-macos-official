@@ -536,7 +536,7 @@ const PROGRESS = {
   phase1: 100,
   phase2: 100,
   phase3: 100,
-  phase4: 50,
+  phase4: 100,
   phase5: 100,
 
   // Actual patches eliminated so far per phase
@@ -556,7 +556,7 @@ const PROGRESS = {
     '1D': 'complete',
     '2A': 'complete', '2B': 'complete', '2C': 'complete', '2D': 'complete',
     '3A': 'complete', '3B': 'complete', '3C': 'complete',
-    '4A': 'pending', '4B': 'pending', '4C': 'complete',
+    '4A': 'complete', '4B': 'complete', '4C': 'complete',
     '5A': 'complete', '5B': 'pending', '5C': 'complete',
   },
 
@@ -565,7 +565,7 @@ const PROGRESS = {
     gate1: [true, true, true, true, true],
     gate2: [true, true, true, true, true],
     gate3: [true, true, true, true, true],
-    gate4: [false, false, false, false],
+    gate4: [true, true, true, true],
   },
 
   // Burndown data points (date, remaining) — append as work progresses
