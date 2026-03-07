@@ -1,0 +1,32 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Components/AccessibilityInfo/AccessibilityInfo.d.ts	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.XRUB96N0Wx	2026-03-06 18:50:41
+@@ -14,7 +14,7 @@
+   | 'change' // deprecated, maps to screenReaderChanged
+   | 'boldTextChanged' // iOS-only Event
+   | 'grayscaleChanged' // iOS-only Event
+-  | 'invertColorsChanged' // iOS-only Event
++  | 'highContrastChanged' // [macOS]
+   | 'reduceMotionChanged'
+   | 'highTextContrastChanged' // Android-only Event
+   | 'darkerSystemColorsChanged' // iOS-only Event
+@@ -59,16 +59,14 @@
+   isGrayscaleEnabled: () => Promise<boolean>;
+ 
+   /**
+-   * Query whether invert colors is currently enabled.
+    *
+-   * @platform ios
++   * @returns Query whether high contract is currently enabled.
++   *
++   * @platform macos
+    */
+-  isInvertColorsEnabled: () => Promise<boolean>;
++  isHighContrastEnabled: () => Promise<boolean>;
+ 
+   /**
+-   * Query whether reduce motion is currently enabled.
+-   */
+-  isReduceMotionEnabled: () => Promise<boolean>;
+ 
+   /**
+    *

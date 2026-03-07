@@ -1,0 +1,73 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Views/RCTViewManager.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.ENcspgnSPP	2026-03-06 18:50:53
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #import <React/RCTBridgeModule.h>
+ #import <React/RCTConvert.h>
+@@ -19,7 +19,7 @@
+ @class RCTSparseArray;
+ @class RCTUIManager;
+ 
+-typedef void (^RCTViewManagerUIBlock)(RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry);
++typedef void (^RCTViewManagerUIBlock)(RCTUIManager *uiManager, NSDictionary<NSNumber *, __kindof RCTPlatformView *> *viewRegistry); // [macOS]
+ 
+ @interface RCTViewManager : NSObject <RCTBridgeModule>
+ 
+@@ -37,7 +37,7 @@
+  * return a fresh instance each time. The view module MUST NOT cache the returned
+  * view and return the same instance for subsequent calls.
+  */
+-- (UIView *)view;
++- (RCTPlatformView *)view; // [macOS]
+ 
+ /**
+  * This method instantiates a shadow view to be managed by the module. If omitted,
+@@ -79,27 +79,25 @@
+     return @[ @ #type, @ #keyPath ];                    \
+   }
+ 
+-/**
+- * This macro can be used when you need to provide custom logic for setting
+- * view properties. The macro should be followed by a method body, which can
+- * refer to "json", "view" and "defaultView" to implement the required logic.
++#if TARGET_OS_OSX // [macOS
++ * These macros allow properties to only be mapped in OSX
+  */
+-#define RCT_CUSTOM_VIEW_PROPERTY(name, type, viewClass) \
+-  RCT_REMAP_VIEW_PROPERTY(name, __custom__, type)       \
+-  -(void)set_##name : (id)json forView : (viewClass *)view withDefaultView : (viewClass *)defaultView RCT_DYNAMIC
++#define RCT_EXPORT_NOT_OSX_VIEW_PROPERTY(name, type)
++#define RCT_EXPORT_OSX_VIEW_PROPERTY(name, type) \
++RCT_EXPORT_VIEW_PROPERTY(name, type)
++#define RCT_REMAP_NOT_OSX_VIEW_PROPERTY(name, keyPath, type)
++#define RCT_REMAP_OSX_VIEW_PROPERTY(name, keyPath, type) \
++RCT_REMAP_VIEW_PROPERTY(name, keyPath, type)
++#else
++#define RCT_EXPORT_NOT_OSX_VIEW_PROPERTY(name, type) \
++RCT_EXPORT_VIEW_PROPERTY(name, type)
++#define RCT_EXPORT_OSX_VIEW_PROPERTY(name, type)
++#define RCT_REMAP_NOT_OSX_VIEW_PROPERTY(name, keyPath, type) \
++RCT_REMAP_VIEW_PROPERTY(name, keyPath, type)
++#define RCT_REMAP_OSX_VIEW_PROPERTY(name, keyPath, type)
++#endif // macOS]
+ 
+ /**
+- * This macro is used to map properties to the shadow view, instead of the view.
+- */
+-#define RCT_EXPORT_SHADOW_PROPERTY(name, type)                \
+-  +(NSArray<NSString *> *)propConfigShadow_##name RCT_DYNAMIC \
+-  {                                                           \
+-    return @[ @ #type ];                                      \
+-  }
+-
+-/**
+- * This macro maps a named property to an arbitrary key path in the shadow view.
+- */
+ #define RCT_REMAP_SHADOW_PROPERTY(name, keyPath, type)        \
+   +(NSArray<NSString *> *)propConfigShadow_##name RCT_DYNAMIC \
+   {                                                           \

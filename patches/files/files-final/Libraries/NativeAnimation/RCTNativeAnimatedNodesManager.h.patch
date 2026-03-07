@@ -1,0 +1,21 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/NativeAnimation/RCTNativeAnimatedNodesManager.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.93LVc1j3w7	2026-03-06 18:50:44
+@@ -8,7 +8,7 @@
+ #import <Foundation/Foundation.h>
+ #import <React/RCTBridgeModule.h>
+ #import <React/RCTEventDispatcherProtocol.h>
+-#import <React/RCTSurfacePresenterStub.h>
++#import <React/RCTPlatformDisplayLink.h> // [macOS]
+ #import <React/RCTUIManager.h>
+ 
+ @protocol RCTValueAnimatedNodeObserver;
+@@ -22,8 +22,7 @@
+ 
+ - (void)updateAnimations;
+ 
+-- (void)stepAnimations:(CADisplayLink *)displaylink;
+-
++- (void)stepAnimations:(RCTPlatformDisplayLink *)displaylink; // [macOS]
+ - (BOOL)isNodeManagedByFabric:(NSNumber *)tag;
+ 
+ - (void)getValue:(NSNumber *)nodeTag saveCallback:(RCTResponseSenderBlock)saveCallback;

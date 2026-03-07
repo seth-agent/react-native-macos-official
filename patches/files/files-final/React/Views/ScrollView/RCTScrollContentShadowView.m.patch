@@ -1,0 +1,40 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Views/ScrollView/RCTScrollContentShadowView.m	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.kSWX4J9HGS	2026-03-06 18:50:53
+@@ -11,25 +11,24 @@
+ 
+ #import <yoga/Yoga.h>
+ 
+-#import "RCTUtils.h"
++#if TARGET_OS_OSX // [macOS
++#import "RCTScrollContentLocalData.h"
++#endif // macOS]
+ 
+ @implementation RCTScrollContentShadowView
+ 
+-- (void)layoutWithMetrics:(RCTLayoutMetrics)layoutMetrics layoutContext:(RCTLayoutContext)layoutContext
++#if TARGET_OS_OSX // [macOS
++- (void)setLocalData:(RCTScrollContentLocalData *)localData
+ {
+-  if (layoutMetrics.layoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
+-    // Motivation:
+-    // Yoga place `contentView` on the right side of `scrollView` when RTL layout is enforced.
+-    // That breaks everything; it is completely pointless to (re)position `contentView`
+-    // because it is `contentView`'s job. So, we work around it here.
++  RCTAssert(
++      [localData isKindOfClass:[RCTScrollContentLocalData class]],
++      @"Local data object for `RCTScrollContentView` must be `RCTScrollContentLocalData` instance.");
+ 
+-    layoutContext.absolutePosition.x += layoutMetrics.frame.size.width;
+-    layoutMetrics.frame.origin.x = 0;
+-  }
++  super.marginEnd = (YGValue){localData.verticalScrollerWidth, YGUnitPoint};
++  super.marginBottom = (YGValue){localData.horizontalScrollerHeight, YGUnitPoint};
+ 
+-  [super layoutWithMetrics:layoutMetrics layoutContext:layoutContext];
++  [self didSetProps:@[@"marginEnd", @"marginBottom"]];
+ }
++#endif // macOS]
+ 
+-@end
+-
+ #endif // RCT_REMOVE_LEGACY_ARCH

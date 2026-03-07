@@ -1,0 +1,146 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Components/__tests__/__snapshots__/Button-test.js.snap	2026-03-06 19:28:14
++++ /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Components/__tests__/__snapshots__/Button-test.js.snap	2026-03-06 19:26:08
+@@ -2,6 +2,7 @@
+ 
+ exports[`<Button /> should be disabled and it should set accessibilityState to disabled when disabled={true} 1`] = `
+ <View
++  acceptsFirstMouse={false}
+   accessibilityRole="button"
+   accessibilityState={
+     Object {
+@@ -22,6 +23,7 @@
+   }
+   accessible={true}
+   collapsable={false}
++  enableFocusRing={false}
+   focusable={false}
+   onClick={[Function]}
+   onResponderGrant={[Function]}
+@@ -68,6 +70,7 @@
+ 
+ exports[`<Button /> should be disabled when disabled is empty and accessibilityState={{disabled: true}} 1`] = `
+ <View
++  acceptsFirstMouse={false}
+   accessibilityRole="button"
+   accessibilityState={
+     Object {
+@@ -88,6 +91,7 @@
+   }
+   accessible={true}
+   collapsable={false}
++  enableFocusRing={false}
+   focusable={false}
+   onClick={[Function]}
+   onResponderGrant={[Function]}
+@@ -134,6 +138,7 @@
+ 
+ exports[`<Button /> should be disabled when disabled={true} and accessibilityState={{disabled: true}} 1`] = `
+ <View
++  acceptsFirstMouse={false}
+   accessibilityRole="button"
+   accessibilityState={
+     Object {
+@@ -154,6 +159,7 @@
+   }
+   accessible={true}
+   collapsable={false}
++  enableFocusRing={false}
+   focusable={false}
+   onClick={[Function]}
+   onResponderGrant={[Function]}
+@@ -200,6 +206,7 @@
+ 
+ exports[`<Button /> should be set importantForAccessibility={no-hide-descendants} when importantForAccessibility={no} 1`] = `
+ <View
++  acceptsFirstMouse={false}
+   accessibilityRole="button"
+   accessibilityState={
+     Object {
+@@ -220,6 +227,7 @@
+   }
+   accessible={true}
+   collapsable={false}
++  enableFocusRing={true}
+   focusable={false}
+   importantForAccessibility="no-hide-descendants"
+   onClick={[Function]}
+@@ -262,6 +270,7 @@
+ 
+ exports[`<Button /> should be set importantForAccessibility={no-hide-descendants} when importantForAccessibility={no-hide-descendants} 1`] = `
+ <View
++  acceptsFirstMouse={false}
+   accessibilityRole="button"
+   accessibilityState={
+     Object {
+@@ -282,6 +291,7 @@
+   }
+   accessible={true}
+   collapsable={false}
++  enableFocusRing={true}
+   focusable={false}
+   importantForAccessibility="no-hide-descendants"
+   onClick={[Function]}
+@@ -324,6 +334,7 @@
+ 
+ exports[`<Button /> should not be disabled when disabled={false} and accessibilityState={{disabled: false}} 1`] = `
+ <View
++  acceptsFirstMouse={false}
+   accessibilityRole="button"
+   accessibilityState={
+     Object {
+@@ -344,6 +355,7 @@
+   }
+   accessible={true}
+   collapsable={false}
++  enableFocusRing={true}
+   focusable={false}
+   onClick={[Function]}
+   onResponderGrant={[Function]}
+@@ -386,6 +398,7 @@
+ 
+ exports[`<Button /> should not be disabled when disabled={false} and accessibilityState={{disabled: true}} 1`] = `
+ <View
++  acceptsFirstMouse={false}
+   accessibilityRole="button"
+   accessibilityState={
+     Object {
+@@ -406,6 +419,7 @@
+   }
+   accessible={true}
+   collapsable={false}
++  enableFocusRing={true}
+   focusable={false}
+   onClick={[Function]}
+   onResponderGrant={[Function]}
+@@ -448,6 +462,7 @@
+ 
+ exports[`<Button /> should overwrite accessibilityState with value of disabled prop 1`] = `
+ <View
++  acceptsFirstMouse={false}
+   accessibilityRole="button"
+   accessibilityState={
+     Object {
+@@ -468,6 +483,7 @@
+   }
+   accessible={true}
+   collapsable={false}
++  enableFocusRing={false}
+   focusable={false}
+   onClick={[Function]}
+   onResponderGrant={[Function]}
+@@ -514,6 +530,7 @@
+ 
+ exports[`<Button /> should render as expected 1`] = `
+ <View
++  acceptsFirstMouse={false}
+   accessibilityRole="button"
+   accessibilityState={
+     Object {
+@@ -534,6 +551,7 @@
+   }
+   accessible={true}
+   collapsable={false}
++  enableFocusRing={true}
+   focusable={false}
+   onClick={[Function]}
+   onResponderGrant={[Function]}

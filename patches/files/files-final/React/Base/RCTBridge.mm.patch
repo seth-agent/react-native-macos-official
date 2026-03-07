@@ -1,0 +1,12 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Base/RCTBridge.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.UC1Rpue5Zz	2026-03-06 18:50:46
+@@ -8,8 +8,7 @@
+ #import "RCTBridge.h"
+ #import "RCTBridge+Inspector.h"
+ #import "RCTBridge+Private.h"
+-
+-#import <objc/runtime.h>
++#import "RCTDevSettings.h" // [macOS]
+ 
+ #import "RCTConvert.h"
+ #if RCT_ENABLE_INSPECTOR

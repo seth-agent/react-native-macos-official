@@ -1,0 +1,11 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/NativeComponent/ViewConfigIgnore.js	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.IVchKofACz	2026-03-06 18:50:44
+@@ -37,7 +37,7 @@
+ export function ConditionallyIgnoredEventHandlers<
+   const T: {+[name: string]: true},
+ >(value: T): T | void {
+-  if (Platform.OS === 'ios') {
++  if (Platform.OS === 'ios' || Platform.OS === 'macos') { // [macOS]
+     return value;
+   }
+   return undefined;

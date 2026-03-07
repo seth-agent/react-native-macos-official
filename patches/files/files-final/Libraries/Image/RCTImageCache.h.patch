@@ -1,0 +1,28 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Image/RCTImageCache.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.lSfPBJEzlc	2026-03-06 18:50:42
+@@ -6,11 +6,11 @@
+  */
+ 
+ #import <Foundation/Foundation.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #import <React/RCTResizeMode.h>
+ 
+-@interface UIImage (React)
++@interface RCTPlatformImage (React) // [macOS]
+ 
+ /**
+  * Memory bytes of the image with the default calculation of static image or GIF. Custom calculations of decoded bytes
+@@ -25,9 +25,9 @@
+  */
+ @protocol RCTImageCache <NSObject>
+ 
+-- (UIImage *)imageForUrl:(NSString *)url size:(CGSize)size scale:(CGFloat)scale resizeMode:(RCTResizeMode)resizeMode;
++- (RCTPlatformImage *)imageForUrl:(NSString *)url size:(CGSize)size scale:(CGFloat)scale resizeMode:(RCTResizeMode)resizeMode; // [macOS]
+ 
+-- (void)addImageToCache:(UIImage *)image
++- (void)addImageToCache:(RCTPlatformImage *)image // [macOS]
+                     URL:(NSString *)url
+                    size:(CGSize)size
+                   scale:(CGFloat)scale

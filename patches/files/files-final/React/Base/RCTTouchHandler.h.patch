@@ -1,0 +1,31 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Base/RCTTouchHandler.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.kB3p5Z9Hw4	2026-03-06 18:50:47
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #import <React/RCTFrameUpdate.h>
+ 
+@@ -15,9 +15,16 @@
+ 
+ - (instancetype)initWithBridge:(RCTBridge *)bridge NS_DESIGNATED_INITIALIZER;
+ 
+-- (void)attachToView:(UIView *)view;
+-- (void)detachFromView:(UIView *)view;
++- (void)attachToView:(RCTPlatformView *)view; // [macOS]
++- (void)detachFromView:(RCTPlatformView *)view; // [macOS]
+ 
+ - (void)cancel;
+ 
+-@end
++#if TARGET_OS_OSX // [macOS
+++ (instancetype)touchHandlerForEvent:(NSEvent *)event;
+++ (instancetype)touchHandlerForView:(NSView *)view;
++
++- (void)willShowMenuWithEvent:(NSEvent *)event;
++- (void)cancelTouchWithEvent:(NSEvent *)event;
++#endif // macOS]
++

@@ -1,0 +1,10 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Image/RCTUIImageViewAnimated.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.ozqOMA5wnD	2026-03-06 18:50:43
+@@ -8,6 +8,4 @@
+ #import <React/RCTAnimatedImage.h>
+ #import <React/RCTDefines.h>
+ 
+-@interface RCTUIImageViewAnimated : UIImageView
+-
+-@end
++@interface RCTUIImageViewAnimated : RCTUIImageView // [macOS]

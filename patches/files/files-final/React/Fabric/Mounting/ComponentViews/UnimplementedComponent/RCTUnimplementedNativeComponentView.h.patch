@@ -1,0 +1,13 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Mounting/ComponentViews/UnimplementedComponent/RCTUnimplementedNativeComponentView.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.zb8rFlbq6i	2026-03-06 18:50:50
+@@ -5,8 +5,8 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
+-
++#import <React/RCTUIKit.h> // [macOS]
++#import "React/RCTUITextView.h"
+ #import <React/RCTViewComponentView.h>
+ 
+ NS_ASSUME_NONNULL_BEGIN

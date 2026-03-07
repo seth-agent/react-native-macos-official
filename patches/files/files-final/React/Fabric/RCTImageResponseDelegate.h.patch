@@ -1,0 +1,18 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/RCTImageResponseDelegate.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.fPcXKTev73	2026-03-06 18:50:51
+@@ -5,13 +5,13 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ NS_ASSUME_NONNULL_BEGIN
+ 
+ @protocol RCTImageResponseDelegate <NSObject>
+ 
+-- (void)didReceiveImage:(UIImage *)image metadata:(id)metadata fromObserver:(const void *)observer;
++- (void)didReceiveImage:(RCTPlatformImage *)image metadata:(id)metadata fromObserver:(const void *)observer; // [macOS]
+ - (void)didReceiveProgress:(float)progress
+                     loaded:(int64_t)loaded
+                      total:(int64_t)total

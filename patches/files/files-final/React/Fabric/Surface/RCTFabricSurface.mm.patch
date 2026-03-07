@@ -1,0 +1,18 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Surface/RCTFabricSurface.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.3h2tuUvcs7	2026-03-06 18:50:51
+@@ -66,13 +66,11 @@
+ 
+     [self _updateLayoutContext];
+ 
+-    [[NSNotificationCenter defaultCenter] addObserver:self
++#if !TARGET_OS_OSX // [macOS]
+                                              selector:@selector(handleContentSizeCategoryDidChangeNotification:)
+                                                  name:UIContentSizeCategoryDidChangeNotification
+                                                object:nil];
+-  }
+-
+-  return self;
++#endif // [macOS]
+ }
+ 
+ - (void)resetWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter

@@ -1,0 +1,11 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/NativeAnimation/Drivers/RCTFrameAnimation.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.4G89SJErgt	2026-03-06 18:50:44
+@@ -7,7 +7,7 @@
+ 
+ #import <React/RCTFrameAnimation.h>
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #import <React/RCTConvert.h>
+ #import <React/RCTDefines.h>

@@ -1,0 +1,33 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Base/RCTReloadCommand.m	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.pqBaxeHZM5	2026-03-06 18:50:47
+@@ -8,9 +8,8 @@
+ #import "RCTReloadCommand.h"
+ 
+ #import "RCTAssert.h"
+-#import "RCTKeyCommands.h"
+-#import "RCTUtils.h"
+-
++#if !TARGET_OS_OSX // [macOS]
++#endif // [macOS]
+ static NSHashTable<id<RCTReloadListener>> *listeners;
+ static NSLock *listenersLock;
+ static NSURL *bundleURL;
+@@ -28,7 +27,7 @@
+   if (!listeners) {
+     listeners = [NSHashTable weakObjectsHashTable];
+   }
+-#if RCT_DEV
++#if RCT_DEV && !TARGET_OS_OSX // [macOS]
+   RCTAssertMainQueue(); // because registerKeyCommandWithInput: must be called on the main thread
+   static dispatch_once_t onceToken;
+   dispatch_once(&onceToken, ^{
+@@ -38,8 +37,7 @@
+                                                             RCTTriggerReloadCommandListeners(@"Command + R");
+                                                           }];
+   });
+-#endif
+-  [listeners addObject:listener];
++#endif // [macOS]
+   [listenersLock unlock];
+ }
+ 

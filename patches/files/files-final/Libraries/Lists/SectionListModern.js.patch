@@ -1,0 +1,13 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Lists/SectionListModern.js	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.FM6JeVf6tV	2026-03-06 18:50:43
+@@ -16,10 +16,8 @@
+   SectionBase as _SectionBase,
+   SectionData,
+   VirtualizedSectionListProps,
+-} from '@react-native/virtualized-lists';
+ 
+ import Platform from '../Utilities/Platform';
+-import VirtualizedLists from '@react-native/virtualized-lists';
+ import * as React from 'react';
+ import {useImperativeHandle, useRef} from 'react';
+ 

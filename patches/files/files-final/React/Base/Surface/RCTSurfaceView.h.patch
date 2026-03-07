@@ -1,0 +1,20 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Base/Surface/RCTSurfaceView.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.HvknERykTg	2026-03-06 18:50:48
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ NS_ASSUME_NONNULL_BEGIN
+ 
+@@ -14,7 +14,7 @@
+ /**
+  * UIView instance which represents the Surface
+  */
+-@interface RCTSurfaceView : UIView
++@interface RCTSurfaceView : RCTUIView // [macOS]
+ 
+ - (instancetype)initWithSurface:(id<RCTSurfaceProtocol>)surface NS_DESIGNATED_INITIALIZER;
+ 

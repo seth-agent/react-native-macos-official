@@ -1,0 +1,139 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/ReactCommon/react/renderer/textlayoutmanager/platform/ios/react/renderer/textlayoutmanager/RCTAttributedTextUtils.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.7dl0ti341u	2026-03-06 18:50:54
+@@ -36,7 +36,7 @@
+   return weights[(fontWeight + 50) / 100 - 1];
+ }
+ 
+-inline static UIFontTextStyle RCTUIFontTextStyleForDynamicTypeRamp(const DynamicTypeRamp &dynamicTypeRamp)
++#if !TARGET_OS_OSX // [macOS]
+ {
+   switch (dynamicTypeRamp) {
+     case DynamicTypeRamp::Caption2:
+@@ -63,8 +63,7 @@
+       return UIFontTextStyleLargeTitle;
+   }
+ }
+-
+-inline static CGFloat RCTBaseSizeForDynamicTypeRamp(const DynamicTypeRamp &dynamicTypeRamp)
++#endif // [macOS]
+ {
+   // Values taken from
+   // https://developer.apple.com/design/human-interface-guidelines/foundations/typography/#specifications
+@@ -97,9 +96,7 @@
+ inline static CGFloat RCTEffectiveFontSizeMultiplierFromTextAttributes(const TextAttributes &textAttributes)
+ {
+   if (textAttributes.allowFontScaling.value_or(true)) {
+-    CGFloat fontSizeMultiplier = !isnan(textAttributes.fontSizeMultiplier) ? textAttributes.fontSizeMultiplier : 1.0;
+-    if (textAttributes.dynamicTypeRamp.has_value()) {
+-      DynamicTypeRamp dynamicTypeRamp = textAttributes.dynamicTypeRamp.value();
++#if !TARGET_OS_OSX // [macOS]
+       UIFontMetrics *fontMetrics =
+           [UIFontMetrics metricsForTextStyle:RCTUIFontTextStyleForDynamicTypeRamp(dynamicTypeRamp)];
+       // Using a specific font size reduces rounding errors from -scaledValueForValue:
+@@ -110,12 +107,9 @@
+     CGFloat maxFontSizeMultiplier =
+         !isnan(textAttributes.maxFontSizeMultiplier) ? textAttributes.maxFontSizeMultiplier : 0.0;
+     return maxFontSizeMultiplier >= 1.0 ? fminf(maxFontSizeMultiplier, fontSizeMultiplier) : fontSizeMultiplier;
+-  } else {
+-    return 1.0;
+-  }
+-}
+-
+-inline static UIFont *RCTEffectiveFontFromTextAttributes(const TextAttributes &textAttributes)
++#else // [macOS
++      return textAttributes.fontSizeMultiplier;
++#endif // macOS]
+ {
+   NSString *fontFamily = [NSString stringWithUTF8String:textAttributes.fontFamily.c_str()];
+ 
+@@ -136,9 +130,9 @@
+   return RCTFontWithFontProperties(fontProperties);
+ }
+ 
+-inline static UIColor *RCTEffectiveForegroundColorFromTextAttributes(const TextAttributes &textAttributes)
++inline static RCTUIColor *RCTEffectiveForegroundColorFromTextAttributes(const TextAttributes &textAttributes) // [macOS]
+ {
+-  UIColor *effectiveForegroundColor = RCTUIColorFromSharedColor(textAttributes.foregroundColor) ?: [UIColor blackColor];
++  RCTUIColor *effectiveForegroundColor = RCTUIColorFromSharedColor(textAttributes.foregroundColor) ? RCTUIColorFromSharedColor(textAttributes.foregroundColor) : [RCTUIColor blackColor]; // [macOS]
+ 
+   if (!isnan(textAttributes.opacity)) {
+     effectiveForegroundColor = [effectiveForegroundColor
+@@ -148,16 +142,16 @@
+   return effectiveForegroundColor;
+ }
+ 
+-inline static UIColor *RCTEffectiveBackgroundColorFromTextAttributes(const TextAttributes &textAttributes)
++inline static RCTUIColor *RCTEffectiveBackgroundColorFromTextAttributes(const TextAttributes &textAttributes) // [macOS]
+ {
+-  UIColor *effectiveBackgroundColor = RCTUIColorFromSharedColor(textAttributes.backgroundColor);
++  RCTUIColor *effectiveBackgroundColor = RCTUIColorFromSharedColor(textAttributes.backgroundColor); // [macOS]
+ 
+   if (effectiveBackgroundColor && !isnan(textAttributes.opacity)) {
+     effectiveBackgroundColor = [effectiveBackgroundColor
+         colorWithAlphaComponent:CGColorGetAlpha(effectiveBackgroundColor.CGColor) * textAttributes.opacity];
+   }
+ 
+-  return effectiveBackgroundColor ?: [UIColor clearColor];
++  return effectiveBackgroundColor ? effectiveBackgroundColor : [RCTUIColor clearColor]; // [macOS]
+ }
+ 
+ NSMutableDictionary<NSAttributedStringKey, id> *RCTNSTextAttributesFromTextAttributes(
+@@ -172,7 +166,7 @@
+   }
+ 
+   // Colors
+-  UIColor *effectiveForegroundColor = RCTEffectiveForegroundColorFromTextAttributes(textAttributes);
++  RCTUIColor *effectiveForegroundColor = RCTEffectiveForegroundColorFromTextAttributes(textAttributes); // [macOS]
+ 
+   if (textAttributes.foregroundColor || !isnan(textAttributes.opacity)) {
+     attributes[NSForegroundColorAttributeName] = effectiveForegroundColor;
+@@ -239,7 +233,7 @@
+     NSUnderlineStyle style = RCTNSUnderlineStyleFromTextDecorationStyle(
+         textAttributes.textDecorationStyle.value_or(TextDecorationStyle::Solid));
+ 
+-    UIColor *textDecorationColor = RCTUIColorFromSharedColor(textAttributes.textDecorationColor);
++    RCTUIColor *textDecorationColor = RCTUIColorFromSharedColor(textAttributes.textDecorationColor); // [macOS]
+ 
+     // Underline
+     if (textDecorationLineType == TextDecorationLineType::Underline ||
+@@ -322,7 +316,7 @@
+                               return;
+                             }
+ 
+-                            maximumFontLineHeight = MAX(font.lineHeight, maximumFontLineHeight);
++                            maximumFontLineHeight = MAX(UIFontLineHeight(font), maximumFontLineHeight); // [macOS]
+                           }];
+ 
+   if (maximumLineHeight < maximumFontLineHeight) {
+@@ -354,7 +348,7 @@
+ 
+ static NSMutableAttributedString *RCTNSAttributedStringFragmentFromFragment(
+     const AttributedString::Fragment &fragment,
+-    UIImage *placeholderImage)
++    RCTPlatformImage *placeholderImage) // [macOS]
+ {
+   if (fragment.isAttachment()) {
+     auto layoutMetrics = fragment.parentShadowView.layoutMetrics;
+@@ -383,7 +377,7 @@
+ 
+ static NSMutableAttributedString *RCTNSAttributedStringFragmentWithAttributesFromFragment(
+     const AttributedString::Fragment &fragment,
+-    UIImage *placeholderImage)
++    RCTPlatformImage *placeholderImage) // [macOS]
+ {
+   auto nsAttributedStringFragment = RCTNSAttributedStringFragmentFromFragment(fragment, placeholderImage);
+ 
+@@ -402,11 +396,10 @@
+ 
+ NSAttributedString *RCTNSAttributedStringFromAttributedString(const AttributedString &attributedString)
+ {
+-  static UIImage *placeholderImage;
++  static RCTPlatformImage *placeholderImage; // [macOS]
+   static dispatch_once_t onceToken;
+   dispatch_once(&onceToken, ^{
+-    placeholderImage = [UIImage new];
+-  });
++    placeholderImage = [RCTPlatformImage new]; // [macOS]
+ 
+   NSMutableAttributedString *nsAttributedString = [NSMutableAttributedString new];
+ 

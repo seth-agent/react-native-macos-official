@@ -1,0 +1,16 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Linking/Linking.js	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.U3PXuipRpg	2026-03-06 18:50:43
+@@ -23,8 +23,11 @@
+ 
+ class LinkingImpl extends NativeEventEmitter<LinkingEventDefinitions> {
+   constructor() {
+-    super(Platform.OS === 'ios' ? nullthrows(NativeLinkingManager) : undefined);
+-  }
++    super(
++      Platform.OS === 'ios' || Platform.OS === 'macos' // [macOS]
++        ? nullthrows(NativeLinkingManager)
++        : undefined,
++    );
+ 
+   /**
+    * Add a handler to Linking changes by listening to the `url` event type

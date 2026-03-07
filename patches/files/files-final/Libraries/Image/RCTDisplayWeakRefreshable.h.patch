@@ -1,0 +1,22 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Image/RCTDisplayWeakRefreshable.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.B8pdknrPIQ	2026-03-06 18:50:42
+@@ -8,9 +8,9 @@
+ #import <Foundation/Foundation.h>
+ #import <QuartzCore/QuartzCore.h>
+ 
+-@protocol RCTDisplayRefreshable
++#import <React/RCTPlatformDisplayLink.h> // [macOS]
+ 
+-- (void)displayDidRefresh:(CADisplayLink *)displayLink;
++- (void)displayDidRefresh:(RCTPlatformDisplayLink *)displayLink; // [macOS]
+ 
+ @end
+ 
+@@ -18,6 +18,5 @@
+ 
+ @property (nonatomic, weak) id<RCTDisplayRefreshable> refreshable;
+ 
+-+ (CADisplayLink *)displayLinkWithWeakRefreshable:(id<RCTDisplayRefreshable>)refreshable;
+-
+++ (RCTPlatformDisplayLink *)displayLinkWithWeakRefreshable:(id<RCTDisplayRefreshable>)refreshable; // [macOS]
+ @end

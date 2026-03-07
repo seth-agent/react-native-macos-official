@@ -1,0 +1,18 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/NativeAnimation/RCTNativeAnimatedModule.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.PmibYcomn2	2026-03-06 18:50:44
+@@ -346,13 +346,12 @@
+   _operations = [NSMutableArray new];
+ 
+   [uiManager
+-      prependUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
++      prependUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, RCTPlatformView *> *viewRegistry) { // [macOS]
+         for (AnimatedOperation operation in preOperations) {
+           operation(self->_nodesManager);
+         }
+       }];
+-  [uiManager addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+-    for (AnimatedOperation operation in operations) {
++  [uiManager addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, RCTPlatformView *> *viewRegistry) { // [macOS]
+       operation(self->_nodesManager);
+     }
+ 

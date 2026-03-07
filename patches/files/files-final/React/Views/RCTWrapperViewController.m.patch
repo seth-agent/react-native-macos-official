@@ -1,0 +1,16 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Views/RCTWrapperViewController.m	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.3G0C5zA6cT	2026-03-06 18:50:53
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import "RCTWrapperViewController.h"
++#if !TARGET_OS_OSX // [macOS]
+ 
+ #import <UIKit/UIScrollView.h>
+ 
+@@ -80,3 +80,4 @@
+ }
+ 
+ @end
++#endif

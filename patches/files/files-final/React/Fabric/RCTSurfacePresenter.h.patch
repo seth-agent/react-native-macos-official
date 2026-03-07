@@ -1,0 +1,20 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/RCTSurfacePresenter.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.sjY1M6g85v	2026-03-06 18:50:51
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #import <React/RCTPrimitives.h>
+ #import <React/RCTSurfacePresenterStub.h>
+@@ -80,7 +80,7 @@
+ /*
+  * Please do not use this, this will be deleted soon.
+  */
+-- (nullable UIView *)findComponentViewWithTag_DO_NOT_USE_DEPRECATED:(NSInteger)tag;
++- (nullable RCTUIView *)findComponentViewWithTag_DO_NOT_USE_DEPRECATED:(NSInteger)tag; // [macOS]
+ 
+ @end
+ 

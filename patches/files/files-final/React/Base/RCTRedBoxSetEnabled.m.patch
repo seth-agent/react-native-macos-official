@@ -1,0 +1,11 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Base/RCTRedBoxSetEnabled.m	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.I5V1yodkP6	2026-03-06 18:50:47
+@@ -7,7 +7,7 @@
+ 
+ #import "RCTRedBoxSetEnabled.h"
+ 
+-#if RCT_DEV
++#if RCT_DEV && DEBUG // [macOS] RCT_DEV is always on in the react-native-macos fork, so to not default to redboxing in release builds, trigger the initial value off of the scheme as well
+ static BOOL redBoxEnabled = YES;
+ #else
+ static BOOL redBoxEnabled = NO;

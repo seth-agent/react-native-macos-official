@@ -1,0 +1,41 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/RCTSurfacePresenter.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.upiTkLGO5X	2026-03-06 18:50:51
+@@ -76,12 +76,11 @@
+ 
+     _scheduler = [self _createScheduler];
+ 
+-    [[NSNotificationCenter defaultCenter] addObserver:self
++#if !TARGET_OS_OSX // [macOS]
+                                              selector:@selector(_applicationWillTerminate)
+                                                  name:UIApplicationWillTerminateNotification
+                                                object:nil];
+-  }
+-
++#endif // [macOS]
+   return self;
+ }
+ 
+@@ -141,10 +140,10 @@
+                                           initialProperties:initialProperties];
+ }
+ 
+-- (UIView *)findComponentViewWithTag_DO_NOT_USE_DEPRECATED:(NSInteger)tag
++- (RCTUIView *)findComponentViewWithTag_DO_NOT_USE_DEPRECATED:(NSInteger)tag // [macOS]
+ {
+-  UIView<RCTComponentViewProtocol> *componentView =
+-      [_mountingManager.componentViewRegistry findComponentViewWithTag:tag];
++  RCTUIView<RCTComponentViewProtocol> *componentView =
++      [_mountingManager.componentViewRegistry findComponentViewWithTag:tag]; // [macOS]
+   return componentView;
+ }
+ 
+@@ -161,8 +160,7 @@
+     return;
+   }
+ 
+-  UIView<RCTComponentViewProtocol> *componentView =
+-      [_mountingManager.componentViewRegistry findComponentViewWithTag:tag];
++  RCTUIView<RCTComponentViewProtocol> *componentView = // [macOS]
+   if (componentView == nil) {
+     return; // This view probably isn't managed by Fabric
+   }

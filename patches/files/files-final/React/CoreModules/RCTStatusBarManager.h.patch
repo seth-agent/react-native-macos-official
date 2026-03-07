@@ -1,0 +1,24 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/CoreModules/RCTStatusBarManager.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.PE8cQePIVp	2026-03-06 18:50:49
+@@ -5,18 +5,16 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #import <React/RCTConvert.h>
+ #import <React/RCTEventEmitter.h>
+ 
+ @interface RCTConvert (UIStatusBar)
+ 
+-+ (UIStatusBarStyle)UIStatusBarStyle:(id)json;
++#if !TARGET_OS_OSX // [macOS]
+ + (UIStatusBarAnimation)UIStatusBarAnimation:(id)json;
+-
+-@end
+-
++#endif // [macOS]
+ @interface RCTStatusBarManager : RCTEventEmitter
+ 
+ @end

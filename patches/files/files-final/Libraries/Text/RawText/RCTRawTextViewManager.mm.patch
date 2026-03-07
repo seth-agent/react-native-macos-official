@@ -1,0 +1,15 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Text/RawText/RCTRawTextViewManager.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.Hn8MPn2X0d	2026-03-06 18:50:45
+@@ -15,10 +15,9 @@
+ 
+ RCT_EXPORT_MODULE(RCTRawText)
+ 
+-- (UIView *)view
++- (RCTPlatformView *)view // [macOS]
+ {
+-  return [UIView new];
+-}
++  return [RCTUIView new]; // [macOS]
+ 
+ - (RCTShadowView *)shadowView
+ {

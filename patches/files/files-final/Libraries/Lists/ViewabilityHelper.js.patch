@@ -1,0 +1,12 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Lists/ViewabilityHelper.js	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.dmdSBR6HVH	2026-03-06 18:50:43
+@@ -14,9 +14,7 @@
+   ListViewToken as ViewToken,
+   ViewabilityConfig,
+   ViewabilityConfigCallbackPair,
+-} from '@react-native/virtualized-lists';
+ 
+-import VirtualizedLists from '@react-native/virtualized-lists';
+ 
+ type ViewabilityHelperType = typeof VirtualizedLists.ViewabilityHelper;
+ const ViewabilityHelper: ViewabilityHelperType =

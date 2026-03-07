@@ -1,0 +1,24 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Base/Surface/SurfaceHostingView/RCTSurfaceHostingProxyRootView.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.8OwL5YQyaD	2026-03-06 18:50:48
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #import <React/RCTBridgeModule.h>
+ #import <React/RCTRootView.h>
+@@ -31,9 +31,9 @@
+ @property (nonatomic, assign) RCTRootViewSizeFlexibility sizeFlexibility;
+ @property (nonatomic, weak) id<RCTRootViewDelegate> delegate;
+ @property (nonatomic, weak) UIViewController *reactViewController;
+-@property (nonatomic, strong, readonly) UIView *view;
+-@property (nonatomic, strong, readonly) UIView *contentView;
+-@property (nonatomic, strong) UIView *loadingView;
++@property (nonatomic, strong, readonly) RCTUIView *view; // [macOS]
++@property (nonatomic, strong, readonly) RCTUIView *contentView; // [macOS]
++@property (nonatomic, strong) RCTPlatformView *loadingView; // [macOS]
+ @property (nonatomic, assign) BOOL passThroughTouches;
+ @property (nonatomic, assign) NSTimeInterval loadingViewFadeDelay;
+ @property (nonatomic, assign) NSTimeInterval loadingViewFadeDuration;
