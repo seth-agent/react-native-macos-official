@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>React Native Platform Provider API — Progress Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --card: #12121a;
+    --border: #1e1e2e;
+    --text: #e0e0e8;
+    --dim: #6b6b80;
+    --accent: #7c6aef;
+    --accent2: #4ecdc4;
+    --accent3: #ff6b6b;
+    --accent4: #ffd93d;
+    --accent5: #6bcb77;
+    --green: #4ecdc4;
+    --red: #ff6b6b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  header p {
+    color: var(--dim);
+    font-size: 1rem;
+  }
+
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .stat-card .number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+
+  .stat-card .label {
+    font-size: 0.8rem;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 0.5rem;
+  }
+
+  .stat-card.patches .number { color: var(--accent3); }
+  .stat-card.eliminated .number { color: var(--accent5); }
+  .stat-card.remaining .number { color: var(--accent4); }
+  .stat-card.progress .number { color: var(--accent); }
+
+  .section-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .section-title .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+
+  .chart-card h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  .chart-card .subtitle {
+    font-size: 0.75rem;
+    color: var(--dim);
+    margin-bottom: 1rem;
+  }
+
+  .chart-card canvas {
+    max-height: 220px;
+  }
+
+  .chart-card.full-width {
+    grid-column: 1 / -1;
+  }
+
+  .chart-card.full-width canvas {
+    max-height: 300px;
+  }
+
+  .phases {
+    margin-bottom: 3rem;
+  }
+
+  .phase {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .phase-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .phase-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .phase-badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 100px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .badge-pending {
+    background: rgba(107, 107, 128, 0.15);
+    color: var(--dim);
+    border: 1px solid rgba(107, 107, 128, 0.3);
+  }
+
+  .badge-active {
+    background: rgba(124, 106, 239, 0.15);
+    color: var(--accent);
+    border: 1px solid rgba(124, 106, 239, 0.3);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .badge-complete {
+    background: rgba(78, 205, 196, 0.15);
+    color: var(--green);
+    border: 1px solid rgba(78, 205, 196, 0.3);
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  .progress-bar-container {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+
+  .progress-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease;
+  }
+
+  .workstreams {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.5rem;
+  }
+
+  .workstream {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .workstream .ws-name {
+    color: var(--text);
+  }
+
+  .workstream .ws-status {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+  }
+
+  .ws-pending { background: rgba(107, 107, 128, 0.15); color: var(--dim); }
+  .ws-in-progress { background: rgba(124, 106, 239, 0.15); color: var(--accent); }
+  .ws-complete { background: rgba(78, 205, 196, 0.15); color: var(--green); }
+  .ws-blocked { background: rgba(255, 107, 107, 0.15); color: var(--red); }
+
+  .gate {
+    background: linear-gradient(135deg, rgba(124, 106, 239, 0.08), rgba(78, 205, 196, 0.08));
+    border: 1px dashed rgba(124, 106, 239, 0.3);
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+  }
+
+  .gate h4 {
+    font-size: 0.8rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+  }
+
+  .gate ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .gate li {
+    padding: 0.2rem 0;
+    color: var(--dim);
+  }
+
+  .gate li::before {
+    content: '○ ';
+    color: var(--dim);
+  }
+
+  .gate li.passed::before {
+    content: '● ';
+    color: var(--green);
+  }
+
+  footer {
+    text-align: center;
+    padding: 2rem 0;
+    border-top: 1px solid var(--border);
+    color: var(--dim);
+    font-size: 0.8rem;
+  }
+
+  footer a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  @media (max-width: 768px) {
+    .hero-stats { grid-template-columns: repeat(2, 1fr); }
+    .chart-grid { grid-template-columns: 1fr; }
+    .workstreams { grid-template-columns: 1fr; }
+    header h1 { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Platform Provider API</h1>
+    <p>React Native OOT Platform Support — Implementation Tracker</p>
+  </header>
+
+  <div class="hero-stats">
+    <div class="stat-card patches">
+      <div class="number">248</div>
+      <div class="label">Total Patches</div>
+    </div>
+    <div class="stat-card eliminated">
+      <div class="number" id="eliminated-count">0</div>
+      <div class="label">Eliminated</div>
+    </div>
+    <div class="stat-card remaining">
+      <div class="number" id="remaining-count">248</div>
+      <div class="label">Remaining</div>
+    </div>
+    <div class="stat-card progress">
+      <div class="number" id="progress-pct">0%</div>
+      <div class="label">Complete</div>
+    </div>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-card full-width">
+      <h3>Overall Burndown</h3>
+      <p class="subtitle">Patches remaining across all phases</p>
+      <canvas id="burndownChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h3>Patches by Category</h3>
+      <p class="subtitle">Distribution of 248 patches across categories</p>
+      <canvas id="categoryChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h3>Phase Impact</h3>
+      <p class="subtitle">Expected patch elimination per phase</p>
+      <canvas id="phaseImpactChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h3>UIKit Type Abstraction</h3>
+      <p class="subtitle">Phase 1 — 166 patches (67%)</p>
+      <canvas id="burndown1"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h3>Capability System</h3>
+      <p class="subtitle">Phase 2 — 67 patches (27%)</p>
+      <canvas id="burndown2"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h3>Component Extensions</h3>
+      <p class="subtitle">Phase 3 — 5 patches (2%)</p>
+      <canvas id="burndown3"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h3>Build System + Module Overrides</h3>
+      <p class="subtitle">Phases 4 & 5 — 10 patches (4%)</p>
+      <canvas id="burndown45"></canvas>
+    </div>
+  </div>
+
+  <h2 class="section-title"><span class="dot" style="background: var(--accent)"></span> Phase Progress</h2>
+
+  <div class="phases">
+    <!-- Phase 1 -->
+    <div class="phase">
+      <div class="phase-header">
+        <h3>Phase 1: Native Type Abstraction</h3>
+        <span class="phase-badge badge-pending">Pending</span>
+      </div>
+      <div class="progress-bar-container">
+        <div class="progress-bar" style="width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent2));"></div>
+      </div>
+      <div class="workstreams">
+        <div class="workstream"><span class="ws-name">1A: RCTPlatformTypes.h</span><span class="ws-status ws-pending">pending</span></div>
+        <div class="workstream"><span class="ws-name">1B: Umbrella Header</span><span class="ws-status ws-pending">pending</span></div>
+        <div class="workstream"><span class="ws-name">1C-i: React/Fabric (60)</span><span class="ws-status ws-pending">pending</span></div>
+        <div class="workstream"><span class="ws-name">1C-ii: React/Views (28)</span><span class="ws-status ws-pending">pending</span></div>
+        <div class="workstream"><span class="ws-name">1C-iii: React/Base (28)</span><span class="ws-status ws-pending">pending</span></div>
+        <div class="workstream"><span class="ws-name">1C-iv: ReactCommon (24)</span><span class="ws-status ws-pending">pending</span></div>
+        <div class="workstream"><span class="ws-name">1C-v: Libs/Text (20)</span><span class="ws-status ws-pending">pending</span></div>
+        <div class="workstream"><span class="ws-name">1C-vi: Libs/Image (18)</span><span class="ws-status ws-pending">pending</span></div>
+        <div class="workstream"><span class="ws-name">1C-vii: CoreModules (10)</span><span class="ws-status ws-pending">pending</span></div>
+        <div class="workstream"><span class="ws-name">1C-viii: Modules (8)</span><span class="ws-status ws-pending">pending</span></div>
+        <div class="workstream"><span class="ws-name">1C-ix: NativeAnim (8)</span><span class="ws-status ws-pending">pending</span></div>
+        <div class="workstream"><span class="ws-name">1C-x: Components (9)</span><span class="ws-status ws-pending">pending</span></div>
+        <div class="workstream"><span class="ws-name">1C-xi: Lists (9)</span><span class="ws-status ws-pending">pending</span></div>
+        <div class="workstream"><span class="ws-name">1C-xii: Remaining (16)</span><span class="ws-status ws-pending">pending</span></div>
+        <div class="workstream"><span class="ws-name">1D: C++ Fabric Traits</span><span class="ws-status ws-pending">pending</span></div>
+      </div>
+    </div>
+
+    <div class="gate">
+      <h4>Gate 1 &rarr; 2</h4>
+      <ul>
+        <li>iOS arm64 + simulator build passes</li>
+        <li>Jest suite: 276+ suites, 5598+ tests passing</li>
+        <li>Native test suite passes</li>
+        <li>No new compiler warnings</li>
+        <li>50%+ of macOS UIKit patches now unnecessary</li>
+      </ul>
+    </div>
+
+    <!-- Phase 2 -->
+    <div class="phase">
+      <div class="phase-header">
+        <h3>Phase 2: Platform Capability System</h3>
+        <span class="phase-badge badge-pending">Pending</span>
+      </div>
+      <div class="progress-bar-container">
+        <div class="progress-bar" style="width: 0%; background: linear-gradient(90deg, var(--accent2), var(--accent4));"></div>
+      </div>
+      <div class="workstreams">
+        <div class="workstream"><span class="ws-name">2A: JS Capability Registry</span><span class="ws-status ws-pending">pending</span></div>
+        <div class="workstream"><span class="ws-name">2B: Platform.OS Migration (12 files)</span><span class="ws-status ws-pending">pending</span></div>
+        <div class="workstream"><span class="ws-name">2C: Native Capability Macros</span><span class="ws-status ws-pending">pending</span></div>
+        <div class="workstream"><span class="ws-name">2D: TARGET_OS Guard Migration</span><span class="ws-status ws-pending">pending</span></div>
+      </div>
+    </div>
+
+    <div class="gate">
+      <h4>Gate 2 &rarr; 3</h4>
+      <ul>
+        <li>iOS + Android builds pass</li>
+        <li>Jest suite passes</li>
+        <li>Platform.capabilities accessible and correct on iOS</li>
+        <li>All 12 Platform.OS patches unnecessary for macOS OOT</li>
+        <li>RCT_PLATFORM_SUPPORTS() macros compile correctly</li>
+      </ul>
+    </div>
+
+    <!-- Phase 3 -->
+    <div class="phase">
+      <div class="phase-header">
+        <h3>Phase 3: Component Extension Registry</h3>
+        <span class="phase-badge badge-pending">Pending</span>
+      </div>
+      <div class="progress-bar-container">
+        <div class="progress-bar" style="width: 0%; background: linear-gradient(90deg, var(--accent4), var(--accent5));"></div>
+      </div>
+      <div class="workstreams">
+        <div class="workstream"><span class="ws-name">3A: ViewConfig Extension API</span><span class="ws-status ws-pending">pending</span></div>
+        <div class="workstream"><span class="ws-name">3B: ViewConfig Integration</span><span class="ws-status ws-pending">pending</span></div>
+        <div class="workstream"><span class="ws-name">3C: TypeScript Extension Types</span><span class="ws-status ws-pending">pending</span></div>
+      </div>
+    </div>
+
+    <div class="gate">
+      <h4>Gate 3 &rarr; 4</h4>
+      <ul>
+        <li>iOS build passes</li>
+        <li>Jest suite passes</li>
+        <li>PlatformComponentExtensions.register() works</li>
+        <li>TypeScript augmentation compiles</li>
+        <li>All 5 view-prop patches unnecessary for macOS OOT</li>
+      </ul>
+    </div>
+
+    <!-- Phase 4 -->
+    <div class="phase">
+      <div class="phase-header">
+        <h3>Phase 4: Build System Integration</h3>
+        <span class="phase-badge badge-pending">Pending</span>
+      </div>
+      <div class="progress-bar-container">
+        <div class="progress-bar" style="width: 0%; background: linear-gradient(90deg, var(--accent5), var(--accent));"></div>
+      </div>
+      <div class="workstreams">
+        <div class="workstream"><span class="ws-name">4A: Metro Auto-Discovery</span><span class="ws-status ws-pending">pending</span></div>
+        <div class="workstream"><span class="ws-name">4B: CocoaPods Platform Plugin</span><span class="ws-status ws-pending">pending</span></div>
+        <div class="workstream"><span class="ws-name">4C: Platform Dir Convention</span><span class="ws-status ws-pending">pending</span></div>
+      </div>
+    </div>
+
+    <div class="gate">
+      <h4>Gate 4 &rarr; 5</h4>
+      <ul>
+        <li>iOS build passes</li>
+        <li>OOT package auto-discovered by Metro</li>
+        <li>use_react_native_platform!() generates correct config</li>
+        <li>Both build-config patches unnecessary</li>
+      </ul>
+    </div>
+
+    <!-- Phase 5 -->
+    <div class="phase">
+      <div class="phase-header">
+        <h3>Phase 5: Module Override System</h3>
+        <span class="phase-badge badge-pending">Pending</span>
+      </div>
+      <div class="progress-bar-container">
+        <div class="progress-bar" style="width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent3));"></div>
+      </div>
+      <div class="workstreams">
+        <div class="workstream"><span class="ws-name">5A: JS Module Override Registry</span><span class="ws-status ws-pending">pending</span></div>
+        <div class="workstream"><span class="ws-name">5B: Core Module Integration</span><span class="ws-status ws-pending">pending</span></div>
+        <div class="workstream"><span class="ws-name">5C: TurboModule Override Hook</span><span class="ws-status ws-pending">pending</span></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>React Native Platform Provider API &mdash; <a href="https://github.com/seth-agent/react-native-macos-official">GitHub</a></p>
+    <p style="margin-top: 0.5rem">Data sourced from analysis of 248 macOS OOT patches against React Native 0.84.1</p>
+  </footer>
+</div>
+
+<script>
+// =========================================================================
+// PROGRESS DATA — Update this object as work progresses
+// =========================================================================
+const PROGRESS = {
+  // Phase completion percentages (0-100)
+  phase1: 0,
+  phase2: 0,
+  phase3: 0,
+  phase4: 0,
+  phase5: 0,
+
+  // Actual patches eliminated so far per phase
+  phase1Eliminated: 0,
+  phase2Eliminated: 0,
+  phase3Eliminated: 0,
+  phase4Eliminated: 0,
+  phase5Eliminated: 0,
+
+  // Workstream statuses: 'pending' | 'in-progress' | 'complete' | 'blocked'
+  workstreams: {
+    '1A': 'pending', '1B': 'pending',
+    '1C-i': 'pending', '1C-ii': 'pending', '1C-iii': 'pending',
+    '1C-iv': 'pending', '1C-v': 'pending', '1C-vi': 'pending',
+    '1C-vii': 'pending', '1C-viii': 'pending', '1C-ix': 'pending',
+    '1C-x': 'pending', '1C-xi': 'pending', '1C-xii': 'pending',
+    '1D': 'pending',
+    '2A': 'pending', '2B': 'pending', '2C': 'pending', '2D': 'pending',
+    '3A': 'pending', '3B': 'pending', '3C': 'pending',
+    '4A': 'pending', '4B': 'pending', '4C': 'pending',
+    '5A': 'pending', '5B': 'pending', '5C': 'pending',
+  },
+
+  // Gate checklist (true/false)
+  gates: {
+    gate1: [false, false, false, false, false],
+    gate2: [false, false, false, false, false],
+    gate3: [false, false, false, false, false],
+    gate4: [false, false, false, false],
+  },
+
+  // Burndown data points (date, remaining) — append as work progresses
+  burndownHistory: [
+    { date: '2026-03-07', remaining: 248 },
+  ],
+};
+
+// =========================================================================
+// Derived values
+// =========================================================================
+const totalPatches = 248;
+const totalEliminated = PROGRESS.phase1Eliminated + PROGRESS.phase2Eliminated +
+  PROGRESS.phase3Eliminated + PROGRESS.phase4Eliminated + PROGRESS.phase5Eliminated;
+const totalRemaining = totalPatches - totalEliminated;
+const progressPct = Math.round((totalEliminated / totalPatches) * 100);
+
+document.getElementById('eliminated-count').textContent = totalEliminated;
+document.getElementById('remaining-count').textContent = totalRemaining;
+document.getElementById('progress-pct').textContent = progressPct + '%';
+
+// =========================================================================
+// Chart defaults
+// =========================================================================
+Chart.defaults.color = '#6b6b80';
+Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.05)';
+Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
+
+const gridColor = 'rgba(255, 255, 255, 0.04)';
+
+// =========================================================================
+// Overall Burndown
+// =========================================================================
+const burndownCtx = document.getElementById('burndownChart').getContext('2d');
+
+// Project the ideal burndown
+const phases = ['Start', 'Phase 1', 'Phase 2', 'Phase 3', 'Phase 4', 'Phase 5'];
+const idealBurndown = [248, 82, 15, 10, 8, 5];
+const actualBurndown = [248, 248 - PROGRESS.phase1Eliminated,
+  248 - PROGRESS.phase1Eliminated - PROGRESS.phase2Eliminated,
+  248 - PROGRESS.phase1Eliminated - PROGRESS.phase2Eliminated - PROGRESS.phase3Eliminated,
+  248 - PROGRESS.phase1Eliminated - PROGRESS.phase2Eliminated - PROGRESS.phase3Eliminated - PROGRESS.phase4Eliminated,
+  totalRemaining];
+
+// Only show actual data up to current progress
+let currentPhase = 0;
+if (PROGRESS.phase1 > 0) currentPhase = 1;
+if (PROGRESS.phase1 >= 100) currentPhase = 2;
+if (PROGRESS.phase2 >= 100) currentPhase = 3;
+if (PROGRESS.phase3 >= 100) currentPhase = 4;
+if (PROGRESS.phase4 >= 100) currentPhase = 5;
+
+const actualData = actualBurndown.map((v, i) => i <= currentPhase ? v : null);
+
+new Chart(burndownCtx, {
+  type: 'line',
+  data: {
+    labels: phases,
+    datasets: [
+      {
+        label: 'Ideal',
+        data: idealBurndown,
+        borderColor: 'rgba(124, 106, 239, 0.3)',
+        borderDash: [6, 4],
+        borderWidth: 2,
+        pointRadius: 4,
+        pointBackgroundColor: 'rgba(124, 106, 239, 0.3)',
+        fill: false,
+        tension: 0.3,
+      },
+      {
+        label: 'Actual',
+        data: actualData,
+        borderColor: '#4ecdc4',
+        borderWidth: 3,
+        pointRadius: 6,
+        pointBackgroundColor: '#4ecdc4',
+        pointBorderColor: '#0a0a0f',
+        pointBorderWidth: 2,
+        fill: {
+          target: 'origin',
+          above: 'rgba(78, 205, 196, 0.08)',
+        },
+        tension: 0.3,
+        spanGaps: false,
+      },
+    ],
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top', labels: { usePointStyle: true, padding: 20 } },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        max: 260,
+        title: { display: true, text: 'Patches Remaining' },
+        grid: { color: gridColor },
+      },
+      x: { grid: { color: gridColor } },
+    },
+  },
+});
+
+// =========================================================================
+// Category Distribution (Doughnut)
+// =========================================================================
+const catCtx = document.getElementById('categoryChart').getContext('2d');
+new Chart(catCtx, {
+  type: 'doughnut',
+  data: {
+    labels: ['UIKit Types + Imports', 'Conditional Compilation', 'Platform.OS Checks', 'View Props', 'Build Config', 'Other'],
+    datasets: [{
+      data: [166, 55, 12, 5, 2, 8],
+      backgroundColor: [
+        'rgba(124, 106, 239, 0.8)',
+        'rgba(78, 205, 196, 0.8)',
+        'rgba(255, 217, 61, 0.8)',
+        'rgba(107, 203, 119, 0.8)',
+        'rgba(255, 107, 107, 0.8)',
+        'rgba(107, 107, 128, 0.5)',
+      ],
+      borderColor: '#12121a',
+      borderWidth: 2,
+    }],
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'right',
+        labels: { usePointStyle: true, padding: 12, font: { size: 11 } },
+      },
+    },
+    cutout: '65%',
+  },
+});
+
+// =========================================================================
+// Phase Impact (Bar)
+// =========================================================================
+const impactCtx = document.getElementById('phaseImpactChart').getContext('2d');
+new Chart(impactCtx, {
+  type: 'bar',
+  data: {
+    labels: ['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4', 'Phase 5'],
+    datasets: [
+      {
+        label: 'Target',
+        data: [166, 67, 5, 2, 8],
+        backgroundColor: 'rgba(124, 106, 239, 0.2)',
+        borderColor: 'rgba(124, 106, 239, 0.5)',
+        borderWidth: 1,
+        borderRadius: 4,
+      },
+      {
+        label: 'Achieved',
+        data: [
+          PROGRESS.phase1Eliminated,
+          PROGRESS.phase2Eliminated,
+          PROGRESS.phase3Eliminated,
+          PROGRESS.phase4Eliminated,
+          PROGRESS.phase5Eliminated,
+        ],
+        backgroundColor: 'rgba(78, 205, 196, 0.6)',
+        borderColor: 'rgba(78, 205, 196, 0.8)',
+        borderWidth: 1,
+        borderRadius: 4,
+      },
+    ],
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', labels: { usePointStyle: true, padding: 20 } } },
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: { display: true, text: 'Patches' },
+        grid: { color: gridColor },
+      },
+      x: { grid: { color: gridColor } },
+    },
+  },
+});
+
+// =========================================================================
+// Per-phase mini burndowns
+// =========================================================================
+function miniChart(canvasId, target, eliminated, color1, color2) {
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  const remaining = target - eliminated;
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Eliminated', 'Remaining'],
+      datasets: [{
+        data: [eliminated, remaining],
+        backgroundColor: [color1, 'rgba(255, 255, 255, 0.05)'],
+        borderColor: '#12121a',
+        borderWidth: 2,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '75%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: true },
+      },
+    },
+    plugins: [{
+      id: 'centerText',
+      beforeDraw(chart) {
+        const { ctx, width, height } = chart;
+        ctx.save();
+        const pct = target > 0 ? Math.round((eliminated / target) * 100) : 0;
+        ctx.font = 'bold 1.5rem -apple-system, system-ui, sans-serif';
+        ctx.fillStyle = eliminated > 0 ? color1 : '#6b6b80';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(pct + '%', width / 2, height / 2 - 8);
+        ctx.font = '0.65rem -apple-system, system-ui, sans-serif';
+        ctx.fillStyle = '#6b6b80';
+        ctx.fillText(eliminated + ' / ' + target, width / 2, height / 2 + 14);
+        ctx.restore();
+      },
+    }],
+  });
+}
+
+miniChart('burndown1', 166, PROGRESS.phase1Eliminated, 'rgba(124, 106, 239, 0.8)', 'rgba(124, 106, 239, 0.1)');
+miniChart('burndown2', 67, PROGRESS.phase2Eliminated, 'rgba(78, 205, 196, 0.8)', 'rgba(78, 205, 196, 0.1)');
+miniChart('burndown3', 5, PROGRESS.phase3Eliminated, 'rgba(255, 217, 61, 0.8)', 'rgba(255, 217, 61, 0.1)');
+miniChart('burndown45', 10, PROGRESS.phase4Eliminated + PROGRESS.phase5Eliminated, 'rgba(107, 203, 119, 0.8)', 'rgba(107, 203, 119, 0.1)');
+
+// =========================================================================
+// Render workstream statuses from PROGRESS data
+// =========================================================================
+document.querySelectorAll('.workstream').forEach(el => {
+  const nameEl = el.querySelector('.ws-name');
+  const statusEl = el.querySelector('.ws-status');
+  const name = nameEl.textContent;
+
+  // Match workstream ID from name
+  const match = name.match(/^(\d[A-Z](?:-[ivx]+)?)/);
+  if (match) {
+    const wsId = match[1];
+    const status = PROGRESS.workstreams[wsId];
+    if (status) {
+      statusEl.textContent = status;
+      statusEl.className = 'ws-status ws-' + status.replace(' ', '-');
+    }
+  }
+});
+
+// =========================================================================
+// Render gate checklists from PROGRESS data
+// =========================================================================
+document.querySelectorAll('.gate').forEach((gateEl, idx) => {
+  const gateKey = 'gate' + (idx + 1);
+  const checks = PROGRESS.gates[gateKey];
+  if (checks) {
+    const items = gateEl.querySelectorAll('li');
+    items.forEach((li, i) => {
+      if (checks[i]) li.classList.add('passed');
+    });
+  }
+});
+
+// =========================================================================
+// Render phase badges and progress bars from PROGRESS data
+// =========================================================================
+const phaseEls = document.querySelectorAll('.phase');
+const phaseKeys = ['phase1', 'phase2', 'phase3', 'phase4', 'phase5'];
+phaseEls.forEach((el, idx) => {
+  const pct = PROGRESS[phaseKeys[idx]];
+  const bar = el.querySelector('.progress-bar');
+  const badge = el.querySelector('.phase-badge');
+  bar.style.width = pct + '%';
+  if (pct >= 100) {
+    badge.textContent = 'Complete';
+    badge.className = 'phase-badge badge-complete';
+  } else if (pct > 0) {
+    badge.textContent = 'In Progress';
+    badge.className = 'phase-badge badge-active';
+  }
+});
+</script>
+
+</body>
+</html>
