@@ -535,16 +535,16 @@ const PROGRESS = {
   // Phase completion percentages (0-100)
   phase1: 100,
   phase2: 100,
-  phase3: 0,
-  phase4: 0,
-  phase5: 0,
+  phase3: 100,
+  phase4: 50,
+  phase5: 100,
 
   // Actual patches eliminated so far per phase
   phase1Eliminated: 166,
   phase2Eliminated: 67,
-  phase3Eliminated: 0,
-  phase4Eliminated: 0,
-  phase5Eliminated: 0,
+  phase3Eliminated: 5,
+  phase4Eliminated: 1,
+  phase5Eliminated: 8,
 
   // Workstream statuses: 'pending' | 'in-progress' | 'complete' | 'blocked'
   workstreams: {
@@ -555,16 +555,16 @@ const PROGRESS = {
     '1C-x': 'complete', '1C-xi': 'complete', '1C-xii': 'complete',
     '1D': 'complete',
     '2A': 'complete', '2B': 'complete', '2C': 'complete', '2D': 'complete',
-    '3A': 'pending', '3B': 'pending', '3C': 'pending',
-    '4A': 'pending', '4B': 'pending', '4C': 'pending',
-    '5A': 'pending', '5B': 'pending', '5C': 'pending',
+    '3A': 'complete', '3B': 'complete', '3C': 'complete',
+    '4A': 'pending', '4B': 'pending', '4C': 'complete',
+    '5A': 'complete', '5B': 'pending', '5C': 'complete',
   },
 
   // Gate checklist (true/false)
   gates: {
     gate1: [true, true, true, true, true],
     gate2: [true, true, true, true, true],
-    gate3: [false, false, false, false, false],
+    gate3: [true, true, true, true, true],
     gate4: [false, false, false, false],
   },
 
