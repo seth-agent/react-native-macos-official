@@ -1,0 +1,50 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Components/Touchable/__tests__/__snapshots__/TouchableOpacity-test.js.snap	2026-03-06 19:28:14
++++ /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Components/Touchable/__tests__/__snapshots__/TouchableOpacity-test.js.snap	2026-03-06 19:26:08
+@@ -2,6 +2,7 @@
+ 
+ exports[`TouchableOpacity renders correctly 1`] = `
+ <View
++  acceptsFirstMouse={false}
+   accessibilityState={
+     Object {
+       "busy": undefined,
+@@ -21,6 +22,7 @@
+   }
+   accessible={true}
+   collapsable={false}
++  enableFocusRing={true}
+   focusable={false}
+   onClick={[Function]}
+   onResponderGrant={[Function]}
+@@ -43,6 +45,7 @@
+ 
+ exports[`TouchableOpacity renders in disabled state when a disabled prop is passed 1`] = `
+ <View
++  acceptsFirstMouse={false}
+   accessibilityState={
+     Object {
+       "busy": undefined,
+@@ -62,6 +65,7 @@
+   }
+   accessible={true}
+   collapsable={false}
++  enableFocusRing={false}
+   focusable={false}
+   onClick={[Function]}
+   onResponderGrant={[Function]}
+@@ -84,6 +88,7 @@
+ 
+ exports[`TouchableOpacity renders in disabled state when a key disabled in accessibilityState is passed 1`] = `
+ <View
++  acceptsFirstMouse={false}
+   accessibilityState={
+     Object {
+       "busy": undefined,
+@@ -103,6 +108,7 @@
+   }
+   accessible={true}
+   collapsable={false}
++  enableFocusRing={true}
+   focusable={false}
+   onClick={[Function]}
+   onResponderGrant={[Function]}

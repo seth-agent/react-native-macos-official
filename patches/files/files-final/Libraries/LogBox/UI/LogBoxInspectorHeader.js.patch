@@ -1,0 +1,10 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/LogBox/UI/LogBoxInspectorHeader.js	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.m3gdbIg2yP	2026-03-06 18:50:44
+@@ -97,6 +97,7 @@
+     height: Platform.select({
+       android: 48,
+       ios: 44,
++      macos: 44, // [macOS]
+     }),
+   },
+   title: {

@@ -1,0 +1,47 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Components/Touchable/TouchableOpacity.js	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.3ftjXR5Pgf	2026-03-06 18:50:42
+@@ -261,8 +261,13 @@
+   render(): React.Node {
+     // BACKWARD-COMPATIBILITY: Focus and blur events were never supported before
+     // adopting `Pressability`, so preserve that behavior.
+-    const {onBlur, onFocus, ...eventHandlersWithoutBlurAndFocus} =
+-      this.state.pressability.getEventHandlers();
++    const {
++      onBlur,
++      onFocus,
++      onMouseEnter, // [macOS]
++      onMouseLeave, // [macOS]
++      ...eventHandlersWithoutBlurAndFocus
++    } = this.state.pressability.getEventHandlers();
+ 
+     let _accessibilityState = {
+       busy: this.props['aria-busy'] ?? this.props.accessibilityState?.busy,
+@@ -338,7 +343,27 @@
+           this.props.onPress !== undefined &&
+           !this.props.disabled
+         }
+-        // $FlowFixMe[prop-missing]
++        // [macOS
++        enableFocusRing={
++          (this.props.enableFocusRing === undefined ||
++            this.props.enableFocusRing === true) &&
++          !this.props.disabled
++        }
++        acceptsFirstMouse={
++          this.props.acceptsFirstMouse !== false &&
++          this.props.acceptsFirstMouse !== undefined &&
++          !this.props.disabled
++        }
++        tooltip={this.props.tooltip}
++        onMouseEnter={this.props.onMouseEnter}
++        onMouseLeave={this.props.onMouseLeave}
++        onDragEnter={this.props.onDragEnter}
++        onDragLeave={this.props.onDragLeave}
++        onDrop={this.props.onDrop}
++        onFocus={this.props.onFocus}
++        onBlur={this.props.onBlur}
++        draggedTypes={this.props.draggedTypes}
++        // macOS]
+         ref={this.props.hostRef}
+         {...eventHandlersWithoutBlurAndFocus}>
+         {this.props.children}

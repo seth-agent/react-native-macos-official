@@ -1,0 +1,42 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Views/RCTBorderDrawing.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.JdMiSODyyJ	2026-03-06 18:50:52
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #import <React/RCTBorderStyle.h>
+ #import <React/RCTDefines.h>
+@@ -29,10 +29,10 @@
+ } RCTCornerInsets;
+ 
+ typedef struct {
+-  UIColor *top;
+-  UIColor *left;
+-  UIColor *bottom;
+-  UIColor *right;
++  RCTUIColor *top; // [macOS]
++  RCTUIColor *left; // [macOS]
++  RCTUIColor *bottom; // [macOS]
++  RCTUIColor *right; // [macOS]
+ } RCTBorderColors;
+ 
+ /**
+@@ -68,12 +68,11 @@
+  * by inspecting the image's `capInsets`.
+  *
+  * `borderInsets` defines the border widths for each edge.
+- */
+-RCT_EXTERN UIImage *RCTGetBorderImage(
++ * `scaleFactor` defines the backing scale factor of the device for supporting high-resolution drawing. // [macOS]
++RCT_EXTERN RCTUIImage *RCTGetBorderImage( // [macOS]
+     RCTBorderStyle borderStyle,
+     CGSize viewSize,
+     RCTCornerRadii cornerRadii,
+     UIEdgeInsets borderInsets,
+     RCTBorderColors borderColors,
+-    UIColor *backgroundColor,
+-    BOOL drawToEdge);
++    RCTUIColor *backgroundColor, // [macOS]

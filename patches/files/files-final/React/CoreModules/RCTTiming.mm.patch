@@ -1,0 +1,68 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/CoreModules/RCTTiming.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.G8tx4d6qso	2026-03-06 18:50:49
+@@ -129,18 +129,14 @@
+   _timers = [NSMutableDictionary new];
+   _inBackground = NO;
+   RCTExecuteOnMainQueue(^{
+-    if (!self->_inBackground &&
++#if !TARGET_OS_OSX // [macOS]
++     if (!self->_inBackground &&
+         ([RCTSharedApplication() applicationState] == UIApplicationStateBackground ||
+          [UIDevice currentDevice].proximityState)) {
+-      [self appDidMoveToBackground];
+-    }
+-  });
+-
+-  for (NSString *name in @[
+-         UIApplicationWillResignActiveNotification,
+-         UIApplicationDidEnterBackgroundNotification,
+-         UIApplicationWillTerminateNotification
+-       ]) {
++#else // [macOS
++    if (!self->_inBackground && ![RCTSharedApplication() isHidden]) {
++#endif
++#if !TARGET_OS_OSX // [macOS]
+     [[NSNotificationCenter defaultCenter] addObserver:self
+                                              selector:@selector(appDidMoveToBackground)
+                                                  name:name
+@@ -158,12 +154,7 @@
+                                            selector:@selector(proximityChanged)
+                                                name:UIDeviceProximityStateDidChangeNotification
+                                              object:nil];
+-}
+-
+-- (void)dealloc
+-{
+-  [_sleepTimer invalidate];
+-}
++#endif // [macOS]
+ 
+ - (dispatch_queue_t)methodQueue
+ {
+@@ -194,24 +185,10 @@
+   [self startTimers];
+ }
+ 
+-- (void)proximityChanged
+-{
+-  BOOL isClose = [UIDevice currentDevice].proximityState;
+-  if (isClose) {
+-    [self appDidMoveToBackground];
+-  } else {
+-    [self appDidMoveToForeground];
++#if !TARGET_OS_OSX // [macOS]
+   }
+ }
+-
+-- (void)stopTimers
+-{
+-  if (_inBackground) {
+-    return;
+-  }
+-
+-  if (!_paused) {
+-    _paused = YES;
++#endif // [macOS]
+     if (_pauseCallback) {
+       _pauseCallback();
+     }

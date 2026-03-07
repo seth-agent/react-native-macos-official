@@ -1,0 +1,24 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Mounting/ComponentViews/Text/RCTAccessibilityElement.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.f0oEjr1Eus	2026-03-06 18:50:50
+@@ -5,16 +5,14 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ NS_ASSUME_NONNULL_BEGIN
+ 
+-@interface RCTAccessibilityElement : UIAccessibilityElement
+-
+-/*
+- * Frame of the accessibility element in parent coordinate system.
+- * Set to `CGRectZero` to use size of the container.
+- *
++#if !TARGET_OS_OSX // [macOS]
++#else // [macOS
++@interface RCTAccessibilityElement : NSAccessibilityElement
++#endif // macOS]
+  * Default value: `CGRectZero`.
+  */
+ @property (nonatomic, assign) CGRect frameInContainerSpace;

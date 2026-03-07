@@ -1,0 +1,41 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/ReactCommon/react/renderer/components/view/BaseTouch.cpp	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.uUrsdl9Bto	2026-03-06 18:50:54
+@@ -23,14 +23,14 @@
+   object.setProperty(runtime, "target", touch.target);
+   object.setProperty(runtime, "timestamp", touch.timestamp * 1000);
+   object.setProperty(runtime, "force", touch.force);
+-}
++#if TARGET_OS_OSX // [macOS
++  object.setProperty(runtime, "button", touch.button);
++  object.setProperty(runtime, "altKey", touch.altKey);
++  object.setProperty(runtime, "ctrlKey", touch.ctrlKey);
++  object.setProperty(runtime, "shiftKey", touch.shiftKey);
++  object.setProperty(runtime, "metaKey", touch.metaKey);
++#endif // macOS]
+ 
+-#if RN_DEBUG_STRING_CONVERTIBLE
+-
+-std::string getDebugName(const BaseTouch& /*touch*/) {
+-  return "Touch";
+-}
+-
+ std::vector<DebugStringConvertibleObject> getDebugProps(
+     const BaseTouch& touch,
+     DebugStringConvertibleOptions options) {
+@@ -42,9 +42,10 @@
+       {"target", getDebugDescription(touch.target, options)},
+       {"force", getDebugDescription(touch.force, options)},
+       {"timestamp", getDebugDescription(touch.timestamp, options)},
+-  };
+-}
+-
+-#endif
+-
+-} // namespace facebook::react
++#if TARGET_OS_SX // [macOS
++	  {"button", getDebugDescription(touch.button, options)},
++	  {"altKey", getDebugDescription(touch.altKey, options)},
++	  {"ctrlKey", getDebugDescription(touch.ctrlKey, options)},
++	  {"shiftKey", getDebugDescription(touch.shiftKey, options)},
++	  {"metaKey", getDebugDescription(touch.metaKey, options)},
++#endif // macOS]

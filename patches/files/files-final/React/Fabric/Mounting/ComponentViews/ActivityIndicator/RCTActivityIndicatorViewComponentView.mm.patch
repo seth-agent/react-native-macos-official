@@ -1,0 +1,30 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Mounting/ComponentViews/ActivityIndicator/RCTActivityIndicatorViewComponentView.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.vH39IwvgnN	2026-03-06 18:50:49
+@@ -8,7 +8,7 @@
+ #import "RCTActivityIndicatorViewComponentView.h"
+ 
+ #import <React/RCTConversions.h>
+-
++#import <React/RCTActivityIndicatorView.h> // [macOS]
+ #import <react/renderer/components/FBReactNativeSpec/ComponentDescriptors.h>
+ #import <react/renderer/components/FBReactNativeSpec/EventEmitters.h>
+ #import <react/renderer/components/FBReactNativeSpec/Props.h>
+@@ -28,7 +28,7 @@
+ }
+ 
+ @implementation RCTActivityIndicatorViewComponentView {
+-  UIActivityIndicatorView *_activityIndicatorView;
++  RCTUIActivityIndicatorView *_activityIndicatorView; // [macOS]
+ }
+ 
+ #pragma mark - RCTComponentViewProtocol
+@@ -44,8 +44,7 @@
+     const auto &defaultProps = ActivityIndicatorViewShadowNode::defaultSharedProps();
+     _props = defaultProps;
+ 
+-    _activityIndicatorView = [[UIActivityIndicatorView alloc] initWithFrame:self.bounds];
+-    _activityIndicatorView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
++    _activityIndicatorView = [[RCTUIActivityIndicatorView alloc] initWithFrame:self.bounds]; // [macOS]
+ 
+     if (defaultProps->animating) {
+       [_activityIndicatorView startAnimating];

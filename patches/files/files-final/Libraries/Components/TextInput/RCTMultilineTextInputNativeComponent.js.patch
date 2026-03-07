@@ -1,0 +1,11 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Components/TextInput/RCTMultilineTextInputNativeComponent.js	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.gAuTtdQa2y	2026-03-06 18:50:42
+@@ -21,7 +21,7 @@
+ type NativeCommands = TextInputNativeCommands<NativeType>;
+ 
+ export const Commands: NativeCommands = codegenNativeCommands<NativeCommands>({
+-  supportedCommands: ['focus', 'blur', 'setTextAndSelection'],
++  supportedCommands: ['focus', 'blur', 'setTextAndSelection', 'setGhostText'], // [macOS]
+ });
+ 
+ export const __INTERNAL_VIEW_CONFIG: PartialViewConfig = {

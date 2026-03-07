@@ -1,0 +1,28 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Text/TextInput/RCTInputAccessoryView.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.ZwE6yv9Wim	2026-03-06 18:50:45
+@@ -18,7 +18,7 @@
+ @interface RCTInputAccessoryView ()
+ 
+ // Overriding `inputAccessoryView` to `readwrite`.
+-@property (nonatomic, readwrite, retain) UIView *inputAccessoryView;
++@property (nonatomic, readwrite, retain) RCTUIView *inputAccessoryView; // [macOS]
+ 
+ @end
+ 
+@@ -51,14 +51,13 @@
+   }
+ }
+ 
+-- (void)insertReactSubview:(UIView *)subview atIndex:(NSInteger)index
++- (void)insertReactSubview:(RCTUIView *)subview atIndex:(NSInteger)index  // [macOS]
+ {
+   [super insertReactSubview:subview atIndex:index];
+   [_inputAccessoryView insertReactSubview:subview atIndex:index];
+ }
+ 
+-- (void)removeReactSubview:(UIView *)subview
+-{
++- (void)removeReactSubview:(RCTUIView *)subview // [macOS]
+   [super removeReactSubview:subview];
+   [_inputAccessoryView removeReactSubview:subview];
+ }

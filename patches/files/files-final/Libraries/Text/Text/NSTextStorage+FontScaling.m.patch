@@ -1,0 +1,11 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Text/Text/NSTextStorage+FontScaling.m	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.Y1yYLKM1I6	2026-03-06 18:50:45
+@@ -122,7 +122,7 @@
+ 
+                   CGFloat fontSize = MAX(MIN(font.pointSize * ratio, maximumFontSize), minimumFontSize);
+ 
+-                  [self addAttribute:NSFontAttributeName value:[font fontWithSize:fontSize] range:range];
++                  [self addAttribute:NSFontAttributeName value:UIFontWithSize(font, fontSize) /* [macOS] */ range:range];
+                 }];
+ 
+   [self endEditing];

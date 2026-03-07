@@ -1,0 +1,26 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Mounting/RCTMountingManager.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.lGuxbcY6BY	2026-03-06 18:50:51
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #import <React/RCTMountingManagerDelegate.h>
+ #import <React/RCTPrimitives.h>
+@@ -37,12 +37,12 @@
+  * influence the intrinsic size of the view and cannot be measured using UIView/UIKit layout API.
+  * Must be called on the main thead.
+  */
+-- (void)attachSurfaceToView:(UIView *)view surfaceId:(facebook::react::SurfaceId)surfaceId;
++- (void)attachSurfaceToView:(RCTPlatformView *)view surfaceId:(facebook::react::SurfaceId)surfaceId; // [macOS]
+ 
+ /**
+  * Stops designating the view as a rendering viewport of a React Native surface.
+  */
+-- (void)detachSurfaceFromView:(UIView *)view surfaceId:(facebook::react::SurfaceId)surfaceId;
++- (void)detachSurfaceFromView:(RCTPlatformView *)view surfaceId:(facebook::react::SurfaceId)surfaceId; // [macOS]
+ 
+ /**
+  * Schedule a mounting transaction to be performed on the main thread.

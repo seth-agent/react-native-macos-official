@@ -1,0 +1,29 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Image/RCTImageView.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.t9HY7poiMD	2026-03-06 18:50:43
+@@ -7,7 +7,7 @@
+ 
+ #import <React/RCTResizeMode.h>
+ #import <React/RCTView.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+@@ -20,13 +20,15 @@
+ - (instancetype)initWithBridge:(RCTBridge *)bridge NS_DESIGNATED_INITIALIZER;
+ 
+ @property (nonatomic, assign) UIEdgeInsets capInsets;
+-@property (nonatomic, strong) UIImage *defaultImage;
++@property (nonatomic, strong) RCTPlatformImage *defaultImage; // [macOS]
+ @property (nonatomic, assign) UIImageRenderingMode renderingMode;
+ @property (nonatomic, copy) NSArray<RCTImageSource *> *imageSources;
+ @property (nonatomic, assign) CGFloat blurRadius;
+ @property (nonatomic, assign) RCTResizeMode resizeMode;
+ @property (nonatomic, copy) NSString *internal_analyticTag;
+ 
+-@end
++#if TARGET_OS_OSX // [macOS
++@property (nonatomic, copy) NSColor *tintColor;
++#endif // macOS]
+ 
+ #endif // RCT_REMOVE_LEGACY_ARCH

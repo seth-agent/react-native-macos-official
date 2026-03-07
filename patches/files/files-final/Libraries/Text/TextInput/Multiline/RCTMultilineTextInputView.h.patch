@@ -1,0 +1,17 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Text/TextInput/Multiline/RCTMultilineTextInputView.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.XB6qji4vAm	2026-03-06 18:50:45
+@@ -14,8 +14,11 @@
+ __attribute__((deprecated("This API will be removed along with the legacy architecture.")))
+ @interface RCTMultilineTextInputView : RCTBaseTextInputView
+ 
+-@end
++#if TARGET_OS_OSX // [macOS
+ 
+-NS_ASSUME_NONNULL_END
++@property (nonatomic, assign) BOOL scrollEnabled;
+ 
+-#endif // RCT_REMOVE_LEGACY_ARCH
++- (void)setReadablePasteBoardTypes:(NSArray<NSPasteboardType> *)readablePasteboardTypes;
++@property (nonatomic, assign) BOOL hideVerticalScrollIndicator;
++#endif // macOS]
++

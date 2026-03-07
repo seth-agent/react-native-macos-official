@@ -1,0 +1,12 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/CoreModules/RCTAccessibilityManager.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.ZnWmj9WJ0D	2026-03-06 18:50:48
+@@ -22,8 +22,7 @@
+ 
+ @property (nonatomic, assign) BOOL isBoldTextEnabled;
+ @property (nonatomic, assign) BOOL isGrayscaleEnabled;
+-@property (nonatomic, assign) BOOL isInvertColorsEnabled;
+-@property (nonatomic, assign) BOOL isReduceMotionEnabled;
++@property (nonatomic, assign) BOOL isHighContrastEnabled; // [macOS] maps to shouldIncreaseContrast on macOS
+ @property (nonatomic, assign) BOOL isDarkerSystemColorsEnabled;
+ @property (nonatomic, assign) BOOL prefersCrossFadeTransitions;
+ @property (nonatomic, assign) BOOL isReduceTransparencyEnabled;

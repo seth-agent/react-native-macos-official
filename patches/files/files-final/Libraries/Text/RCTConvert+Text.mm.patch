@@ -1,0 +1,16 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Text/RCTConvert+Text.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.TKY4uBvWek	2026-03-06 18:50:45
+@@ -34,11 +34,10 @@
+     RCTTextTransformUndefined,
+     integerValue)
+ 
+-+ (UITextSmartInsertDeleteType)UITextSmartInsertDeleteType:(id)json
++#if !TARGET_OS_OSX // [macOS]
+ {
+   return json == nil           ? UITextSmartInsertDeleteTypeDefault
+       : [RCTConvert BOOL:json] ? UITextSmartInsertDeleteTypeYes
+                                : UITextSmartInsertDeleteTypeNo;
+ }
+-
+-@end
++#endif// macOS]

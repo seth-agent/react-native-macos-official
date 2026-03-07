@@ -1,0 +1,11 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Modules/RCTI18nUtil.m	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.k5yoHeF2JQ	2026-03-06 18:50:52
+@@ -7,7 +7,7 @@
+ 
+ #import "RCTI18nUtil.h"
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ @implementation RCTI18nUtil
+ 

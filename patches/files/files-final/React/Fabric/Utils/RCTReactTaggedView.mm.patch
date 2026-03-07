@@ -1,0 +1,30 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Utils/RCTReactTaggedView.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.HR8VcZiTKl	2026-03-06 18:50:52
+@@ -7,14 +7,14 @@
+ 
+ #import "RCTReactTaggedView.h"
+ 
+-@implementation RCTReactTaggedView
++#import <React/RCTUIKit.h>
+ 
+-+ (RCTReactTaggedView *)wrap:(UIView *)view
+++ (RCTReactTaggedView *)wrap:(RCTPlatformView *)view // [macOS]
+ {
+   return [[RCTReactTaggedView alloc] initWithView:view];
+ }
+ 
+-- (instancetype)initWithView:(UIView *)view
++- (instancetype)initWithView:(RCTPlatformView *)view // [macOS]
+ {
+   if (self = [super init]) {
+     _view = view;
+@@ -23,8 +23,7 @@
+   return self;
+ }
+ 
+-- (nullable UIView *)view
+-{
++- (nullable RCTPlatformView *)view // [macOS]
+   if (_view.tag == _tag) {
+     return _view;
+   }

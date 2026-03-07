@@ -1,0 +1,12 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Views/ScrollView/RCTScrollContentViewManager.m	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.z1PAX9i9sN	2026-03-06 18:50:53
+@@ -16,7 +16,8 @@
+ 
+ RCT_EXPORT_MODULE()
+ 
+-- (RCTScrollContentView *)view
++RCT_EXPORT_OSX_VIEW_PROPERTY(inverted, BOOL) // [macOS]
++
+ {
+   return [RCTScrollContentView new];
+ }

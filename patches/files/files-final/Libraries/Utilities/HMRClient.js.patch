@@ -1,0 +1,21 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Utilities/HMRClient.js	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.j74D054fkm	2026-03-06 18:50:46
+@@ -192,7 +192,7 @@
+ Try the following to fix the issue:
+ - Ensure that Metro is running and available on the same network`;
+ 
+-      if (Platform.OS === 'ios') {
++      if (Platform.OS === 'ios' || Platform.OS === 'macos' /* [macOS] */) {
+         error += `
+ - Ensure that the Metro URL is correctly set in AppDelegate`;
+       } else {
+@@ -343,8 +343,7 @@
+ 
+ function dismissRedbox() {
+   if (
+-    Platform.OS === 'ios' &&
+-    NativeRedBox != null &&
++    (Platform.OS === 'ios' || Platform.OS === 'macos') /* [macOS] */ &&
+     NativeRedBox.dismiss != null
+   ) {
+     NativeRedBox.dismiss();

@@ -1,0 +1,12 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Base/RCTUtilsUIOverride.m	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.bhQoDfpIzs	2026-03-06 18:50:48
+@@ -5,8 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import "RCTUtilsUIOverride.h"
+-
++#import <React/RCTUIKit.h> // [macOS]
+ @implementation RCTUtilsUIOverride
+ 
+ static UIViewController *_presentedViewController = nil;

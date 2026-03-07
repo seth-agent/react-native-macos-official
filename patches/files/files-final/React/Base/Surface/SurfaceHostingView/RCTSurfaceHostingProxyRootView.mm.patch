@@ -1,0 +1,36 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Base/Surface/SurfaceHostingView/RCTSurfaceHostingProxyRootView.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.a5YbABA2p9	2026-03-06 18:50:48
+@@ -67,12 +67,12 @@
+   return super.surface.moduleName;
+ }
+ 
+-- (UIView *)view
++- (RCTPlatformView *)view // [macOS]
+ {
+-  return (UIView *)super.surface.view;
++  return (RCTUIView *)super.surface.view; // [macOS]
+ }
+ 
+-- (UIView *)contentView
++- (RCTUIView *)contentView
+ {
+   return self;
+ }
+@@ -102,14 +102,14 @@
+   [super.surface setProperties:appProperties];
+ }
+ 
+-- (UIView *)loadingView
++- (RCTPlatformView *)loadingView // [macOS]
+ {
+   return super.activityIndicatorViewFactory ? super.activityIndicatorViewFactory() : nil;
+ }
+ 
+-- (void)setLoadingView:(UIView *)loadingView
++- (void)setLoadingView:(RCTPlatformView *)loadingView // [macOS]
+ {
+-  super.activityIndicatorViewFactory = ^UIView *(void) {
++  super.activityIndicatorViewFactory = ^RCTPlatformView *(void) { // [macOS]
+     return loadingView;
+   };
+ }

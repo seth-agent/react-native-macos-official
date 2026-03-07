@@ -1,0 +1,16 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Components/StatusBar/StatusBar.js	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.A5m8qLrpDv	2026-03-06 18:50:42
+@@ -28,11 +28,11 @@
+   /**
+    * Dark background, white texts and icons
+    */
+-  'light-content': string,
++  'light-content': ColorValue, // [macOS]
+   /**
+    * Light background, dark texts and icons
+    */
+-  'dark-content': string,
++  'dark-content': ColorValue, // [macOS]
+   ...
+ }>;
+ 

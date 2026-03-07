@@ -1,0 +1,32 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/ReactCommon/react/nativemodule/samples/platform/ios/ReactCommon/RCTSampleTurboModule.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.rr5EYNZAav	2026-03-06 18:50:53
+@@ -12,7 +12,7 @@
+ #import <React/RCTInitializing.h>
+ #import <React/RCTUtils.h>
+ #import <ReactCommon/RCTTurboModuleWithJSIBindings.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ using namespace facebook::react;
+ 
+@@ -34,9 +34,17 @@
+ 
+ - (void)initialize
+ {
+-  UIScreen *mainScreen = UIScreen.mainScreen;
+-  CGSize screenSize = mainScreen.bounds.size;
+-
++#if !TARGET_OS_OSX // [macOS]
++#if !TARGET_OS_VISION // [visionOS]
++    UIScreen *mainScreen = UIScreen.mainScreen;
++    CGSize screenSize = mainScreen.bounds.size;
++#else // [visionOS
++	CGSize screenSize = CGSizeZero;
++#endif // visionOS]
++#else // [macOS
++    NSScreen *mainScreen = NSScreen.mainScreen;
++    CGSize screenSize = mainScreen.frame.size;
++#endif // macOS]
+   _constants = facebook::react::typedConstants<JS::NativeSampleTurboModule::Constants>({
+       .const1 = YES,
+       .const2 = screenSize.width,

@@ -1,0 +1,29 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/ReactCommon/react/renderer/components/textinput/platform/ios/react/renderer/components/iostextinput/conversions.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.4qo2I4NEPE	2026-03-06 18:50:54
+@@ -208,4 +208,25 @@
+   result = KeyboardType::Default;
+ }
+ 
+-} // namespace facebook::react
++#if TARGET_OS_OSX // [macOS
++inline void fromRawValue(
++    const PropsParserContext &context,
++    const RawValue &value,
++    PastedTypesType &result) {
++  auto string = (std::string)value;
++  if (string == "fileUrl") {
++    result = PastedTypesType::FileUrl;
++    return;
++  }
++  if (string == "image") {
++    result = PastedTypesType::Image;
++    return;
++  }
++  if (string == "string") {
++    result = PastedTypesType::String;
++    return;
++  }
++  abort();
++}
++#endif // macOS]
++

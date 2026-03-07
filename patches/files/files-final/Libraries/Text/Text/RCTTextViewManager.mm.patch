@@ -1,0 +1,36 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Text/Text/RCTTextViewManager.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.b8G1zd44x8	2026-03-06 18:50:45
+@@ -44,26 +44,27 @@
+ 
+   [bridge.uiManager.observerCoordinator addObserver:self];
+ 
++#if !TARGET_OS_OSX // [macOS]
++
+   [[NSNotificationCenter defaultCenter] addObserver:self
+                                            selector:@selector(handleDidUpdateMultiplierNotification)
+                                                name:@"RCTAccessibilityManagerDidUpdateMultiplierNotification"
+                                              object:[bridge moduleForName:@"AccessibilityManager"
+                                                         lazilyLoadIfNecessary:YES]];
++#endif // [macOS]
+ }
+ 
+-- (UIView *)view
++- (RCTPlatformView *)view // [macOS]
+ {
+-  return [RCTTextView new];
++  return [[RCTTextView alloc] initWithEventDispatcher:self.bridge.eventDispatcher]; // [macOS]
+ }
+ 
+ - (RCTShadowView *)shadowView
+ {
+   RCTTextShadowView *shadowView = [[RCTTextShadowView alloc] initWithBridge:self.bridge];
+-  shadowView.textAttributes.fontSizeMultiplier =
++#if !TARGET_OS_OSX // [macOS]
+       [[[self.bridge moduleForName:@"AccessibilityManager"] valueForKey:@"multiplier"] floatValue];
+-  [_shadowViews addObject:shadowView];
+-  return shadowView;
+-}
++#endif // [macOS]
+ 
+ #pragma mark - RCTUIManagerObserver
+ 

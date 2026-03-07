@@ -1,0 +1,25 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Modules/RCTRedBoxExtraDataViewController.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.OQ2Kjtc37Q	2026-03-06 18:50:52
+@@ -5,16 +5,16 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ @protocol RCTRedBoxExtraDataActionDelegate <NSObject>
+ - (void)reload;
+ @end
+ 
+-@interface RCTRedBoxExtraDataViewController : UIViewController <UITableViewDelegate, UITableViewDataSource>
++#if !TARGET_OS_OSX // [macOS]
++#else // [macOS
++@interface RCTRedBoxExtraDataViewController : NSViewController <NSTableViewDelegate, NSTableViewDataSource>
++#endif // macOS]
+ 
+-@property (nonatomic, weak) id<RCTRedBoxExtraDataActionDelegate> actionDelegate;
+-
+-- (void)addExtraData:(NSDictionary *)data forIdentifier:(NSString *)identifier;
+-
+ @end
++

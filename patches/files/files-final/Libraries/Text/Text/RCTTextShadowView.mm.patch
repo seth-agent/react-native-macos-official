@@ -1,0 +1,73 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Text/Text/RCTTextShadowView.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.Kr8fRyJvon	2026-03-06 18:50:45
+@@ -98,16 +98,16 @@
+                          [descendantViewTags addObject:shadowView.reactTag];
+                        }];
+ 
+-  [_bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
++  [_bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTPlatformView *> *viewRegistry) { // [macOS]
+     RCTTextView *textView = (RCTTextView *)viewRegistry[tag];
+     if (!textView) {
+       return;
+     }
+ 
+-    NSMutableArray<UIView *> *descendantViews = [NSMutableArray arrayWithCapacity:descendantViewTags.count];
++    NSMutableArray<RCTPlatformView *> *descendantViews = [NSMutableArray arrayWithCapacity:descendantViewTags.count]; // [macOS]
+     [descendantViewTags
+         enumerateObjectsUsingBlock:^(NSNumber *_Nonnull descendantViewTag, NSUInteger index, BOOL *_Nonnull stop) {
+-          UIView *descendantView = viewRegistry[descendantViewTag];
++          RCTPlatformView *descendantView = viewRegistry[descendantViewTag]; // [macOS]
+           if (!descendantView) {
+             return;
+           }
+@@ -143,7 +143,7 @@
+     return;
+   }
+ 
+-  __block CGFloat maximumFontLineHeight = 0;
++    __block CGFloat maximumFontLineHeight = 0;
+ 
+   [attributedText enumerateAttribute:NSFontAttributeName
+                              inRange:NSMakeRange(0, attributedText.length)
+@@ -153,8 +153,8 @@
+                               return;
+                             }
+ 
+-                            if (maximumFontLineHeight <= font.lineHeight) {
+-                              maximumFontLineHeight = font.lineHeight;
++                            if (maximumFontLineHeight <= UIFontLineHeight(font)) { // [macOS]
++                              maximumFontLineHeight = UIFontLineHeight(font); // [macOS]
+                             }
+                           }];
+ 
+@@ -165,16 +165,16 @@
+   CGFloat baseLineOffset = maximumLineHeight / 2.0 - maximumFontLineHeight / 2.0;
+ 
+   [attributedText addAttribute:NSBaselineOffsetAttributeName
+-                         value:@(baseLineOffset)
+-                         range:NSMakeRange(0, attributedText.length)];
++                          value:@(baseLineOffset)
++                          range:NSMakeRange(0, attributedText.length)];
+ }
+ 
+ - (NSAttributedString *)attributedTextWithMeasuredAttachmentsThatFitSize:(CGSize)size
+ {
+-  static UIImage *placeholderImage;
++  static RCTPlatformImage *placeholderImage; // [macOS]
+   static dispatch_once_t onceToken;
+   dispatch_once(&onceToken, ^{
+-    placeholderImage = [UIImage new];
++    placeholderImage = [RCTPlatformImage new]; // [macOS]
+   });
+ 
+   NSMutableAttributedString *attributedText =
+@@ -204,8 +204,7 @@
+ 
+ - (NSTextStorage *)textStorageAndLayoutManagerThatFitsSize:(CGSize)size exclusiveOwnership:(BOOL)exclusiveOwnership
+ {
+-  NSValue *key = [NSValue valueWithCGSize:size];
+-  NSTextStorage *cachedTextStorage = [_cachedTextStorages objectForKey:key];
++  NSValue *key = NSValueWithCGSize(size); // [macOS]
+ 
+   if (cachedTextStorage) {
+     if (exclusiveOwnership) {
