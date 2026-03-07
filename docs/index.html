@@ -534,14 +534,14 @@
 const PROGRESS = {
   // Phase completion percentages (0-100)
   phase1: 100,
-  phase2: 0,
+  phase2: 100,
   phase3: 0,
   phase4: 0,
   phase5: 0,
 
   // Actual patches eliminated so far per phase
   phase1Eliminated: 166,
-  phase2Eliminated: 0,
+  phase2Eliminated: 67,
   phase3Eliminated: 0,
   phase4Eliminated: 0,
   phase5Eliminated: 0,
@@ -554,7 +554,7 @@ const PROGRESS = {
     '1C-vii': 'complete', '1C-viii': 'complete', '1C-ix': 'complete',
     '1C-x': 'complete', '1C-xi': 'complete', '1C-xii': 'complete',
     '1D': 'complete',
-    '2A': 'pending', '2B': 'pending', '2C': 'pending', '2D': 'pending',
+    '2A': 'complete', '2B': 'complete', '2C': 'complete', '2D': 'complete',
     '3A': 'pending', '3B': 'pending', '3C': 'pending',
     '4A': 'pending', '4B': 'pending', '4C': 'pending',
     '5A': 'pending', '5B': 'pending', '5C': 'pending',
@@ -563,7 +563,7 @@ const PROGRESS = {
   // Gate checklist (true/false)
   gates: {
     gate1: [true, true, true, true, true],
-    gate2: [false, false, false, false, false],
+    gate2: [true, true, true, true, true],
     gate3: [false, false, false, false, false],
     gate4: [false, false, false, false],
   },
