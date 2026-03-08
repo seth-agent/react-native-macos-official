@@ -83,7 +83,9 @@ function applyPatches() {
     }
 
     const patchFile = path.join(PATCHES_DIR, `${file}.patch`);
-    const targetFile = path.join(rnRoot, file);
+    // Strip leading directory prefix (e.g. 'files-final/') to get the real path in react-native
+    const relativeFile = file.replace(/^files-final\//, '');
+    const targetFile = path.join(rnRoot, relativeFile);
 
     if (!fs.existsSync(patchFile)) {
       if (VERBOSE) {
