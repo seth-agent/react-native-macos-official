@@ -1,0 +1,16 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Text/Text/RCTDynamicTypeRamp.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.Bce1bMCMFg	2026-03-06 18:50:45
+@@ -29,7 +29,7 @@
+ 
+ @end
+ 
+-UIFontMetrics *RCTUIFontMetricsForDynamicTypeRamp(RCTDynamicTypeRamp dynamicTypeRamp)
++#if !TARGET_OS_OSX // [macOS]
+ {
+   static NSDictionary<NSNumber *, UIFontTextStyle> *mapping;
+   static dispatch_once_t onceToken;
+@@ -80,3 +80,4 @@
+       mapping[@(dynamicTypeRamp)] ?: @17; // Default to body size if we don't recognize the specified ramp
+   return [baseSize doubleValue];
+ }
++#endif // [macOS]

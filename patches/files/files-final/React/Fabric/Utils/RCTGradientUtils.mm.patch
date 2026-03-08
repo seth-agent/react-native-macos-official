@@ -1,0 +1,24 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Utils/RCTGradientUtils.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.BA9EXl4u7M	2026-03-06 18:50:51
+@@ -233,7 +233,7 @@
+     auto leftColor = RCTUIColorFromSharedColor(leftSharedColor);
+     auto rightColor = RCTUIColorFromSharedColor(rightSharedColor);
+     NSArray<NSNumber *> *inputRange = @[ @0.0, @1.0 ];
+-    NSArray<UIColor *> *outputRange = @[ leftColor, rightColor ];
++    NSArray<RCTUIColor *> *outputRange = @[ leftColor, rightColor ]; // [macOS]
+ 
+     for (auto &newStop : newStops) {
+       auto pointRelativeOffset = (newStop.position.value() - offsetLeft) / totalDist;
+@@ -388,10 +388,9 @@
+   // To fix this, we detect when a color stop is transparent black and replace it with
+   // a transparent version of the *previous* color stop. This creates a smooth fade-out effect
+   // by only interpolating the alpha channel, matching web and Android behavior.
+-  UIColor *lastColor = nil;
++  RCTUIColor *lastColor = nil; // [macOS]
+   for (const auto &colorStop : colorStops) {
+-    UIColor *currentColor = RCTUIColorFromSharedColor(colorStop.color);
+-
++    RCTUIColor *currentColor = RCTUIColorFromSharedColor(colorStop.color); // [macOS]
+     CGFloat red = 0.0;
+     CGFloat green = 0.0;
+     CGFloat blue = 0.0;

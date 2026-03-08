@@ -1,0 +1,26 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Views/RCTComponentData.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.qU5u0VlG9a	2026-03-06 18:50:52
+@@ -81,19 +81,17 @@
+ 
+ RCT_NOT_IMPLEMENTED(-(instancetype)init)
+ 
+-- (UIView *)createViewWithTag:(nullable NSNumber *)tag rootTag:(nullable NSNumber *)rootTag
++- (RCTPlatformView *)createViewWithTag:(nullable NSNumber *)tag rootTag:(nullable NSNumber *)rootTag // [macOS]
+ {
+   RCTAssertMainQueue();
+ 
+-  UIView *view = [self.manager view];
++  RCTPlatformView *view = [self.manager view]; // [macOS]
+   view.reactTag = tag;
+   view.rootTag = rootTag;
+-  view.multipleTouchEnabled = YES;
++#if !TARGET_OS_OSX // [macOS]
+   view.userInteractionEnabled = YES; // required for touch handling
+   view.layer.allowsGroupOpacity = YES; // required for touch handling
+-  return view;
+-}
+-
++#endif // [macOS]
+ - (RCTShadowView *)createShadowViewWithTag:(NSNumber *)tag
+ {
+   RCTShadowView *shadowView = [self.manager shadowView];

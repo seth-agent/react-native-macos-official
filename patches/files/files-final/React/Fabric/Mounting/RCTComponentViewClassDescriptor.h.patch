@@ -1,0 +1,11 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Mounting/RCTComponentViewClassDescriptor.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.7bTpCTZsal	2026-03-06 18:50:51
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #import <React/RCTComponentViewProtocol.h>
+ 

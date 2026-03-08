@@ -1,0 +1,13 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/DevSupport/RCTInspectorDevServerHelper.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.EMO0xDrv8l	2026-03-06 18:50:49
+@@ -6,9 +6,7 @@
+  */
+ 
+ #import <Foundation/Foundation.h>
+-#import <UIKit/UIKit.h>
+-
+-#import <React/RCTDefines.h>
++#import <React/RCTUIKit.h> // [macOS]
+ #import <React/RCTInspectorPackagerConnection.h>
+ 
+ #if RCT_DEV || RCT_REMOTE_PROFILE

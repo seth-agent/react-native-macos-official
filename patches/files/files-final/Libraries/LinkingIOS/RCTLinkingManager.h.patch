@@ -1,0 +1,32 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/LinkingIOS/RCTLinkingManager.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.v0DwKUxFvT	2026-03-06 18:50:43
+@@ -6,15 +6,13 @@
+  */
+ 
+ #import <React/RCTEventEmitter.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
++#if !TARGET_OS_OSX // [macOS]
+ #import <UIKit/UIUserActivity.h>
++#endif // [macOS]
+ 
+-@interface RCTLinkingManager : RCTEventEmitter
++#if !TARGET_OS_OSX // [macOS]
+ 
+-+ (BOOL)application:(nonnull UIApplication *)app
+-            openURL:(nonnull NSURL *)URL
+-            options:(nonnull NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options;
+-
+ + (BOOL)application:(nonnull UIApplication *)application
+               openURL:(nonnull NSURL *)URL
+     sourceApplication:(nullable NSString *)sourceApplication
+@@ -23,5 +21,7 @@
+ + (BOOL)application:(nonnull UIApplication *)application
+     continueUserActivity:(nonnull NSUserActivity *)userActivity
+       restorationHandler:(nonnull void (^)(NSArray<id<UIUserActivityRestoring>> *_Nullable))restorationHandler;
+-
+-@end
++#else // [macOS
+++ (void)getUrlEventHandler:(NSAppleEventDescriptor *)event withReplyEvent:(NSAppleEventDescriptor *)replyEvent;
+++ (void)setAlwaysForegroundLastWindow:(BOOL)alwaysForeground;
++#endif // macOS]

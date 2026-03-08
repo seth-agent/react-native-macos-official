@@ -1,0 +1,12 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/ReactCommon/react/renderer/components/view/primitives.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.2xWtzWNwaB	2026-03-06 18:50:54
+@@ -138,6 +138,9 @@
+   SWResize,
+   Text,
+   Url,
++  VerticalText, // [macOS]
++  Text,
++  Url,
+   WResize,
+   Wait,
+   ZoomIn,

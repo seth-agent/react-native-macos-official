@@ -1,0 +1,11 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Network/__tests__/XMLHttpRequest-test.js	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.XPtyKFdLXS	2026-03-06 18:50:44
+@@ -21,7 +21,7 @@
+ jest.mock('../../Utilities/GlobalPerformanceLogger');
+ let requestId = 1;
+ function setRequestId(id: number) {
+-  if (Platform.OS === 'ios') {
++  if (Platform.OS === 'ios' || Platform.OS === 'macos') { // [macOS]
+     return;
+   }
+   requestId = id;

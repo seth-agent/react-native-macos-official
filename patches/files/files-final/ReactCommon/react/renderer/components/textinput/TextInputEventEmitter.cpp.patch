@@ -1,0 +1,87 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/ReactCommon/react/renderer/components/textinput/TextInputEventEmitter.cpp	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.7Maz4UVPt4	2026-03-06 18:50:54
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#include "TextInputEventEmitter.h"
++#include <react/renderer/components/view/HostPlatformViewEventEmitter.h>
+ 
+ namespace facebook::react {
+ 
+@@ -131,21 +131,19 @@
+   return payload;
+ };
+ 
+-void TextInputEventEmitter::onFocus(const Metrics& textInputMetrics) const {
+-  dispatchTextInputEvent("focus", textInputMetrics);
+-}
++#if TARGET_OS_OSX // [macOS
++static jsi::Value pasteMetricsPayload(
++    jsi::Runtime& runtime,
++    const TextInputEventEmitter::PasteMetrics& pasteMetrics) {
++  auto payload = jsi::Object(runtime);
++  auto dataTransferObject = HostPlatformViewEventEmitter::dataTransferPayload(
++    runtime,
++    pasteMetrics.dataTransfer);
++  payload.setProperty(runtime, "dataTransfer", dataTransferObject);
++  return payload;
++};
++#endif // macOS]
+ 
+-void TextInputEventEmitter::onBlur(const Metrics& textInputMetrics) const {
+-  dispatchTextInputEvent("blur", textInputMetrics);
+-}
+-
+-void TextInputEventEmitter::onChange(const Metrics& textInputMetrics) const {
+-  dispatchTextInputEvent("change", textInputMetrics);
+-}
+-
+-void TextInputEventEmitter::onContentSizeChange(
+-    const Metrics& textInputMetrics) const {
+-  dispatchTextInputContentSizeChangeEvent(
+       "contentSizeChange", textInputMetrics);
+ }
+ 
+@@ -177,23 +175,27 @@
+   });
+ }
+ 
+-void TextInputEventEmitter::dispatchTextInputEvent(
+-    const std::string& name,
+-    const Metrics& textInputMetrics,
+-    bool includeSelectionState) const {
+-  dispatchEvent(
+-      name, [includeSelectionState, textInputMetrics](jsi::Runtime& runtime) {
+-        return textInputMetricsPayload(
+-            runtime, textInputMetrics, includeSelectionState);
+-      });
++#if TARGET_OS_OSX // [macOS
++void TextInputEventEmitter::onAutoCorrectChange(
++    const Metrics& textInputMetrics) const {
++  dispatchTextInputEvent("autoCorrectChange", textInputMetrics);
+ }
+ 
+-void TextInputEventEmitter::dispatchTextInputContentSizeChangeEvent(
+-    const std::string& name,
++void TextInputEventEmitter::onSpellCheckChange(
+     const Metrics& textInputMetrics) const {
+-  dispatchEvent(name, [textInputMetrics](jsi::Runtime& runtime) {
+-    return textInputMetricsContentSizePayload(runtime, textInputMetrics);
++  dispatchTextInputEvent("spellCheckChange", textInputMetrics);
++}
++
++void TextInputEventEmitter::onGrammarCheckChange(
++    const Metrics& textInputMetrics) const {
++  dispatchTextInputEvent("grammarCheckChange", textInputMetrics);
++}
++
++void TextInputEventEmitter::onPaste(
++    const PasteMetrics& pasteMetrics) const {
++  dispatchEvent("paste", [pasteMetrics](jsi::Runtime& runtime) {
++    return pasteMetricsPayload(runtime, pasteMetrics);
+   });
+ }
++#endif // macOS]
+ 
+-} // namespace facebook::react

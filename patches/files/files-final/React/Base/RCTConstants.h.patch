@@ -1,0 +1,19 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Base/RCTConstants.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.P9uTSxRSuq	2026-03-06 18:50:47
+@@ -10,12 +10,10 @@
+ RCT_EXTERN NSString *const RCTPlatformName;
+ 
+ RCT_EXTERN NSString *const RCTUserInterfaceStyleDidChangeNotification;
+-RCT_EXTERN NSString *const RCTUserInterfaceStyleDidChangeNotificationTraitCollectionKey;
+-
+-RCT_EXTERN NSString *const RCTWindowFrameDidChangeNotification;
+-
+-RCT_EXTERN NSString *const RCTNotifyEventDispatcherObserversOfEvent_DEPRECATED;
+-
++#if !TARGET_OS_OSX // [macOS]
++#else // [macOS
++RCT_EXTERN NSString *const RCTUserInterfaceStyleDidChangeNotificationAppearanceKey;
++#endif // macOS]
+ /**
+  * This notification fires when the bridge initializes.
+  */

@@ -1,0 +1,23 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Base/RCTViewRegistry.m	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.jYfGI8pM78	2026-03-06 18:50:48
+@@ -30,9 +30,9 @@
+   _bridgelessComponentViewProvider = bridgelessComponentViewProvider;
+ }
+ 
+-- (UIView *)viewForReactTag:(NSNumber *)reactTag
++- (RCTPlatformView *)viewForReactTag:(NSNumber *)reactTag // [macOS]
+ {
+-  UIView *view = nil;
++  RCTPlatformView *view = nil; // [macOS]
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+   RCTBridge *bridge = _bridge;
+@@ -57,7 +57,7 @@
+   __weak __typeof(self) weakSelf = self;
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+   if (_bridge) {
+-    [_bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
++    [_bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTPlatformView *> *viewRegistry) {
+       __typeof(self) strongSelf = weakSelf;
+       if (strongSelf) {
+         block(strongSelf);

@@ -1,0 +1,127 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Mounting/ComponentViews/Modal/RCTModalHostViewComponentView.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.DQq4dQsSan	2026-03-06 18:50:50
+@@ -21,7 +21,7 @@
+ 
+ using namespace facebook::react;
+ 
+-static UIInterfaceOrientationMask supportedOrientationsMask(ModalHostViewSupportedOrientationsMask mask)
++#if !TARGET_OS_OSX // [macOS]
+ {
+   UIInterfaceOrientationMask supportedOrientations = 0;
+ 
+@@ -93,11 +93,8 @@
+       : ModalHostViewEventEmitter::OnOrientationChangeOrientation::Landscape;
+   return {orientation};
+ }
++#endif // [macOS]
+ 
+-@interface RCTModalHostViewComponentView () <RCTFabricModalHostViewControllerDelegate>
+-
+-@property (nonatomic, weak) UIView *accessibilityFocusedView;
+-
+ @end
+ 
+ @implementation RCTModalHostViewComponentView {
+@@ -109,6 +106,7 @@
+   BOOL _modalInPresentation;
+ }
+ 
++#if !TARGET_OS_OSX // [macOS]
+ - (instancetype)initWithFrame:(CGRect)frame
+ {
+   if (self = [super initWithFrame:frame]) {
+@@ -152,7 +150,6 @@
+ {
+   BOOL shouldBePresented = !_isPresented && _shouldPresent && self.window;
+   if (shouldBePresented) {
+-    [self saveAccessibilityFocusedView];
+     self.viewController.presentationController.delegate = self;
+     self.viewController.modalInPresentation = _modalInPresentation;
+ 
+@@ -172,7 +169,7 @@
+     _isPresented = NO;
+     // To animate dismissal of view controller, snapshot of
+     // view hierarchy needs to be added to the UIViewController.
+-    UIView *snapshot = [self.viewController.view snapshotViewAfterScreenUpdates:NO];
++    RCTPlatformView *snapshot = [self.viewController.view snapshotViewAfterScreenUpdates:NO]; // [macOS]
+     if (_shouldPresent) {
+       [self.viewController.view addSubview:snapshot];
+     }
+@@ -185,8 +182,6 @@
+                        if (eventEmitter) {
+                          eventEmitter->onDismiss(ModalHostViewEventEmitter::OnDismiss{});
+                        }
+-
+-                       [self restoreAccessibilityFocusedView];
+                      }];
+   }
+ }
+@@ -213,23 +208,6 @@
+ {
+   [super didMoveToSuperview];
+   [self ensurePresentedOnlyIfNeeded];
+-}
+-
+-- (void)saveAccessibilityFocusedView
+-{
+-  id focusedElement = UIAccessibilityFocusedElement(nil);
+-  if (focusedElement && [focusedElement isKindOfClass:[UIView class]]) {
+-    self.accessibilityFocusedView = (UIView *)focusedElement;
+-  }
+-}
+-
+-- (void)restoreAccessibilityFocusedView
+-{
+-  id viewToFocus = self.accessibilityFocusedView;
+-  if (viewToFocus) {
+-    UIAccessibilityPostNotification(UIAccessibilityScreenChangedNotification, viewToFocus);
+-    self.accessibilityFocusedView = nil;
+-  }
+ }
+ 
+ #pragma mark - RCTFabricModalHostViewControllerDelegate
+@@ -295,12 +273,12 @@
+   _state = std::static_pointer_cast<const ModalHostViewShadowNode::ConcreteState>(state);
+ }
+ 
+-- (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index
++- (void)mountChildComponentView:(RCTUIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index // [macOS]
+ {
+   [self.viewController.view insertSubview:childComponentView atIndex:index];
+ }
+ 
+-- (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index
++- (void)unmountChildComponentView:(RCTUIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index // [macOS]
+ {
+   [childComponentView removeFromSuperview];
+ }
+@@ -324,7 +302,29 @@
+     eventEmitter->onRequestClose({});
+   }
+ }
++#endif // [macOS]
++}
+ 
++#pragma mark - UIAdaptivePresentationControllerDelegate
++
++- (void)presentationControllerDidAttemptToDismiss:(UIPresentationController *)controller
++{
++  auto eventEmitter = [self modalEventEmitter];
++  if (eventEmitter) {
++    eventEmitter->onRequestClose({});
++  }
++}
++
++- (void)presentationControllerDidDismiss:(UIPresentationController *)presentationController
++{
++  auto eventEmitter = [self modalEventEmitter];
++  const auto &props = static_cast<const ModalHostViewProps &>(*_props);
++
++  if (eventEmitter && props.allowSwipeDismissal) {
++    eventEmitter->onRequestClose({});
++  }
++}
++
+ @end
+ 
+ #ifdef __cplusplus

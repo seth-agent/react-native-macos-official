@@ -1,0 +1,49 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Mounting/ComponentViews/Text/RCTParagraphComponentAccessibilityProvider.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.uoQMxO4IN8	2026-03-06 18:50:50
+@@ -21,19 +21,18 @@
+ using namespace facebook::react;
+ 
+ @implementation RCTParagraphComponentAccessibilityProvider {
+-  NSMutableArray<UIAccessibilityElement *> *_accessibilityElements;
+-  AttributedString _attributedString;
+-  RCTTextLayoutManager *_layoutManager;
++#if !TARGET_OS_OSX // [macOS]
++#endif // [macOS]
+   ParagraphAttributes _paragraphAttributes;
+   CGRect _frame;
+-  __weak UIView *_view;
++  __weak RCTUIView *_view; // [macOS]
+ }
+ 
+ - (instancetype)initWithString:(facebook::react::AttributedString)attributedString
+                  layoutManager:(RCTTextLayoutManager *)layoutManager
+            paragraphAttributes:(ParagraphAttributes)paragraphAttributes
+                          frame:(CGRect)frame
+-                          view:(UIView *)view
++                          view:(RCTPlatformView *)view // [macOS]
+ {
+   if (self = [super init]) {
+     _attributedString = attributedString;
+@@ -45,9 +44,7 @@
+   return self;
+ }
+ 
+-- (NSArray<UIAccessibilityElement *> *)accessibilityElements
+-{
+-  if (_accessibilityElements) {
++#if !TARGET_OS_OSX // [macOS]
+     return _accessibilityElements;
+   }
+ 
+@@ -177,10 +174,6 @@
+   _accessibilityElements = elements;
+   return _accessibilityElements;
+ }
++#endif // [macOS]
+ 
+-- (BOOL)isUpToDate:(facebook::react::AttributedString)currentAttributedString
+-{
+-  return currentAttributedString == _attributedString;
+-}
+-
+ @end

@@ -1,0 +1,11 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Modules/RCTSurfacePresenterStub.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.ZilZli1oJC	2026-03-06 18:50:52
+@@ -31,7 +31,7 @@
+ 
+ - (id<RCTSurfaceProtocol>)createFabricSurfaceForModuleName:(NSString *)moduleName
+                                          initialProperties:(NSDictionary *)initialProperties;
+-- (nullable UIView *)findComponentViewWithTag_DO_NOT_USE_DEPRECATED:(NSInteger)tag;
++- (nullable RCTPlatformView *)findComponentViewWithTag_DO_NOT_USE_DEPRECATED:(NSInteger)tag; // [macOS]
+ - (void)synchronouslyUpdateViewOnUIThread:(NSNumber *)reactTag props:(NSDictionary *)props;
+ - (void)addObserver:(id<RCTSurfacePresenterObserver>)observer;
+ - (void)removeObserver:(id<RCTSurfacePresenterObserver>)observer;

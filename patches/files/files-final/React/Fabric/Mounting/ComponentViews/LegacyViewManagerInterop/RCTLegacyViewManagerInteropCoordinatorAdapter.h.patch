@@ -1,0 +1,11 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Mounting/ComponentViews/LegacyViewManagerInterop/RCTLegacyViewManagerInteropCoordinatorAdapter.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.8KPapGtT2L	2026-03-06 18:50:49
+@@ -14,7 +14,7 @@
+ 
+ - (instancetype)initWithCoordinator:(RCTLegacyViewManagerInteropCoordinator *)coordinator reactTag:(NSInteger)tag;
+ 
+-@property (strong, nonatomic) UIView *paperView;
++@property (strong, nonatomic) RCTPlatformView *paperView; // [macOS]
+ 
+ @property (nonatomic, copy, nullable) void (^eventInterceptor)(std::string eventName, folly::dynamic &&event);
+ 

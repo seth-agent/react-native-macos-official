@@ -1,0 +1,44 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Views/RCTDebuggingOverlayManager.m	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.bmltROOITi	2026-03-06 18:50:52
+@@ -19,15 +19,15 @@
+ 
+ RCT_EXPORT_MODULE(DebuggingOverlay)
+ 
+-- (UIView *)view
++- (RCTPlatformView *)view // [macOS]
+ {
+   return [RCTDebuggingOverlay new];
+ }
+ 
+ RCT_EXPORT_METHOD(highlightTraceUpdates : (nonnull NSNumber *)viewTag nodes : (NSArray *)updates)
+ {
+-  [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+-    UIView *view = viewRegistry[viewTag];
++  [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTPlatformView *> *viewRegistry) { // [macOS]
++    RCTPlatformView *view = viewRegistry[viewTag]; // [macOS]
+ 
+     if ([view isKindOfClass:[RCTDebuggingOverlay class]]) {
+       [(RCTDebuggingOverlay *)view highlightTraceUpdates:updates];
+@@ -39,8 +39,8 @@
+ 
+ RCT_EXPORT_METHOD(highlightElements : (nonnull NSNumber *)viewTag elements : (NSArray *)elements)
+ {
+-  [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+-    UIView *view = viewRegistry[viewTag];
++  [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTPlatformView *> *viewRegistry) { // [macOS]
++    RCTPlatformView *view = viewRegistry[viewTag]; // [macOS]
+ 
+     if ([view isKindOfClass:[RCTDebuggingOverlay class]]) {
+       [(RCTDebuggingOverlay *)view highlightElements:elements];
+@@ -52,9 +52,8 @@
+ 
+ RCT_EXPORT_METHOD(clearElementsHighlights : (nonnull NSNumber *)viewTag)
+ {
+-  [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+-    UIView *view = viewRegistry[viewTag];
+-
++  [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTPlatformView *> *viewRegistry) { // [macOS[
++    RCTPlatformView *view = viewRegistry[viewTag]; // [macOS]
+     if ([view isKindOfClass:[RCTDebuggingOverlay class]]) {
+       [(RCTDebuggingOverlay *)view clearElementsHighlights];
+     } else {

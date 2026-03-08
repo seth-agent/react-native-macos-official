@@ -1,0 +1,12 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Utils/RCTRadialGradient.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.wVL3mZWMIC	2026-03-06 18:50:51
+@@ -6,8 +6,7 @@
+  */
+ 
+ #import "RCTRadialGradient.h"
+-#import <React/RCTAnimationUtils.h>
+-#import <React/RCTConversions.h>
++#import <QuartzCore/QuartzCore.h> // [macOS]
+ #include <react/renderer/graphics/ValueUnit.h>
+ #import <react/utils/FloatComparison.h>
+ #include <cmath>

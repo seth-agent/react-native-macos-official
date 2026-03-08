@@ -1,0 +1,49 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Mounting/ComponentViews/Modal/RCTFabricModalHostViewController.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.XY3thrB5az	2026-03-06 18:50:49
+@@ -15,7 +15,7 @@
+   RCTSurfaceTouchHandler *_touchHandler;
+ }
+ 
+-- (instancetype)init
++#if !TARGET_OS_OSX // [macOS]
+ {
+   if ((self = [super init]) == nullptr) {
+     return nil;
+@@ -40,26 +40,16 @@
+   [_touchHandler attachToView:self.view];
+ }
+ 
+-- (UIStatusBarStyle)preferredStatusBarStyle
+-{
++#if TARGET_OS_IOS // [visionOS]
+   return [RCTUIStatusBarManager() statusBarStyle];
+ }
+-
+-- (void)viewDidDisappear:(BOOL)animated
+-{
++#endif // [visionOS]
+   [super viewDidDisappear:animated];
+   _lastViewBounds = CGRectZero;
+ }
+ 
+-- (BOOL)prefersStatusBarHidden
+-{
+-  return [RCTUIStatusBarManager() isStatusBarHidden];
+-}
+-
+-#if RCT_DEV && TARGET_OS_IOS
+-- (UIInterfaceOrientationMask)supportedInterfaceOrientations
+-{
+-  UIInterfaceOrientationMask appSupportedOrientationsMask =
++#if TARGET_OS_IOS // [visionOS]
++#endif // [visionOS]
+       [RCTSharedApplication() supportedInterfaceOrientationsForWindow:RCTKeyWindow()];
+   if ((_supportedInterfaceOrientations & appSupportedOrientationsMask) == 0u) {
+     RCTLogError(
+@@ -74,5 +64,4 @@
+   return _supportedInterfaceOrientations;
+ }
+ #endif // RCT_DEV
+-
+-@end
++#endif // [macOS]

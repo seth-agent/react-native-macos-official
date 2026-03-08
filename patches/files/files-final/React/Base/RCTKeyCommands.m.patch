@@ -1,0 +1,16 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Base/RCTKeyCommands.m	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.1EEtbYy7F8	2026-03-06 18:50:47
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import "RCTKeyCommands.h"
++#if !TARGET_OS_OSX // [macOS]
+ 
+ #import <UIKit/UIKit.h>
+ 
+@@ -273,3 +273,4 @@
+ @end
+ 
+ #endif
++#endif // [macOS]

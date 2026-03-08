@@ -1,0 +1,20 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Mounting/ComponentViews/Text/RCTAccessibilityElement.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.Un2ki4xj2d	2026-03-06 18:50:50
+@@ -9,14 +9,13 @@
+ 
+ @implementation RCTAccessibilityElement
+ 
+-- (CGRect)accessibilityFrame
++#if !TARGET_OS_OSX // [macOS]
+ {
+-  UIView *container = (UIView *)self.accessibilityContainer;
++  RCTUIView *container = (RCTUIView *)self.accessibilityContainer; // [macOS]
+   if (CGRectEqualToRect(_frameInContainerSpace, CGRectZero)) {
+     return UIAccessibilityConvertFrameToScreenCoordinates(container.bounds, container);
+   } else {
+     return UIAccessibilityConvertFrameToScreenCoordinates(_frameInContainerSpace, container);
+   }
+ }
+-
+-@end
++#endif // [macOS]

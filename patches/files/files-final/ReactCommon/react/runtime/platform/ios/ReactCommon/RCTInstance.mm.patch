@@ -1,0 +1,183 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.fZG2i4PTbh	2026-03-06 18:50:54
+@@ -189,7 +189,36 @@
+           }];
+     }
+     _launchOptions = launchOptions;
++#if !TARGET_OS_OSX // [macOS]
++    [[NSNotificationCenter defaultCenter] addObserver:self
++                                             selector:@selector(_handleMemoryWarning)
++                                                 name:UIApplicationDidReceiveMemoryWarningNotification
++                                               object:nil];
++#endif // [macOS]
++                                                                      bundleManager:bundleManager
++                                                                  callableJSModules:[RCTCallableJSModules new]];
++    _devMenuConfigurationDecorator =
++#if RCT_DEV_MENU
++        [[RCTDevMenuConfigurationDecorator alloc] initWithDevMenuConfiguration:devMenuConfiguration];
++#else
++        nil;
++#endif
+ 
++    _parentInspectorTarget = parentInspectorTarget;
++    {
++      __weak __typeof(self) weakSelf = self;
++      [_bridgeModuleDecorator.callableJSModules
++          setBridgelessJSModuleMethodInvoker:^(
++              NSString *moduleName, NSString *methodName, NSArray *args, dispatch_block_t onComplete) {
++            [weakSelf callFunctionOnJSModule:moduleName method:methodName args:args];
++            if (onComplete) {
++              [weakSelf
++                  callFunctionOnBufferedRuntimeExecutor:[onComplete](facebook::jsi::Runtime &_) { onComplete(); }];
++            }
++          }];
++    }
++    _launchOptions = launchOptions;
++
+     [[NSNotificationCenter defaultCenter] addObserver:self
+                                              selector:@selector(_handleMemoryWarning)
+                                                  name:UIApplicationDidReceiveMemoryWarningNotification
+@@ -202,11 +231,66 @@
+ 
+ - (void)dealloc
+ {
++#if !TARGET_OS_OSX // [macOS]
++    _parentInspectorTarget = parentInspectorTarget;
++    {
++      __weak __typeof(self) weakSelf = self;
++      [_bridgeModuleDecorator.callableJSModules
++          setBridgelessJSModuleMethodInvoker:^(
++              NSString *moduleName, NSString *methodName, NSArray *args, dispatch_block_t onComplete) {
++            [weakSelf callFunctionOnJSModule:moduleName method:methodName args:args];
++            if (onComplete) {
++              [weakSelf
++                  callFunctionOnBufferedRuntimeExecutor:[onComplete](facebook::jsi::Runtime &_) { onComplete(); }];
++            }
++          }];
++    }
++    _launchOptions = launchOptions;
++
++    [[NSNotificationCenter defaultCenter] addObserver:self
++                                             selector:@selector(_handleMemoryWarning)
++                                                 name:UIApplicationDidReceiveMemoryWarningNotification
++                                               object:nil];
++
++    [self _start];
++  }
++  return self;
++}
++
++- (void)dealloc
++{
+   [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                   name:UIApplicationDidReceiveMemoryWarningNotification
+                                                 object:nil];
++#endif // [macOS]
++          setBridgelessJSModuleMethodInvoker:^(
++              NSString *moduleName, NSString *methodName, NSArray *args, dispatch_block_t onComplete) {
++            [weakSelf callFunctionOnJSModule:moduleName method:methodName args:args];
++            if (onComplete) {
++              [weakSelf
++                  callFunctionOnBufferedRuntimeExecutor:[onComplete](facebook::jsi::Runtime &_) { onComplete(); }];
++            }
++          }];
++    }
++    _launchOptions = launchOptions;
++
++    [[NSNotificationCenter defaultCenter] addObserver:self
++                                             selector:@selector(_handleMemoryWarning)
++                                                 name:UIApplicationDidReceiveMemoryWarningNotification
++                                               object:nil];
++
++    [self _start];
++  }
++  return self;
+ }
+ 
++- (void)dealloc
++{
++  [[NSNotificationCenter defaultCenter] removeObserver:self
++                                                  name:UIApplicationDidReceiveMemoryWarningNotification
++                                                object:nil];
++}
++
+ - (void)callFunctionOnJSModule:(NSString *)moduleName method:(NSString *)method args:(NSArray *)args
+ {
+   if (_valid) {
+@@ -396,7 +480,6 @@
+ 
+       RCTScreenSize();
+       RCTScreenScale();
+-      RCTSwitchSize();
+ 
+       std::lock_guard<std::mutex> lock(*mutex);
+       *isReady = true;
+@@ -426,7 +509,7 @@
+ 
+   // This enables RCTViewRegistry in modules to return UIViews from its viewForReactTag method
+   __weak RCTSurfacePresenter *weakSurfacePresenter = _surfacePresenter;
+-  [_bridgeModuleDecorator.viewRegistry_DEPRECATED setBridgelessComponentViewProvider:^UIView *(NSNumber *reactTag) {
++  [_bridgeModuleDecorator.viewRegistry_DEPRECATED setBridgelessComponentViewProvider:^RCTPlatformView *(NSNumber *reactTag) { // [macOS]
+     RCTSurfacePresenter *strongSurfacePresenter = weakSurfacePresenter;
+     if (strongSurfacePresenter == nil) {
+       return nil;
+@@ -662,7 +745,59 @@
+                             name:errorData[@"name"]
+                   componentStack:errorData[@"componentStack"]
+                      exceptionId:error.id
++#if !TARGET_OS_OSX // [macOS]
++                         isFatal:errorData[@"isFatal"]
++#else // [macOS Use boolValue for isFatal to ensure type safety
++      stackFrame[@"lineNumber"] = @(*frame.lineNumber);
++    }
++    if (frame.column) {
++      stackFrame[@"column"] = @(*frame.column);
++    }
++    [stack addObject:stackFrame];
++  }
++
++  errorData[@"stack"] = stack;
++  errorData[@"id"] = @(error.id);
++  errorData[@"isFatal"] = @(error.isFatal);
++
++  id extraData =
++      TurboModuleConvertUtils::convertJSIValueToObjCObject(runtime, jsi::Value(runtime, error.extraData), nullptr);
++  if (extraData) {
++    errorData[@"extraData"] = extraData;
++  }
++
++  if (![_delegate instance:self
++          didReceiveJSErrorStack:errorData[@"stack"]
++                         message:errorData[@"message"]
++                 originalMessage:errorData[@"originalMessage"]
++                            name:errorData[@"name"]
++                  componentStack:errorData[@"componentStack"]
++                     exceptionId:error.id
+                          isFatal:[errorData[@"isFatal"] boolValue]
++#endif // macOS]
++      stackFrame[@"column"] = @(*frame.column);
++    }
++    [stack addObject:stackFrame];
++  }
++
++  errorData[@"stack"] = stack;
++  errorData[@"id"] = @(error.id);
++  errorData[@"isFatal"] = @(error.isFatal);
++
++  id extraData =
++      TurboModuleConvertUtils::convertJSIValueToObjCObject(runtime, jsi::Value(runtime, error.extraData), nullptr);
++  if (extraData) {
++    errorData[@"extraData"] = extraData;
++  }
++
++  if (![_delegate instance:self
++          didReceiveJSErrorStack:errorData[@"stack"]
++                         message:errorData[@"message"]
++                 originalMessage:errorData[@"originalMessage"]
++                            name:errorData[@"name"]
++                  componentStack:errorData[@"componentStack"]
++                     exceptionId:error.id
++                         isFatal:[errorData[@"isFatal"] boolValue]
+                        extraData:errorData[@"extraData"]]) {
+     JS::NativeExceptionsManager::ExceptionData jsErrorData{errorData};
+     id<NativeExceptionsManagerSpec> exceptionsManager = [_turboModuleManager moduleForName:"ExceptionsManager"];

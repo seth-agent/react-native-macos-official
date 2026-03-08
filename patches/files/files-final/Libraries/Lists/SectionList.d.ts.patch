@@ -1,0 +1,10 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Lists/SectionList.d.ts	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.s5TBokFviZ	2026-03-06 18:50:43
+@@ -11,7 +11,6 @@
+ import type {
+   ListRenderItemInfo,
+   VirtualizedListWithoutRenderItemProps,
+-} from '@react-native/virtualized-lists';
+ import type {
+   ScrollView,
+   ScrollViewProps,

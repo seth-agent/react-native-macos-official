@@ -1,0 +1,63 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Image/RCTImageStoreManager.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.K0IbVR5sDi	2026-03-06 18:50:43
+@@ -12,9 +12,8 @@
+ 
+ #import <FBReactNativeSpec/FBReactNativeSpec.h>
+ #import <ImageIO/ImageIO.h>
+-#import <MobileCoreServices/UTType.h>
+-#import <React/RCTAssert.h>
+-#import <React/RCTImageUtils.h>
++#if !TARGET_OS_OSX // [macOS]
++#endif // [macOS]
+ #import <React/RCTLog.h>
+ #import <React/RCTUtils.h>
+ 
+@@ -84,7 +83,7 @@
+   });
+ }
+ 
+-- (void)storeImage:(UIImage *)image withBlock:(void (^)(NSString *imageTag))block
++- (void)storeImage:(RCTPlatformImage *)image withBlock:(void (^)(NSString *imageTag))block // [macOS]
+ {
+   RCTAssertParam(block);
+   dispatch_async(_methodQueue, ^{
+@@ -210,7 +209,7 @@
+ 
+ @implementation RCTImageStoreManager (Deprecated)
+ 
+-- (NSString *)storeImage:(UIImage *)image
++- (NSString *)storeImage:(RCTPlatformImage *)image // [macOS]
+ {
+   RCTAssertMainQueue();
+   RCTLogWarn(
+@@ -222,7 +221,7 @@
+   return imageTag;
+ }
+ 
+-- (UIImage *)imageForTag:(NSString *)imageTag
++- (RCTPlatformImage *)imageForTag:(NSString *)imageTag // [macOS]
+ {
+   RCTAssertMainQueue();
+   RCTLogWarn(
+@@ -231,18 +230,17 @@
+   dispatch_sync(_methodQueue, ^{
+     imageData = self->_store[imageTag];
+   });
+-  return [UIImage imageWithData:imageData];
++  return UIImageWithData(imageData); // [macOS]
+ }
+ 
+-- (void)getImageForTag:(NSString *)imageTag withBlock:(void (^)(UIImage *image))block
++- (void)getImageForTag:(NSString *)imageTag withBlock:(void (^)(RCTPlatformImage *image))block // [macOS]
+ {
+   RCTAssertParam(block);
+   dispatch_async(_methodQueue, ^{
+     NSData *imageData = self->_store[imageTag];
+     dispatch_async(dispatch_get_main_queue(), ^{
+       // imageWithData: is not thread-safe, so we can't do this on methodQueue
+-      block([UIImage imageWithData:imageData]);
+-    });
++      block(UIImageWithData(imageData)); // [macOS]
+   });
+ }
+ 

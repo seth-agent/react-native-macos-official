@@ -1,0 +1,20 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Views/RCTViewUtils.m	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.LcxOhEJjZa	2026-03-06 18:50:53
+@@ -9,14 +9,13 @@
+ 
+ #import "UIView+React.h"
+ 
+-UIEdgeInsets RCTContentInsets(UIView *view)
++UIEdgeInsets RCTContentInsets(RCTPlatformView *view) // [macOS]
+ {
+-  while (view) {
++#if !TARGET_OS_OSX // [macOS]
+     UIViewController *controller = view.reactViewController;
+     if (controller) {
+       return controller.view.safeAreaInsets;
+     }
+     view = view.superview;
+   }
+-  return UIEdgeInsetsZero;
+-}
++#endif // [macOS]

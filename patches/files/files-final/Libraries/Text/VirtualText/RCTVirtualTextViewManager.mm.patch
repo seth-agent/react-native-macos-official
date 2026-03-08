@@ -1,0 +1,12 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Text/VirtualText/RCTVirtualTextViewManager.mm	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.lPxXLpio65	2026-03-06 18:50:46
+@@ -15,8 +15,7 @@
+ 
+ RCT_EXPORT_MODULE(RCTVirtualText)
+ 
+-- (UIView *)view
+-{
++- (RCTPlatformView *)view // [macOS]
+   return [RCTVirtualTextView new];
+ }
+ 

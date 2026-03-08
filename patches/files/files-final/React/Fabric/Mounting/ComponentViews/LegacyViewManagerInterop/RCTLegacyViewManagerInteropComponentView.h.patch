@@ -1,0 +1,20 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Fabric/Mounting/ComponentViews/LegacyViewManagerInterop/RCTLegacyViewManagerInteropComponentView.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.aLubFwC1v1	2026-03-06 18:50:49
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #import <React/RCTViewComponentView.h>
+ 
+@@ -25,7 +25,7 @@
+  * This method is required for addUIBlock and to let the infra bypass the interop layer
+  * when providing views from the RCTUIManager. The interop layer should be transparent to the users.
+  */
+-- (UIView *)paperView;
++- (RCTPlatformView *)paperView; // [macOS]
+ 
+ @end
+ 

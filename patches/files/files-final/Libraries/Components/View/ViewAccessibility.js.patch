@@ -1,0 +1,12 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Components/View/ViewAccessibility.js	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.6zbVsj3cvG	2026-03-06 18:50:42
+@@ -54,8 +54,7 @@
+   | 'drawerlayout'
+   | 'slidingdrawer'
+   | 'iconmenu'
+-  | string;
+-
++  | 'menubutton' // [macOS]
+ // Role types for web
+ export type Role =
+   | 'alert'

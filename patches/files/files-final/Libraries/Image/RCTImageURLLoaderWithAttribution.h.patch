@@ -1,0 +1,11 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Image/RCTImageURLLoaderWithAttribution.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.lhmfzar9i6	2026-03-06 18:50:43
+@@ -64,7 +64,7 @@
+ /**
+  * Image instrumentation - start tracking the on-screen visibility of the native image view.
+  */
+-- (void)trackURLImageVisibilityForRequest:(RCTImageURLLoaderRequest *)loaderRequest imageView:(UIView *)imageView;
++- (void)trackURLImageVisibilityForRequest:(RCTImageURLLoaderRequest *)loaderRequest imageView:(RCTUIView *)imageView; // [macOS]
+ 
+ /**
+  * Image instrumentation - notify that the request was destroyed.

@@ -1,0 +1,10 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/Lists/FlatList.d.ts	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.kkrf5ixbT7	2026-03-06 18:50:43
+@@ -13,7 +13,6 @@
+   ViewToken,
+   VirtualizedListProps,
+   ViewabilityConfig,
+-} from '@react-native/virtualized-lists';
+ import type {ScrollViewComponent} from '../Components/ScrollView/ScrollView';
+ import type {StyleProp} from '../StyleSheet/StyleSheet';
+ import type {ViewStyle} from '../StyleSheet/StyleSheetTypes';

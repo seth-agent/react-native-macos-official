@@ -1,0 +1,11 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/Libraries/ReactNative/PaperUIManager.js	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.rE1m51Uf6G	2026-03-06 18:50:44
+@@ -155,7 +155,7 @@
+  * only needed for iOS, which puts the constants in the ViewManager
+  * namespace instead of UIManager, unlike Android.
+  */
+-if (Platform.OS === 'ios') {
++if (Platform.OS === 'ios' || Platform.OS === 'macos' /* [macOS] */) {
+   Object.keys(getConstants()).forEach(viewName => {
+     lazifyViewManagerConfig(viewName);
+   });

@@ -1,0 +1,59 @@
+--- /Users/sethagent/Developer/react-native-upstream/packages/react-native/React/Base/RCTBridgeModule.h	2026-03-06 18:50:06
++++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.G0lnie8iHy	2026-03-06 18:50:47
+@@ -6,7 +6,7 @@
+  */
+ 
+ #import <Foundation/Foundation.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h> // [macOS]
+ 
+ #import <React/RCTDefines.h>
+ #import <React/RCTJSThread.h>
+@@ -93,6 +93,18 @@
+ #endif // RCT_DISABLE_STATIC_MODULE_REGISTRATION
+ 
+ /**
++ * Same as RCT_EXPORT_MODULE, but uses __attribute__((constructor)) for module
++ * registration. Useful for registering swift classes that forbids use of load
++ * Used in RCT_EXTERN_REMAP_MODULE
++ */
++#define RCT_EXPORT_MODULE_NO_LOAD(js_name, objc_name)                               \
++  RCT_EXTERN void RCTRegisterModule(Class);                                         \
++  +(NSString *)moduleName                                                           \
++  {                                                                                 \
++    return @ #js_name;                                                              \
++  }                                                                                 \
++  _Pragma("clang diagnostic push")                                                  \
++  _Pragma("clang diagnostic ignored \"-Wglobal-constructors\"")                     \
+  * Same as RCT_EXPORT_MODULE, but uses __attribute__((constructor)) for module
+  * registration. Useful for registering swift classes that forbids use of load
+  * Used in RCT_EXTERN_REMAP_MODULE
+@@ -106,7 +118,8 @@
+   __attribute__((constructor)) static void RCT_CONCAT(initialize_, objc_name)(void) \
+   {                                                                                 \
+     RCTRegisterModule([objc_name class]);                                           \
+-  }
++  }                                                                                 \
++  _Pragma("clang diagnostic pop")
+ 
+ // Implemented by RCT_EXPORT_MODULE
+ + (NSString *)moduleName;
+@@ -381,7 +394,7 @@
+ - (id)moduleForClass:(Class)moduleClass;
+ @end
+ 
+-typedef UIView * (^RCTBridgelessComponentViewProvider)(NSNumber *);
++typedef RCTPlatformView * (^RCTBridgelessComponentViewProvider)(NSNumber *); // [macOS]
+ 
+ typedef void (^RCTViewRegistryUIBlock)(RCTViewRegistry *viewRegistry);
+ 
+@@ -394,8 +407,7 @@
+ #endif // RCT_REMOVE_LEGACY_ARCH
+ - (void)setBridgelessComponentViewProvider:(RCTBridgelessComponentViewProvider)bridgelessComponentViewProvider;
+ 
+-- (UIView *)viewForReactTag:(NSNumber *)reactTag;
+-- (void)addUIBlock:(RCTViewRegistryUIBlock)block;
++- (RCTPlatformView *)viewForReactTag:(NSNumber *)reactTag; // [macOS]
+ @end
+ 
+ typedef void (^RCTBridgelessJSModuleMethodInvoker)(
