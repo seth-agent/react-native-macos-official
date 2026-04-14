@@ -373,6 +373,130 @@ The extraction is complete when:
 3. `react-native-macos` compiles and runs without ANY patches to core
 4. A new platform can be bootstrapped from a template in under a week
 5. Core releases don't require coordinated platform releases (platforms pin to core versions)
+6. **The top 30 ecosystem libraries continue to work unchanged via a backwards-compatibility layer** (see Ecosystem Compatibility below)
+
+## Ecosystem Compatibility
+
+### Requirement
+
+Third-party libraries must not break. The top 30 React Native ecosystem libraries must continue to compile and function without source changes when a project upgrades to the extracted architecture. A backwards-compatibility layer bridges old APIs to new ones. This layer ships with `react-native-ios` and is deprecated over 2-3 major versions, giving library authors time to migrate.
+
+### Ecosystem Audit
+
+We audited the top 30 RN ecosystem libraries by native code coupling:
+
+| Severity | Libraries | Count |
+|----------|-----------|-------|
+| **Critical** (deep UIKit ViewController/Navigation) | react-native-screens, react-native-navigation (Wix), react-native-pager-view | 3 |
+| **High** (heavy UIKit view/gesture usage) | react-native-gesture-handler, react-native-webview, react-native-maps, @react-native-community/blur | 4 |
+| **Medium** (UIKit views, some abstraction) | react-native-reanimated, react-native-svg, lottie-react-native, react-native-video, react-native-vision-camera, react-native-linear-gradient, react-native-safe-area-context, react-native-fast-image, expo-image | 9 |
+| **Low** (UIKit types but not views) | react-native-device-info, react-native-image-picker, @react-native-clipboard/clipboard, react-native-vector-icons | 4 |
+| **Minimal** (system frameworks, no UIKit) | react-native-mmkv, @react-native-async-storage/async-storage, react-native-keychain, @react-native-community/netinfo, react-native-permissions | 5 |
+| **None** (pure JS) | @react-navigation/native, @gorhom/bottom-sheet, @shopify/flash-list (thin native), @shopify/react-native-skia (Skia abstracts platform) | 4+  |
+
+### What Libraries Actually Depend On
+
+| RN API Surface | Used By (of top 30) | Impact |
+|---------------|---------------------|--------|
+| `RCTViewManager` | ~18 libraries | Primary bridge API for native views. Must be preserved. |
+| `RCTBridgeModule` | ~20 libraries | Universal native module protocol. Must be preserved. |
+| Fabric `RCTComponentViewProtocol` | ~8 libraries (growing) | New arch view API. Forward-looking, preserve as-is. |
+| `UIView+React` category | ~15 libraries | Adds `reactTag`, `reactSuperview`, etc. to UIView. Must be preserved. |
+| `RCTConvert` | ~12 libraries | Type conversions including UIKit-specific (colors, fonts). Needs compat shim. |
+| JSI / TurboModules | ~6 libraries | Direct C++ bindings. Platform-agnostic, no compat needed. |
+| `NativeEventEmitter` | ~5 libraries | Event bridge. Platform-agnostic, no compat needed. |
+| `RCTBridge` internals | ~4 libraries | Deep bridge access (surface presenter, mounting manager). Highest migration cost. |
+
+### The Compatibility Layer
+
+The compat layer lives in `react-native-ios` and provides:
+
+#### 1. Header Forwarding
+
+Libraries that `#import <React/RCTViewManager.h>` continue to work. `react-native-ios` re-exports all public React-Core headers at their original paths:
+
+```objc
+// react-native-ios/compat/React/RCTViewManager.h
+// Forwards to the new location
+#import <ReactCore/RCTViewManager.h>
+
+// Platform types resolve to UIKit on iOS
+#import <ReactCore/RNPlatformTypes.h>
+// RNPlatformView is UIView, RNPlatformColor is UIColor, etc.
+```
+
+#### 2. UIKit Type Preservation
+
+Libraries that reference `UIView`, `UIColor`, `UIImage` directly in their source code continue to compile because `react-native-ios` imports UIKit and the platform types are typedefs:
+
+```objc
+// react-native-ios/platform/RNPlatformTypes+iOS.h
+// These are typedefs, not #defines — they preserve UIKit type identity
+typedef UIView RNPlatformView;    // UIView IS RNPlatformView on iOS
+typedef UIColor RNPlatformColor;
+typedef UIImage RNPlatformImage;
+```
+
+Third-party code that says `UIView *view = ...` keeps working because UIKit is still imported. The extraction changes **core's** code from `UIView` to `RNPlatformView`, not third-party code.
+
+#### 3. RCTViewManager → RNViewManager Shim
+
+```objc
+// react-native-ios/compat/RCTViewManager+Compat.h
+// Old API continues to work, forwards to new implementation
+@compatibility_alias RCTViewManager RNViewManager;
+// RCT_EXPORT_VIEW_PROPERTY macros continue to work unchanged
+```
+
+#### 4. UIView+React Category Preservation
+
+The `UIView+React` category (`reactTag`, `reactSuperview`, etc.) moves to `react-native-ios` since it's UIKit-specific. On macOS, `react-native-macos` provides `NSView+React` with the same interface.
+
+#### 5. RCTConvert UIKit Extensions
+
+`RCTConvert` type conversions for UIKit types (`UIColor`, `UIFont`, `UIImage`) move to `react-native-ios`. Core keeps platform-agnostic conversions (numbers, strings, JSON). The compat header re-exports both:
+
+```objc
+// react-native-ios/compat/React/RCTConvert.h
+#import <ReactCore/RCTConvert.h>        // Platform-agnostic
+#import <ReactNativeIOS/RCTConvert+UIKit.h>  // UIKit-specific
+```
+
+### Library-Specific Notes
+
+**react-native-screens (Critical):** Deepest UIKit coupling — wraps `UINavigationController`, `UISheetPresentationController`, etc. These are iOS navigation primitives with no cross-platform equivalent. The compat layer keeps this working on iOS. On macOS, a `react-native-screens-macos` package would provide AppKit navigation equivalents.
+
+**react-native-gesture-handler (High):** Subclasses `UIGestureRecognizer`. The compat layer preserves this on iOS. macOS would need `NSGestureRecognizer` equivalents in a separate package.
+
+**react-native-reanimated (Medium):** Already has a `REAUIView` abstraction layer, suggesting readiness for platform extraction. Main coupling is to Fabric internals (`RCTMountingManager`, `RCTSurfacePresenter`). These move to `react-native-ios` but remain accessible via compat headers.
+
+**expo-modules-core (Critical for validation):** Already solves the UIKit/AppKit abstraction problem with type aliases (`UIView` → `NSView`). This validates that the approach works at scale — the entire Expo ecosystem runs through it. The extraction should align with expo-modules-core's existing patterns.
+
+**react-native-svg:** Already has `RNSVGUIKit.h` — its own platform abstraction header. This library independently arrived at the same solution we're proposing for core.
+
+**react-native-webview:** Already references `RCTUIKit` for macOS compat. Another independent validation of the pattern.
+
+### Migration Path for Library Authors
+
+The compat layer buys time, but library authors should eventually migrate:
+
+**Phase 1 (compat layer ships):** All libraries work unchanged. Deprecation warnings in compat headers.
+
+**Phase 2 (1 major version later):** Library authors encouraged to:
+- Import from `react-native` (platform-agnostic core) instead of `react-native-ios`
+- Use `RNPlatformView` instead of `UIView` in shared code
+- Put UIKit-specific code in `.ios.m` files
+
+**Phase 3 (2-3 major versions later):** Compat layer removed. Libraries that haven't migrated pin to older `react-native-ios` versions.
+
+### Prior Art: expo-modules-core
+
+Expo has already solved this problem for their ecosystem. `expo-modules-core` provides:
+- `UIView` → `NSView` type aliasing
+- Platform-specific implementation files (`.ios.mm` / `.macos.mm`)
+- A module definition DSL that abstracts the bridge
+
+The extraction should align with these patterns. Libraries already using Expo Modules API are largely ready for the extracted architecture.
 
 ## Timeline
 
