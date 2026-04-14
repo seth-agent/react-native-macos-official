@@ -20,7 +20,7 @@
  
    s.subspec "animated" do |ss|
      ss.source_files         = podspec_sources("react/renderer/animated/**/*.{m,mm,cpp,h}", "react/renderer/animated/**/*.{h}")
-@@ -129,8 +131,8 @@
+@@ -129,8 +131,9 @@
      ss.subspec "view" do |sss|
        sss.dependency             "React-renderercss"
        sss.dependency             "Yoga"
@@ -28,6 +28,7 @@
 -      sss.header_dir           = "react/renderer/components/view"
 +      sss.source_files         = "react/renderer/components/view/**/*.{m,mm,cpp,h}" # [macOS]
 +      sss.exclude_files        = "react/renderer/components/view/tests", "react/renderer/components/view/platform/android", "react/renderer/components/view/platform/windows" # [macOS]
++      sss.header_dir           = "react/renderer/components/view"
      end
  
      ss.subspec "scrollview" do |sss|

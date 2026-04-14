@@ -54,9 +54,41 @@ function findReactNative() {
   );
 }
 
+// Copy macOS platform headers into react-native source tree so patched files
+// can find them at their expected import paths (e.g. <React/RCTUIKit.h>).
+function copyPlatformHeaders(rnRoot) {
+  const headers = [
+    { src: 'macos/RCTAppKit/RCTUIKit.h', dest: 'React/Base/RCTUIKit.h' },
+  ];
+
+  for (const { src, dest } of headers) {
+    const srcPath = path.join(OOT_ROOT, src);
+    const destPath = path.join(rnRoot, dest);
+
+    if (!fs.existsSync(srcPath)) {
+      console.warn(`  [warn] Platform header not found: ${src}`);
+      continue;
+    }
+
+    if (DRY_RUN) {
+      console.log(`  [dry-run] Would copy: ${src} -> ${dest}`);
+      continue;
+    }
+
+    fs.mkdirSync(path.dirname(destPath), { recursive: true });
+    fs.copyFileSync(srcPath, destPath);
+    if (VERBOSE) {
+      console.log(`  [copy] ${src} -> ${dest}`);
+    }
+  }
+}
+
 function applyPatches() {
   const rnRoot = findReactNative();
   console.log(`react-native-macos-official: Applying macOS patches to ${rnRoot}`);
+
+  // Copy platform headers before patching so patched files can reference them
+  copyPlatformHeaders(rnRoot);
 
   if (!fs.existsSync(OVERRIDES_JSON)) {
     console.error('No overrides.json found. Skipping patch application.');
