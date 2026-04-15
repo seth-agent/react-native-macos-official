@@ -1,0 +1,672 @@
+diff --git a/React/Views/RCTActivityIndicatorView.h b/React/Views/RCTActivityIndicatorView.h
+index 19550f4..8ef6e98 100644
+--- a/React/Views/RCTActivityIndicatorView.h
++++ b/React/Views/RCTActivityIndicatorView.h
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+diff --git a/React/Views/RCTAutoInsetsProtocol.h b/React/Views/RCTAutoInsetsProtocol.h
+index 0d12aba..f736807 100644
+--- a/React/Views/RCTAutoInsetsProtocol.h
++++ b/React/Views/RCTAutoInsetsProtocol.h
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ /**
+  * Defines a View that wants to support auto insets adjustment
+diff --git a/React/Views/RCTBorderDrawing.h b/React/Views/RCTBorderDrawing.h
+index 26c92fa..88e12f6 100644
+--- a/React/Views/RCTBorderDrawing.h
++++ b/React/Views/RCTBorderDrawing.h
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTBorderStyle.h>
+ #import <React/RCTDefines.h>
+@@ -29,10 +29,10 @@ typedef struct {
+ } RCTCornerInsets;
+ 
+ typedef struct {
+-  UIColor *top;
+-  UIColor *left;
+-  UIColor *bottom;
+-  UIColor *right;
++  RCTUIColor *top;
++  RCTUIColor *left;
++  RCTUIColor *bottom;
++  RCTUIColor *right;
+ } RCTBorderColors;
+ 
+ /**
+@@ -75,5 +75,5 @@ RCT_EXTERN UIImage *RCTGetBorderImage(
+     RCTCornerRadii cornerRadii,
+     UIEdgeInsets borderInsets,
+     RCTBorderColors borderColors,
+-    UIColor *backgroundColor,
++    RCTUIColor *backgroundColor,
+     BOOL drawToEdge);
+diff --git a/React/Views/RCTComponentData.h b/React/Views/RCTComponentData.h
+index 1dd1197..26da8fe 100644
+--- a/React/Views/RCTComponentData.h
++++ b/React/Views/RCTComponentData.h
+@@ -34,7 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
+                               bridge:(RCTBridge *)bridge
+                      eventDispatcher:(id<RCTEventDispatcherProtocol>)eventDispatcher NS_DESIGNATED_INITIALIZER;
+ 
+-- (UIView *)createViewWithTag:(nullable NSNumber *)tag rootTag:(nullable NSNumber *)rootTag;
++- (RCTPlatformView *)createViewWithTag:(nullable NSNumber *)tag rootTag:(nullable NSNumber *)rootTag;
+ - (RCTShadowView *)createShadowViewWithTag:(NSNumber *)tag;
+ - (void)setProps:(NSDictionary<NSString *, id> *)props forView:(id<RCTComponent>)view;
+ - (void)setProps:(NSDictionary<NSString *, id> *)props forShadowView:(RCTShadowView *)shadowView;
+diff --git a/React/Views/RCTDebuggingOverlay.h b/React/Views/RCTDebuggingOverlay.h
+index 8e1a174..e552918 100644
+--- a/React/Views/RCTDebuggingOverlay.h
++++ b/React/Views/RCTDebuggingOverlay.h
+@@ -5,16 +5,16 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTView.h>
+ 
+ @interface TraceUpdateTuple : NSObject
+ 
+-@property (nonatomic, strong, readonly) UIView *view;
++@property (nonatomic, strong, readonly) RCTPlatformView *view;
+ @property (nonatomic, copy, readonly) dispatch_block_t cleanupBlock;
+ 
+-- (instancetype)initWithView:(UIView *)view cleanupBlock:(dispatch_block_t)cleanupBlock;
++- (instancetype)initWithView:(RCTPlatformView *)view cleanupBlock:(dispatch_block_t)cleanupBlock;
+ 
+ @end
+ 
+diff --git a/React/Views/RCTFont+Private.h b/React/Views/RCTFont+Private.h
+index 4bfd7f6..6f62402 100644
+--- a/React/Views/RCTFont+Private.h
++++ b/React/Views/RCTFont+Private.h
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTDefines.h>
+ 
+diff --git a/React/Views/RCTLayout.h b/React/Views/RCTLayout.h
+index 8016463..660f8ba 100644
+--- a/React/Views/RCTLayout.h
++++ b/React/Views/RCTLayout.h
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTDefines.h>
+ #import <yoga/Yoga.h>
+diff --git a/React/Views/RCTModalHostView.h b/React/Views/RCTModalHostView.h
+index ca2a97a..96eede8 100644
+--- a/React/Views/RCTModalHostView.h
++++ b/React/Views/RCTModalHostView.h
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+@@ -19,7 +19,7 @@
+ @protocol RCTModalHostViewInteractor;
+ 
+ __attribute__((deprecated("This API will be removed along with the legacy architecture.")))
+-@interface RCTModalHostView : UIView<RCTInvalidating, UIAdaptivePresentationControllerDelegate>
++@interface RCTModalHostView : RCTUIView<RCTInvalidating, UIAdaptivePresentationControllerDelegate>
+ 
+ @property (nonatomic, copy) NSString *animationType;
+ @property (nonatomic, assign) UIModalPresentationStyle presentationStyle;
+diff --git a/React/Views/RCTModalHostViewController.h b/React/Views/RCTModalHostViewController.h
+index 80b0750..47ceac5 100644
+--- a/React/Views/RCTModalHostViewController.h
++++ b/React/Views/RCTModalHostViewController.h
+@@ -5,12 +5,12 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+ __attribute__((deprecated("This API will be removed along with the legacy architecture.")))
+-@interface RCTModalHostViewController : UIViewController
++@interface RCTModalHostViewController : RCTPlatformViewController
+ 
+ @property (nonatomic, copy) void (^boundsDidChangeBlock)(CGRect newBounds);
+ 
+diff --git a/React/Views/RCTModalHostViewManager.h b/React/Views/RCTModalHostViewManager.h
+index d0b3d97..6dce773 100644
+--- a/React/Views/RCTModalHostViewManager.h
++++ b/React/Views/RCTModalHostViewManager.h
+@@ -12,8 +12,8 @@
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+ typedef void (^RCTModalViewInteractionBlock)(
+-    UIViewController *reactViewController,
+-    UIViewController *viewController,
++    RCTPlatformViewController *reactViewController,
++    RCTPlatformViewController *viewController,
+     BOOL animated,
+     dispatch_block_t completionBlock)
+     __attribute__((deprecated("This API will be removed along with the legacy architecture.")));
+diff --git a/React/Views/RCTModalManager.h b/React/Views/RCTModalManager.h
+index f00b4b2..9943720 100644
+--- a/React/Views/RCTModalManager.h
++++ b/React/Views/RCTModalManager.h
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+diff --git a/React/Views/RCTShadowView+Internal.h b/React/Views/RCTShadowView+Internal.h
+index 0455863..0efa929 100644
+--- a/React/Views/RCTShadowView+Internal.h
++++ b/React/Views/RCTShadowView+Internal.h
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTShadowView.h>
+ 
+diff --git a/React/Views/RCTShadowView+Layout.h b/React/Views/RCTShadowView+Layout.h
+index e320952..4cd3afc 100644
+--- a/React/Views/RCTShadowView+Layout.h
++++ b/React/Views/RCTShadowView+Layout.h
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTShadowView.h>
+ 
+diff --git a/React/Views/RCTShadowView.h b/React/Views/RCTShadowView.h
+index d647796..b784d19 100644
+--- a/React/Views/RCTShadowView.h
++++ b/React/Views/RCTShadowView.h
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTComponent.h>
+ // Keeps RCTConvert.h here before yoga for clang module to generate correct header imports.
+@@ -17,7 +17,7 @@
+ @class RCTRootShadowView;
+ @class RCTSparseArray;
+ 
+-typedef void (^RCTApplierBlock)(NSDictionary<NSNumber *, UIView *> *viewRegistry);
++typedef void (^RCTApplierBlock)(NSDictionary<NSNumber *, RCTPlatformView *> *viewRegistry);
+ 
+ /**
+  * ShadowView tree mirrors RCT view tree. Every node is highly stateful.
+diff --git a/React/Views/RCTSwitch.h b/React/Views/RCTSwitch.h
+index d1df01b..8cded30 100644
+--- a/React/Views/RCTSwitch.h
++++ b/React/Views/RCTSwitch.h
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+diff --git a/React/Views/RCTView.h b/React/Views/RCTView.h
+index 8abda6e..2e81e44 100644
+--- a/React/Views/RCTView.h
++++ b/React/Views/RCTView.h
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTBorderCurve.h>
+ #import <React/RCTBorderStyle.h>
+@@ -13,11 +13,11 @@
+ #import <React/RCTCursor.h>
+ #import <React/RCTPointerEvents.h>
+ 
+-extern const UIAccessibilityTraits SwitchAccessibilityTrait;
++extern const RCTUIAccessibilityTraits SwitchAccessibilityTrait;
+ 
+ @protocol RCTAutoInsetsProtocol;
+ 
+-@interface RCTView : UIView
++@interface RCTView : RCTUIView
+ 
+ /**
+  * Accessibility event handlers
+@@ -32,8 +32,8 @@ extern const UIAccessibilityTraits SwitchAccessibilityTrait;
+  */
+ @property (nonatomic, assign) RCTPointerEvents pointerEvents;
+ 
+-+ (void)autoAdjustInsetsForView:(UIView<RCTAutoInsetsProtocol> *)parentView
+-                 withScrollView:(UIScrollView *)scrollView
+++ (void)autoAdjustInsetsForView:(RCTPlatformView<RCTAutoInsetsProtocol> *)parentView
++                 withScrollView:(RCTUIScrollView *)scrollView
+                    updateOffset:(BOOL)updateOffset;
+ 
+ /**
+@@ -80,16 +80,16 @@ extern const UIAccessibilityTraits SwitchAccessibilityTrait;
+ /**
+  * Border colors (actually retained).
+  */
+-@property (nonatomic, strong) UIColor *borderTopColor;
+-@property (nonatomic, strong) UIColor *borderRightColor;
+-@property (nonatomic, strong) UIColor *borderBottomColor;
+-@property (nonatomic, strong) UIColor *borderLeftColor;
+-@property (nonatomic, strong) UIColor *borderStartColor;
+-@property (nonatomic, strong) UIColor *borderEndColor;
+-@property (nonatomic, strong) UIColor *borderColor;
+-@property (nonatomic, strong) UIColor *borderBlockColor;
+-@property (nonatomic, strong) UIColor *borderBlockEndColor;
+-@property (nonatomic, strong) UIColor *borderBlockStartColor;
++@property (nonatomic, strong) RCTUIColor *borderTopColor;
++@property (nonatomic, strong) RCTUIColor *borderRightColor;
++@property (nonatomic, strong) RCTUIColor *borderBottomColor;
++@property (nonatomic, strong) RCTUIColor *borderLeftColor;
++@property (nonatomic, strong) RCTUIColor *borderStartColor;
++@property (nonatomic, strong) RCTUIColor *borderEndColor;
++@property (nonatomic, strong) RCTUIColor *borderColor;
++@property (nonatomic, strong) RCTUIColor *borderBlockColor;
++@property (nonatomic, strong) RCTUIColor *borderBlockEndColor;
++@property (nonatomic, strong) RCTUIColor *borderBlockStartColor;
+ 
+ /**
+  * Border widths.
+diff --git a/React/Views/RCTViewManager.h b/React/Views/RCTViewManager.h
+index ed17a43..5bc414f 100644
+--- a/React/Views/RCTViewManager.h
++++ b/React/Views/RCTViewManager.h
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTBridgeModule.h>
+ #import <React/RCTConvert.h>
+@@ -19,7 +19,7 @@
+ @class RCTSparseArray;
+ @class RCTUIManager;
+ 
+-typedef void (^RCTViewManagerUIBlock)(RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry);
++typedef void (^RCTViewManagerUIBlock)(RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTPlatformView *> *viewRegistry);
+ 
+ @interface RCTViewManager : NSObject <RCTBridgeModule>
+ 
+@@ -37,7 +37,7 @@ typedef void (^RCTViewManagerUIBlock)(RCTUIManager *uiManager, NSDictionary<NSNu
+  * return a fresh instance each time. The view module MUST NOT cache the returned
+  * view and return the same instance for subsequent calls.
+  */
+-- (UIView *)view;
++- (RCTPlatformView *)view;
+ 
+ /**
+  * This method instantiates a shadow view to be managed by the module. If omitted,
+diff --git a/React/Views/RCTViewUtils.h b/React/Views/RCTViewUtils.h
+index ef2a335..381f34b 100644
+--- a/React/Views/RCTViewUtils.h
++++ b/React/Views/RCTViewUtils.h
+@@ -6,13 +6,13 @@
+  */
+ 
+ #import <React/RCTDefines.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ NS_ASSUME_NONNULL_BEGIN
+ 
+ RCT_EXTERN_C_BEGIN
+ 
+-UIEdgeInsets RCTContentInsets(UIView *view);
++UIEdgeInsets RCTContentInsets(RCTPlatformView *view);
+ 
+ RCT_EXTERN_C_END
+ 
+diff --git a/React/Views/RCTWrapperViewController.h b/React/Views/RCTWrapperViewController.h
+index b827758..6deeb00 100644
+--- a/React/Views/RCTWrapperViewController.h
++++ b/React/Views/RCTWrapperViewController.h
+@@ -5,12 +5,12 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ @class RCTWrapperViewController;
+ 
+-@interface RCTWrapperViewController : UIViewController
++@interface RCTWrapperViewController : RCTPlatformViewController
+ 
+-- (instancetype)initWithContentView:(UIView *)contentView NS_DESIGNATED_INITIALIZER;
++- (instancetype)initWithContentView:(RCTPlatformView *)contentView NS_DESIGNATED_INITIALIZER;
+ 
+ @end
+diff --git a/React/Views/RefreshControl/RCTRefreshControl.h b/React/Views/RefreshControl/RCTRefreshControl.h
+index ed306d7..e614034 100644
+--- a/React/Views/RefreshControl/RCTRefreshControl.h
++++ b/React/Views/RefreshControl/RCTRefreshControl.h
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+@@ -17,7 +17,7 @@ __attribute__((deprecated("This API will be removed along with the legacy archit
+ 
+ @property (nonatomic, copy) NSString *title;
+ @property (nonatomic, copy) RCTDirectEventBlock onRefresh;
+-@property (nonatomic, weak) UIScrollView *scrollView;
++@property (nonatomic, weak) RCTUIScrollView *scrollView;
+ 
+ @end
+ 
+diff --git a/React/Views/RefreshControl/RCTRefreshableProtocol.h b/React/Views/RefreshControl/RCTRefreshableProtocol.h
+index b0b06f2..64b57ff 100644
+--- a/React/Views/RefreshControl/RCTRefreshableProtocol.h
++++ b/React/Views/RefreshControl/RCTRefreshableProtocol.h
+@@ -6,7 +6,7 @@
+  */
+ 
+ #import <React/RCTComponent.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ /**
+  * Protocol used to dispatch commands in `RCTRefreshControlManager.h`.
+diff --git a/React/Views/SafeAreaView/RCTSafeAreaView.h b/React/Views/SafeAreaView/RCTSafeAreaView.h
+index 08a9794..88dfd23 100644
+--- a/React/Views/SafeAreaView/RCTSafeAreaView.h
++++ b/React/Views/SafeAreaView/RCTSafeAreaView.h
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+diff --git a/React/Views/SafeAreaView/RCTSafeAreaViewLocalData.h b/React/Views/SafeAreaView/RCTSafeAreaViewLocalData.h
+index 6df07b7..9cae6a5 100644
+--- a/React/Views/SafeAreaView/RCTSafeAreaViewLocalData.h
++++ b/React/Views/SafeAreaView/RCTSafeAreaViewLocalData.h
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+diff --git a/React/Views/ScrollView/RCTScrollContentShadowView.h b/React/Views/ScrollView/RCTScrollContentShadowView.h
+index ced82fd..0abd943 100644
+--- a/React/Views/ScrollView/RCTScrollContentShadowView.h
++++ b/React/Views/ScrollView/RCTScrollContentShadowView.h
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+diff --git a/React/Views/ScrollView/RCTScrollContentView.h b/React/Views/ScrollView/RCTScrollContentView.h
+index b9033f1..332e6db 100644
+--- a/React/Views/ScrollView/RCTScrollContentView.h
++++ b/React/Views/ScrollView/RCTScrollContentView.h
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+diff --git a/React/Views/ScrollView/RCTScrollView.h b/React/Views/ScrollView/RCTScrollView.h
+index 9aa5d67..12ab8aa 100644
+--- a/React/Views/ScrollView/RCTScrollView.h
++++ b/React/Views/ScrollView/RCTScrollView.h
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIScrollView.h>
++#import <React/RCTUIKit.h>
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+@@ -15,10 +15,10 @@
+ #import <React/RCTScrollableProtocol.h>
+ #import <React/RCTView.h>
+ 
+-@protocol RCTUIScrollViewDelegate;
++@protocol RCTRCTUIScrollViewDelegate;
+ 
+ __attribute__((deprecated("This API will be removed along with the legacy architecture.")))
+-@interface RCTScrollView : RCTView<UIScrollViewDelegate, RCTScrollableProtocol, RCTAutoInsetsProtocol>
++@interface RCTScrollView : RCTView<RCTUIScrollViewDelegate, RCTScrollableProtocol, RCTAutoInsetsProtocol>
+ 
+ - (instancetype)initWithEventDispatcher:(id<RCTEventDispatcherProtocol>)eventDispatcher NS_DESIGNATED_INITIALIZER;
+ 
+@@ -29,12 +29,12 @@ __attribute__((deprecated("This API will be removed along with the legacy archit
+  * efficiently since it will have already been computed by the off-main-thread
+  * layout system.
+  */
+-@property (nonatomic, readonly) UIView *contentView;
++@property (nonatomic, readonly) RCTPlatformView *contentView;
+ 
+ /**
+  * The underlying scrollView (TODO: can we remove this?)
+  */
+-@property (nonatomic, readonly) UIScrollView *scrollView;
++@property (nonatomic, readonly) RCTUIScrollView *scrollView;
+ 
+ @property (nonatomic, assign) UIEdgeInsets contentInset;
+ @property (nonatomic, assign) BOOL automaticallyAdjustContentInsets;
+@@ -54,7 +54,7 @@ __attribute__((deprecated("This API will be removed along with the legacy archit
+ /** Focus area of newly-activated text input relative to the window to compare against UIKeyboardFrameBegin/End */
+ @property (nonatomic, assign) CGRect firstResponderFocus;
+ /** newly-activated text input outside of the scroll view */
+-@property (nonatomic, weak) UIView *firstResponderViewOutsideScrollView;
++@property (nonatomic, weak) RCTPlatformView *firstResponderViewOutsideScrollView;
+ 
+ // NOTE: currently these event props are only declared so we can export the
+ // event names to JS - we don't call the blocks directly because scroll events
+@@ -68,7 +68,7 @@ __attribute__((deprecated("This API will be removed along with the legacy archit
+ 
+ @end
+ 
+-@interface UIView (RCTScrollView)
++@interface RCTPlatformView (RCTScrollView)
+ 
+ - (void)reactUpdateResponderOffsetForScrollView:(RCTScrollView *)scrollView;
+ 
+diff --git a/React/Views/ScrollView/RCTScrollableProtocol.h b/React/Views/ScrollView/RCTScrollableProtocol.h
+index d85f135..a18317e 100644
+--- a/React/Views/ScrollView/RCTScrollableProtocol.h
++++ b/React/Views/ScrollView/RCTScrollableProtocol.h
+@@ -6,7 +6,7 @@
+  */
+ 
+ #import <React/RCTComponent.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ /**
+  * Contains any methods related to scrolling. Any `RCTView` that has scrolling
+@@ -25,8 +25,8 @@
+ - (void)scrollToEnd:(BOOL)animated;
+ - (void)zoomToRect:(CGRect)rect animated:(BOOL)animated;
+ 
+-- (void)addScrollListener:(NSObject<UIScrollViewDelegate> *)scrollListener;
+-- (void)removeScrollListener:(NSObject<UIScrollViewDelegate> *)scrollListener;
++- (void)addScrollListener:(NSObject<RCTUIScrollViewDelegate> *)scrollListener;
++- (void)removeScrollListener:(NSObject<RCTUIScrollViewDelegate> *)scrollListener;
+ 
+ @end
+ 
+@@ -39,7 +39,7 @@
+ @property (nonatomic, readonly, getter=isRefreshing) BOOL refreshing;
+ 
+ @optional
+-@property (nonatomic, weak) UIScrollView *scrollView;
++@property (nonatomic, weak) RCTUIScrollView *scrollView;
+ 
+ @end
+ 
+diff --git a/React/Views/UIView+Private.h b/React/Views/UIView+Private.h
+index dde1598..874adaf 100644
+--- a/React/Views/UIView+Private.h
++++ b/React/Views/UIView+Private.h
+@@ -5,13 +5,13 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+-@interface UIView (Private)
++@interface RCTPlatformView (Private)
+ 
+ // remove clipped subviews implementation
+ - (void)react_remountAllSubviews;
+-- (void)react_updateClippedSubviewsWithClipRect:(CGRect)clipRect relativeToView:(UIView *)clipView;
+-- (UIView *)react_findClipView;
++- (void)react_updateClippedSubviewsWithClipRect:(CGRect)clipRect relativeToView:(RCTPlatformView *)clipView;
++- (RCTPlatformView *)react_findClipView;
+ 
+ @end
+diff --git a/React/Views/UIView+React.h b/React/Views/UIView+React.h
+index fbc8ca0..a56a9b1 100644
+--- a/React/Views/UIView+React.h
++++ b/React/Views/UIView+React.h
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTComponent.h>
+ #import <React/RCTConvert.h>
+@@ -19,15 +19,15 @@ typedef struct {
+   CGFloat z;
+ } RCTTransformOrigin;
+ 
+-@interface UIView (React) <RCTComponent>
++@interface RCTPlatformView (React) <RCTComponent>
+ 
+ /**
+  * RCTComponent interface.
+  */
+-- (NSArray<UIView *> *)reactSubviews NS_REQUIRES_SUPER;
+-- (UIView *)reactSuperview NS_REQUIRES_SUPER;
+-- (void)insertReactSubview:(UIView *)subview atIndex:(NSInteger)atIndex NS_REQUIRES_SUPER;
+-- (void)removeReactSubview:(UIView *)subview NS_REQUIRES_SUPER;
++- (NSArray<RCTPlatformView *> *)reactSubviews NS_REQUIRES_SUPER;
++- (RCTPlatformView *)reactSuperview NS_REQUIRES_SUPER;
++- (void)insertReactSubview:(RCTPlatformView *)subview atIndex:(NSInteger)atIndex NS_REQUIRES_SUPER;
++- (void)removeReactSubview:(RCTPlatformView *)subview NS_REQUIRES_SUPER;
+ 
+ /**
+  * The native id of the view, used to locate view from native codes
+@@ -63,7 +63,7 @@ typedef struct {
+  * Subviews sorted by z-index. Note that this method doesn't do any caching (yet)
+  * and sorts all the views each call.
+  */
+-- (NSArray<UIView *> *)reactZIndexSortedSubviews;
++- (NSArray<RCTPlatformView *> *)reactZIndexSortedSubviews;
+ 
+ /**
+  * Updates the subviews array based on the reactSubviews. Default behavior is
+@@ -86,7 +86,7 @@ typedef struct {
+ /**
+  * This method finds and returns the containing view controller for the view.
+  */
+-- (UIViewController *)reactViewController;
++- (RCTPlatformViewController *)reactViewController;
+ 
+ /**
+  * This method attaches the specified controller as a child of the
+@@ -94,7 +94,7 @@ typedef struct {
+  * controller is found (which may happen if the view is not currently
+  * attached to the view hierarchy).
+  */
+-- (void)reactAddControllerToClosestParent:(UIViewController *)controller;
++- (void)reactAddControllerToClosestParent:(RCTPlatformViewController *)controller;
+ 
+ /**
+  * Focus manipulation.
+@@ -125,7 +125,7 @@ typedef struct {
+  * transparent in favour of some subview.
+  * Defaults to `self`.
+  */
+-@property (nonatomic, readonly) UIView *reactAccessibilityElement;
++@property (nonatomic, readonly) RCTPlatformView *reactAccessibilityElement;
+ 
+ /**
+  * Accessibility properties
+@@ -136,8 +136,8 @@ typedef struct {
+ @property (nonatomic, copy) NSArray<NSDictionary *> *accessibilityActions;
+ @property (nonatomic, copy) NSDictionary *accessibilityValueInternal;
+ @property (nonatomic, copy) NSString *accessibilityLanguage;
+-@property (nonatomic) UIAccessibilityTraits accessibilityRoleTraits;
+-@property (nonatomic) UIAccessibilityTraits roleTraits;
++@property (nonatomic) RCTUIAccessibilityTraits accessibilityRoleTraits;
++@property (nonatomic) RCTUIAccessibilityTraits roleTraits;
+ 
+ /**
+  * Used in debugging to get a description of the view hierarchy rooted at

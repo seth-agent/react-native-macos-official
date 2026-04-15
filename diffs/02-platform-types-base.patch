@@ -1,0 +1,399 @@
+diff -ruN --ex /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTBridge.h /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/RCTBridge.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTBridge.h	1985-10-26 01:15:00
++++ /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/RCTBridge.h	2026-04-14 21:33:11
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTBridgeDelegate.h>
+ #import <React/RCTBridgeModule.h>
+diff -ruN --ex /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTBridgeModule.h /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/RCTBridgeModule.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTBridgeModule.h	1985-10-26 01:15:00
++++ /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/RCTBridgeModule.h	2026-04-14 21:33:11
+@@ -6,7 +6,7 @@
+  */
+ 
+ #import <Foundation/Foundation.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTDefines.h>
+ #import <React/RCTJSThread.h>
+@@ -381,7 +381,7 @@
+ - (id)moduleForClass:(Class)moduleClass;
+ @end
+ 
+-typedef UIView * (^RCTBridgelessComponentViewProvider)(NSNumber *);
++typedef RCTPlatformView * (^RCTBridgelessComponentViewProvider)(NSNumber *);
+ 
+ typedef void (^RCTViewRegistryUIBlock)(RCTViewRegistry *viewRegistry);
+ 
+@@ -394,7 +394,7 @@
+ #endif // RCT_REMOVE_LEGACY_ARCH
+ - (void)setBridgelessComponentViewProvider:(RCTBridgelessComponentViewProvider)bridgelessComponentViewProvider;
+ 
+-- (UIView *)viewForReactTag:(NSNumber *)reactTag;
++- (RCTPlatformView *)viewForReactTag:(NSNumber *)reactTag;
+ - (void)addUIBlock:(RCTViewRegistryUIBlock)block;
+ @end
+ 
+diff -ruN --ex /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTEventDispatcherProtocol.h /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/RCTEventDispatcherProtocol.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTEventDispatcherProtocol.h	1985-10-26 01:15:00
++++ /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/RCTEventDispatcherProtocol.h	2026-04-14 21:33:11
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTBridge.h>
+ #import <React/RCTBridgeProxy.h>
+diff -ruN --ex /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTJSThread.h /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/RCTJSThread.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTJSThread.h	1985-10-26 01:15:00
++++ /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/RCTJSThread.h	2026-04-14 21:33:11
+@@ -6,7 +6,7 @@
+  */
+ 
+ #import <Foundation/Foundation.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTDefines.h>
+ 
+diff -ruN --ex /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTJavaScriptLoader.h /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/RCTJavaScriptLoader.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTJavaScriptLoader.h	1985-10-26 01:15:00
++++ /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/RCTJavaScriptLoader.h	2026-04-14 21:33:11
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTDefines.h>
+ 
+diff -ruN --ex /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTKeyCommands.h /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/RCTKeyCommands.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTKeyCommands.h	1985-10-26 01:15:00
++++ /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/RCTKeyCommands.h	2026-04-14 21:33:12
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ @interface RCTKeyCommands : NSObject
+ 
+diff -ruN --ex /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTRootContentView.h /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/RCTRootContentView.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTRootContentView.h	1985-10-26 01:15:00
++++ /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/RCTRootContentView.h	2026-04-14 21:33:11
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+diff -ruN --ex /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTRootView.h /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/RCTRootView.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTRootView.h	1985-10-26 01:15:00
++++ /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/RCTRootView.h	2026-04-14 21:33:11
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTBridge.h>
+ #import <React/RCTBridgeModule.h>
+@@ -47,7 +47,7 @@
+  * like any ordinary UIView. You can have multiple RCTRootViews on screen at
+  * once, all controlled by the same JavaScript application.
+  */
+-__deprecated_msg("This API will be removed along with the legacy architecture.") @interface RCTRootView : UIView
++__deprecated_msg("This API will be removed along with the legacy architecture.") @interface RCTRootView : RCTUIView
+ 
+ /**
+  * - Designated initializer -
+@@ -118,24 +118,24 @@
+ /**
+  * The backing view controller of the root view.
+  */
+-@property (nonatomic, weak, nullable) UIViewController *reactViewController;
++@property (nonatomic, weak, nullable) RCTPlatformViewController *reactViewController;
+ 
+ /**
+  * The root view casted as UIView. Used by splash screen libraries.
+  */
+-@property (nonatomic, strong, readonly) UIView *view;
++@property (nonatomic, strong, readonly) RCTPlatformView *view;
+ 
+ /**
+  * The React-managed contents view of the root view.
+  */
+-@property (nonatomic, strong, readonly) UIView *contentView;
++@property (nonatomic, strong, readonly) RCTPlatformView *contentView;
+ 
+ /**
+  * A view to display while the JavaScript is loading, so users aren't presented
+  * with a blank screen. By default this is nil, but you can override it with
+  * (for example) a UIActivityIndicatorView or a placeholder image.
+  */
+-@property (nonatomic, strong, nullable) UIView *loadingView;
++@property (nonatomic, strong, nullable) RCTPlatformView *loadingView;
+ 
+ /**
+  * When set, any touches on the RCTRootView that are not matched up to any of the child
+diff -ruN --ex /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTTouchHandler.h /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/RCTTouchHandler.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTTouchHandler.h	1985-10-26 01:15:00
++++ /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/RCTTouchHandler.h	2026-04-14 21:33:11
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTFrameUpdate.h>
+ 
+@@ -15,8 +15,8 @@
+ 
+ - (instancetype)initWithBridge:(RCTBridge *)bridge NS_DESIGNATED_INITIALIZER;
+ 
+-- (void)attachToView:(UIView *)view;
+-- (void)detachFromView:(UIView *)view;
++- (void)attachToView:(RCTPlatformView *)view;
++- (void)detachFromView:(RCTPlatformView *)view;
+ 
+ - (void)cancel;
+ 
+diff -ruN --ex /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTUtils.h /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/RCTUtils.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTUtils.h	1985-10-26 01:15:00
++++ /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/RCTUtils.h	2026-04-14 21:33:11
+@@ -7,7 +7,7 @@
+ 
+ #import <CoreGraphics/CoreGraphics.h>
+ #import <Foundation/Foundation.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTAssert.h>
+ #import <React/RCTDefines.h>
+@@ -94,11 +94,11 @@
+ 
+ // Returns the current main window, useful if you need to access the root view
+ // or view controller
+-RCT_EXTERN UIWindow *__nullable RCTKeyWindow(void);
++RCT_EXTERN RCTPlatformWindow *__nullable RCTKeyWindow(void);
+ 
+ // Returns the presented view controller, useful if you need
+ // e.g. to present a modal view controller or alert over it
+-RCT_EXTERN UIViewController *__nullable RCTPresentedViewController(void);
++RCT_EXTERN RCTPlatformViewController *__nullable RCTPresentedViewController(void);
+ 
+ // Retrieve current window UIStatusBarManager
+ #if !TARGET_OS_TV
+@@ -160,12 +160,12 @@
+ 
+ // Returns an UIImage for a local image asset. Returns nil if the URL
+ // does not correspond to a local asset.
+-RCT_EXTERN UIImage *__nullable RCTImageFromLocalAssetURL(NSURL *imageURL);
++RCT_EXTERN RCTPlatformImage *__nullable RCTImageFromLocalAssetURL(NSURL *imageURL);
+ 
+ // Only used in case when RCTImageFromLocalAssetURL fails to get an image
+ // This method basically checks for the image in the bundle location, instead
+ // of the CodePush location
+-RCT_EXTERN UIImage *__nullable RCTImageFromLocalBundleAssetURL(NSURL *imageURL);
++RCT_EXTERN RCTPlatformImage *__nullable RCTImageFromLocalBundleAssetURL(NSURL *imageURL);
+ 
+ // Creates a new, unique temporary file path with the specified extension
+ RCT_EXTERN NSString *__nullable RCTTempFilePath(NSString *__nullable extension, NSError **error);
+diff -ruN --ex /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTUtilsUIOverride.h /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/RCTUtilsUIOverride.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTUtilsUIOverride.h	1985-10-26 01:15:00
++++ /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/RCTUtilsUIOverride.h	2026-04-14 21:33:11
+@@ -6,14 +6,14 @@
+  */
+ 
+ #import <Foundation/Foundation.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ @interface RCTUtilsUIOverride : NSObject
+ /**
+  Set the global presented view controller instance override.
+  */
+-+ (void)setPresentedViewController:(UIViewController *)presentedViewController;
+-+ (UIViewController *)presentedViewController;
+++ (void)setPresentedViewController:(RCTPlatformViewController *)presentedViewController;
+++ (RCTPlatformViewController *)presentedViewController;
+ + (BOOL)hasPresentedViewController;
+ 
+ @end
+diff -ruN --ex /tmp/rn-diff-work/react-native-0.84.1/React/Base/Surface/RCTSurfaceDelegate.h /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/Surface/RCTSurfaceDelegate.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/Surface/RCTSurfaceDelegate.h	1985-10-26 01:15:00
++++ /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/Surface/RCTSurfaceDelegate.h	2026-04-14 21:33:11
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTSurfaceStage.h>
+ 
+diff -ruN --ex /tmp/rn-diff-work/react-native-0.84.1/React/Base/Surface/RCTSurfaceProtocol.h /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/Surface/RCTSurfaceProtocol.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/Surface/RCTSurfaceProtocol.h	1985-10-26 01:15:00
++++ /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/Surface/RCTSurfaceProtocol.h	2026-04-14 21:33:11
+@@ -6,7 +6,7 @@
+  */
+ 
+ #import <React/RCTSurfaceStage.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ NS_ASSUME_NONNULL_BEGIN
+ 
+diff -ruN --ex /tmp/rn-diff-work/react-native-0.84.1/React/Base/Surface/RCTSurfaceRootShadowViewDelegate.h /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/Surface/RCTSurfaceRootShadowViewDelegate.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/Surface/RCTSurfaceRootShadowViewDelegate.h	1985-10-26 01:15:00
++++ /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/Surface/RCTSurfaceRootShadowViewDelegate.h	2026-04-14 21:33:11
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ NS_ASSUME_NONNULL_BEGIN
+ 
+diff -ruN --ex /tmp/rn-diff-work/react-native-0.84.1/React/Base/Surface/RCTSurfaceRootView.h /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/Surface/RCTSurfaceRootView.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/Surface/RCTSurfaceRootView.h	1985-10-26 01:15:00
++++ /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/Surface/RCTSurfaceRootView.h	2026-04-14 21:33:11
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTView.h>
+ 
+diff -ruN --ex /tmp/rn-diff-work/react-native-0.84.1/React/Base/Surface/RCTSurfaceStage.h /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/Surface/RCTSurfaceStage.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/Surface/RCTSurfaceStage.h	1985-10-26 01:15:00
++++ /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/Surface/RCTSurfaceStage.h	2026-04-14 21:33:11
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTDefines.h>
+ 
+diff -ruN --ex /tmp/rn-diff-work/react-native-0.84.1/React/Base/Surface/RCTSurfaceView+Internal.h /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/Surface/RCTSurfaceView+Internal.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/Surface/RCTSurfaceView+Internal.h	1985-10-26 01:15:00
++++ /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/Surface/RCTSurfaceView+Internal.h	2026-04-14 21:33:11
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTSurfaceStage.h>
+ #import <React/RCTSurfaceView.h>
+diff -ruN --ex /tmp/rn-diff-work/react-native-0.84.1/React/Base/Surface/RCTSurfaceView.h /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/Surface/RCTSurfaceView.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/Surface/RCTSurfaceView.h	1985-10-26 01:15:00
++++ /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/Surface/RCTSurfaceView.h	2026-04-14 21:33:11
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ NS_ASSUME_NONNULL_BEGIN
+ 
+@@ -14,7 +14,7 @@
+ /**
+  * UIView instance which represents the Surface
+  */
+-@interface RCTSurfaceView : UIView
++@interface RCTSurfaceView : RCTUIView
+ 
+ - (instancetype)initWithSurface:(id<RCTSurfaceProtocol>)surface NS_DESIGNATED_INITIALIZER;
+ 
+diff -ruN --ex /tmp/rn-diff-work/react-native-0.84.1/React/Base/Surface/SurfaceHostingView/RCTSurfaceHostingProxyRootView.h /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/Surface/SurfaceHostingView/RCTSurfaceHostingProxyRootView.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/Surface/SurfaceHostingView/RCTSurfaceHostingProxyRootView.h	1985-10-26 01:15:00
++++ /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/Surface/SurfaceHostingView/RCTSurfaceHostingProxyRootView.h	2026-04-14 21:33:11
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTBridgeModule.h>
+ #import <React/RCTRootView.h>
+@@ -30,10 +30,10 @@
+ @property (nonatomic, copy, readwrite) NSDictionary *appProperties;
+ @property (nonatomic, assign) RCTRootViewSizeFlexibility sizeFlexibility;
+ @property (nonatomic, weak) id<RCTRootViewDelegate> delegate;
+-@property (nonatomic, weak) UIViewController *reactViewController;
+-@property (nonatomic, strong, readonly) UIView *view;
+-@property (nonatomic, strong, readonly) UIView *contentView;
+-@property (nonatomic, strong) UIView *loadingView;
++@property (nonatomic, weak) RCTPlatformViewController *reactViewController;
++@property (nonatomic, strong, readonly) RCTPlatformView *view;
++@property (nonatomic, strong, readonly) RCTPlatformView *contentView;
++@property (nonatomic, strong) RCTPlatformView *loadingView;
+ @property (nonatomic, assign) BOOL passThroughTouches;
+ @property (nonatomic, assign) NSTimeInterval loadingViewFadeDelay;
+ @property (nonatomic, assign) NSTimeInterval loadingViewFadeDuration;
+diff -ruN --ex /tmp/rn-diff-work/react-native-0.84.1/React/Base/Surface/SurfaceHostingView/RCTSurfaceHostingView.h /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/Surface/SurfaceHostingView/RCTSurfaceHostingView.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/Surface/SurfaceHostingView/RCTSurfaceHostingView.h	1985-10-26 01:15:00
++++ /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/Surface/SurfaceHostingView/RCTSurfaceHostingView.h	2026-04-14 21:33:11
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTSurfaceDelegate.h>
+ #import <React/RCTSurfaceProtocol.h>
+@@ -15,7 +15,7 @@
+ @class RCTBridge;
+ @class RCTSurface;
+ 
+-typedef UIView *_Nullable (^RCTSurfaceHostingViewActivityIndicatorViewFactory)(void);
++typedef RCTPlatformView *_Nullable (^RCTSurfaceHostingViewActivityIndicatorViewFactory)(void);
+ 
+ NS_ASSUME_NONNULL_BEGIN
+ 
+@@ -25,7 +25,7 @@
+  * This class can be used as easy-to-use general purpose integration point
+  * of ReactNative-powered experiences in UIKit based apps.
+  */
+-@interface RCTSurfaceHostingView : UIView <RCTSurfaceDelegate>
++@interface RCTSurfaceHostingView : RCTUIView <RCTSurfaceDelegate>
+ 
+ /**
+  * Designated initializer.
+diff -ruN --ex /tmp/rn-diff-work/react-native-0.84.1/React/Base/Surface/SurfaceHostingView/RCTSurfaceSizeMeasureMode.h /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/Surface/SurfaceHostingView/RCTSurfaceSizeMeasureMode.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/Surface/SurfaceHostingView/RCTSurfaceSizeMeasureMode.h	1985-10-26 01:15:00
++++ /Users/sethagent/Developer/react-native-macos-official/upstream-rn-0.84.1/React/Base/Surface/SurfaceHostingView/RCTSurfaceSizeMeasureMode.h	2026-04-14 21:33:11
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTDefines.h>
+ 
