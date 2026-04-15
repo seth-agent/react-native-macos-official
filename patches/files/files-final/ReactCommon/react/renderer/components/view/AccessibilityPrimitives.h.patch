@@ -1,10 +1,9 @@
 --- /Users/sethagent/Developer/react-native-upstream/packages/react-native/ReactCommon/react/renderer/components/view/AccessibilityPrimitives.h	2026-03-06 18:50:06
 +++ /var/folders/jp/b_h7tjf10rg_htfhxp6tds100000gn/T/tmp.yIpnQhq2Ao	2026-03-06 18:50:54
-@@ -34,23 +34,23 @@
+@@ -34,6 +34,20 @@
    Header = (1 << 15),
    Switch = (1 << 16),
    TabBar = (1 << 17),
--};
 +#if TARGET_OS_OSX  // [macOS
 +  ComboBox = (1 << 18),
 +  Menu = (1 << 19),
@@ -20,23 +19,6 @@
 +  ScrollBar = (1 << 29),
 +  SpinButton = (1 << 30),
 +#endif // macOS]
-+};
+ };
 
--constexpr enum AccessibilityTraits operator|(const enum AccessibilityTraits lhs, const enum AccessibilityTraits rhs)
--{
--  return (enum AccessibilityTraits)((uint32_t)lhs | (uint32_t)rhs);
--}
--
--constexpr enum AccessibilityTraits operator&(const enum AccessibilityTraits lhs, const enum AccessibilityTraits rhs)
--{
--  return (enum AccessibilityTraits)((uint32_t)lhs & (uint32_t)rhs);
--}
--
--struct AccessibilityAction {
--  std::string name;
--  std::optional<std::string> label{};
--};
--
- inline static bool operator==(const AccessibilityAction &lhs, const AccessibilityAction &rhs)
- {
-   return lhs.name == rhs.name && lhs.label == rhs.label;
+ constexpr enum AccessibilityTraits operator|(const enum AccessibilityTraits lhs, const enum AccessibilityTraits rhs)
