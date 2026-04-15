@@ -1,7 +1,6 @@
-diff --git a/React/Views/RCTActivityIndicatorView.h b/React/Views/RCTActivityIndicatorView.h
-index 19550f4..8ef6e98 100644
---- a/React/Views/RCTActivityIndicatorView.h
-+++ b/React/Views/RCTActivityIndicatorView.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTActivityIndicatorView.h upstream-rn-0.84.1/React/Views/RCTActivityIndicatorView.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTActivityIndicatorView.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/RCTActivityIndicatorView.h	2026-04-14 21:48:12
 @@ -5,7 +5,7 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -11,10 +10,9 @@ index 19550f4..8ef6e98 100644
  
  #ifndef RCT_REMOVE_LEGACY_ARCH
  
-diff --git a/React/Views/RCTAutoInsetsProtocol.h b/React/Views/RCTAutoInsetsProtocol.h
-index 0d12aba..f736807 100644
---- a/React/Views/RCTAutoInsetsProtocol.h
-+++ b/React/Views/RCTAutoInsetsProtocol.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTAutoInsetsProtocol.h upstream-rn-0.84.1/React/Views/RCTAutoInsetsProtocol.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTAutoInsetsProtocol.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/RCTAutoInsetsProtocol.h	2026-04-14 21:48:12
 @@ -5,7 +5,7 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -24,10 +22,9 @@ index 0d12aba..f736807 100644
  
  /**
   * Defines a View that wants to support auto insets adjustment
-diff --git a/React/Views/RCTBorderDrawing.h b/React/Views/RCTBorderDrawing.h
-index 26c92fa..88e12f6 100644
---- a/React/Views/RCTBorderDrawing.h
-+++ b/React/Views/RCTBorderDrawing.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTBorderDrawing.h upstream-rn-0.84.1/React/Views/RCTBorderDrawing.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTBorderDrawing.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/RCTBorderDrawing.h	2026-04-14 21:48:12
 @@ -5,7 +5,7 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -37,7 +34,7 @@ index 26c92fa..88e12f6 100644
  
  #import <React/RCTBorderStyle.h>
  #import <React/RCTDefines.h>
-@@ -29,10 +29,10 @@ typedef struct {
+@@ -29,10 +29,10 @@
  } RCTCornerInsets;
  
  typedef struct {
@@ -52,18 +49,17 @@ index 26c92fa..88e12f6 100644
  } RCTBorderColors;
  
  /**
-@@ -75,5 +75,5 @@ RCT_EXTERN UIImage *RCTGetBorderImage(
+@@ -75,5 +75,5 @@
      RCTCornerRadii cornerRadii,
      UIEdgeInsets borderInsets,
      RCTBorderColors borderColors,
 -    UIColor *backgroundColor,
 +    RCTUIColor *backgroundColor,
      BOOL drawToEdge);
-diff --git a/React/Views/RCTComponentData.h b/React/Views/RCTComponentData.h
-index 1dd1197..26da8fe 100644
---- a/React/Views/RCTComponentData.h
-+++ b/React/Views/RCTComponentData.h
-@@ -34,7 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTComponentData.h upstream-rn-0.84.1/React/Views/RCTComponentData.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTComponentData.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/RCTComponentData.h	2026-04-14 21:48:12
+@@ -34,7 +34,7 @@
                                bridge:(RCTBridge *)bridge
                       eventDispatcher:(id<RCTEventDispatcherProtocol>)eventDispatcher NS_DESIGNATED_INITIALIZER;
  
@@ -72,10 +68,9 @@ index 1dd1197..26da8fe 100644
  - (RCTShadowView *)createShadowViewWithTag:(NSNumber *)tag;
  - (void)setProps:(NSDictionary<NSString *, id> *)props forView:(id<RCTComponent>)view;
  - (void)setProps:(NSDictionary<NSString *, id> *)props forShadowView:(RCTShadowView *)shadowView;
-diff --git a/React/Views/RCTDebuggingOverlay.h b/React/Views/RCTDebuggingOverlay.h
-index 8e1a174..e552918 100644
---- a/React/Views/RCTDebuggingOverlay.h
-+++ b/React/Views/RCTDebuggingOverlay.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTDebuggingOverlay.h upstream-rn-0.84.1/React/Views/RCTDebuggingOverlay.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTDebuggingOverlay.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/RCTDebuggingOverlay.h	2026-04-14 21:48:12
 @@ -5,16 +5,16 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -96,10 +91,9 @@ index 8e1a174..e552918 100644
  
  @end
  
-diff --git a/React/Views/RCTFont+Private.h b/React/Views/RCTFont+Private.h
-index 4bfd7f6..6f62402 100644
---- a/React/Views/RCTFont+Private.h
-+++ b/React/Views/RCTFont+Private.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTFont+Private.h upstream-rn-0.84.1/React/Views/RCTFont+Private.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTFont+Private.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/RCTFont+Private.h	2026-04-14 21:48:12
 @@ -5,7 +5,7 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -109,10 +103,9 @@ index 4bfd7f6..6f62402 100644
  
  #import <React/RCTDefines.h>
  
-diff --git a/React/Views/RCTLayout.h b/React/Views/RCTLayout.h
-index 8016463..660f8ba 100644
---- a/React/Views/RCTLayout.h
-+++ b/React/Views/RCTLayout.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTLayout.h upstream-rn-0.84.1/React/Views/RCTLayout.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTLayout.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/RCTLayout.h	2026-04-14 21:48:12
 @@ -5,7 +5,7 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -122,10 +115,9 @@ index 8016463..660f8ba 100644
  
  #import <React/RCTDefines.h>
  #import <yoga/Yoga.h>
-diff --git a/React/Views/RCTModalHostView.h b/React/Views/RCTModalHostView.h
-index ca2a97a..96eede8 100644
---- a/React/Views/RCTModalHostView.h
-+++ b/React/Views/RCTModalHostView.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTModalHostView.h upstream-rn-0.84.1/React/Views/RCTModalHostView.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTModalHostView.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/RCTModalHostView.h	2026-04-14 21:48:12
 @@ -5,7 +5,7 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -144,10 +136,9 @@ index ca2a97a..96eede8 100644
  
  @property (nonatomic, copy) NSString *animationType;
  @property (nonatomic, assign) UIModalPresentationStyle presentationStyle;
-diff --git a/React/Views/RCTModalHostViewController.h b/React/Views/RCTModalHostViewController.h
-index 80b0750..47ceac5 100644
---- a/React/Views/RCTModalHostViewController.h
-+++ b/React/Views/RCTModalHostViewController.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTModalHostViewController.h upstream-rn-0.84.1/React/Views/RCTModalHostViewController.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTModalHostViewController.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/RCTModalHostViewController.h	2026-04-14 21:48:12
 @@ -5,12 +5,12 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -163,10 +154,9 @@ index 80b0750..47ceac5 100644
  
  @property (nonatomic, copy) void (^boundsDidChangeBlock)(CGRect newBounds);
  
-diff --git a/React/Views/RCTModalHostViewManager.h b/React/Views/RCTModalHostViewManager.h
-index d0b3d97..6dce773 100644
---- a/React/Views/RCTModalHostViewManager.h
-+++ b/React/Views/RCTModalHostViewManager.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTModalHostViewManager.h upstream-rn-0.84.1/React/Views/RCTModalHostViewManager.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTModalHostViewManager.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/RCTModalHostViewManager.h	2026-04-14 21:48:12
 @@ -12,8 +12,8 @@
  #ifndef RCT_REMOVE_LEGACY_ARCH
  
@@ -178,10 +168,9 @@ index d0b3d97..6dce773 100644
      BOOL animated,
      dispatch_block_t completionBlock)
      __attribute__((deprecated("This API will be removed along with the legacy architecture.")));
-diff --git a/React/Views/RCTModalManager.h b/React/Views/RCTModalManager.h
-index f00b4b2..9943720 100644
---- a/React/Views/RCTModalManager.h
-+++ b/React/Views/RCTModalManager.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTModalManager.h upstream-rn-0.84.1/React/Views/RCTModalManager.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTModalManager.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/RCTModalManager.h	2026-04-14 21:48:12
 @@ -5,7 +5,7 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -191,10 +180,9 @@ index f00b4b2..9943720 100644
  
  #ifndef RCT_REMOVE_LEGACY_ARCH
  
-diff --git a/React/Views/RCTShadowView+Internal.h b/React/Views/RCTShadowView+Internal.h
-index 0455863..0efa929 100644
---- a/React/Views/RCTShadowView+Internal.h
-+++ b/React/Views/RCTShadowView+Internal.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTShadowView+Internal.h upstream-rn-0.84.1/React/Views/RCTShadowView+Internal.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTShadowView+Internal.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/RCTShadowView+Internal.h	2026-04-14 21:48:12
 @@ -5,7 +5,7 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -204,10 +192,9 @@ index 0455863..0efa929 100644
  
  #import <React/RCTShadowView.h>
  
-diff --git a/React/Views/RCTShadowView+Layout.h b/React/Views/RCTShadowView+Layout.h
-index e320952..4cd3afc 100644
---- a/React/Views/RCTShadowView+Layout.h
-+++ b/React/Views/RCTShadowView+Layout.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTShadowView+Layout.h upstream-rn-0.84.1/React/Views/RCTShadowView+Layout.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTShadowView+Layout.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/RCTShadowView+Layout.h	2026-04-14 21:48:12
 @@ -5,7 +5,7 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -217,10 +204,9 @@ index e320952..4cd3afc 100644
  
  #import <React/RCTShadowView.h>
  
-diff --git a/React/Views/RCTShadowView.h b/React/Views/RCTShadowView.h
-index d647796..b784d19 100644
---- a/React/Views/RCTShadowView.h
-+++ b/React/Views/RCTShadowView.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTShadowView.h upstream-rn-0.84.1/React/Views/RCTShadowView.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTShadowView.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/RCTShadowView.h	2026-04-14 21:48:12
 @@ -5,7 +5,7 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -239,10 +225,9 @@ index d647796..b784d19 100644
  
  /**
   * ShadowView tree mirrors RCT view tree. Every node is highly stateful.
-diff --git a/React/Views/RCTSwitch.h b/React/Views/RCTSwitch.h
-index d1df01b..8cded30 100644
---- a/React/Views/RCTSwitch.h
-+++ b/React/Views/RCTSwitch.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTSwitch.h upstream-rn-0.84.1/React/Views/RCTSwitch.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTSwitch.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/RCTSwitch.h	2026-04-14 21:48:12
 @@ -5,7 +5,7 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -252,10 +237,9 @@ index d1df01b..8cded30 100644
  
  #ifndef RCT_REMOVE_LEGACY_ARCH
  
-diff --git a/React/Views/RCTView.h b/React/Views/RCTView.h
-index 8abda6e..2e81e44 100644
---- a/React/Views/RCTView.h
-+++ b/React/Views/RCTView.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTView.h upstream-rn-0.84.1/React/Views/RCTView.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTView.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/RCTView.h	2026-04-14 21:48:12
 @@ -5,7 +5,7 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -279,7 +263,7 @@ index 8abda6e..2e81e44 100644
  
  /**
   * Accessibility event handlers
-@@ -32,8 +32,8 @@ extern const UIAccessibilityTraits SwitchAccessibilityTrait;
+@@ -32,8 +32,8 @@
   */
  @property (nonatomic, assign) RCTPointerEvents pointerEvents;
  
@@ -290,7 +274,7 @@ index 8abda6e..2e81e44 100644
                     updateOffset:(BOOL)updateOffset;
  
  /**
-@@ -80,16 +80,16 @@ extern const UIAccessibilityTraits SwitchAccessibilityTrait;
+@@ -80,16 +80,16 @@
  /**
   * Border colors (actually retained).
   */
@@ -317,10 +301,9 @@ index 8abda6e..2e81e44 100644
  
  /**
   * Border widths.
-diff --git a/React/Views/RCTViewManager.h b/React/Views/RCTViewManager.h
-index ed17a43..5bc414f 100644
---- a/React/Views/RCTViewManager.h
-+++ b/React/Views/RCTViewManager.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTViewManager.h upstream-rn-0.84.1/React/Views/RCTViewManager.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTViewManager.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/RCTViewManager.h	2026-04-14 21:48:12
 @@ -5,7 +5,7 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -339,7 +322,7 @@ index ed17a43..5bc414f 100644
  
  @interface RCTViewManager : NSObject <RCTBridgeModule>
  
-@@ -37,7 +37,7 @@ typedef void (^RCTViewManagerUIBlock)(RCTUIManager *uiManager, NSDictionary<NSNu
+@@ -37,7 +37,7 @@
   * return a fresh instance each time. The view module MUST NOT cache the returned
   * view and return the same instance for subsequent calls.
   */
@@ -348,10 +331,9 @@ index ed17a43..5bc414f 100644
  
  /**
   * This method instantiates a shadow view to be managed by the module. If omitted,
-diff --git a/React/Views/RCTViewUtils.h b/React/Views/RCTViewUtils.h
-index ef2a335..381f34b 100644
---- a/React/Views/RCTViewUtils.h
-+++ b/React/Views/RCTViewUtils.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTViewUtils.h upstream-rn-0.84.1/React/Views/RCTViewUtils.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTViewUtils.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/RCTViewUtils.h	2026-04-14 21:48:12
 @@ -6,13 +6,13 @@
   */
  
@@ -368,10 +350,9 @@ index ef2a335..381f34b 100644
  
  RCT_EXTERN_C_END
  
-diff --git a/React/Views/RCTWrapperViewController.h b/React/Views/RCTWrapperViewController.h
-index b827758..6deeb00 100644
---- a/React/Views/RCTWrapperViewController.h
-+++ b/React/Views/RCTWrapperViewController.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTWrapperViewController.h upstream-rn-0.84.1/React/Views/RCTWrapperViewController.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTWrapperViewController.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/RCTWrapperViewController.h	2026-04-14 21:48:12
 @@ -5,12 +5,12 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -388,10 +369,9 @@ index b827758..6deeb00 100644
 +- (instancetype)initWithContentView:(RCTPlatformView *)contentView NS_DESIGNATED_INITIALIZER;
  
  @end
-diff --git a/React/Views/RefreshControl/RCTRefreshControl.h b/React/Views/RefreshControl/RCTRefreshControl.h
-index ed306d7..e614034 100644
---- a/React/Views/RefreshControl/RCTRefreshControl.h
-+++ b/React/Views/RefreshControl/RCTRefreshControl.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RefreshControl/RCTRefreshControl.h upstream-rn-0.84.1/React/Views/RefreshControl/RCTRefreshControl.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RefreshControl/RCTRefreshControl.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/RefreshControl/RCTRefreshControl.h	2026-04-14 21:48:12
 @@ -5,7 +5,7 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -401,7 +381,7 @@ index ed306d7..e614034 100644
  
  #ifndef RCT_REMOVE_LEGACY_ARCH
  
-@@ -17,7 +17,7 @@ __attribute__((deprecated("This API will be removed along with the legacy archit
+@@ -17,7 +17,7 @@
  
  @property (nonatomic, copy) NSString *title;
  @property (nonatomic, copy) RCTDirectEventBlock onRefresh;
@@ -410,10 +390,9 @@ index ed306d7..e614034 100644
  
  @end
  
-diff --git a/React/Views/RefreshControl/RCTRefreshableProtocol.h b/React/Views/RefreshControl/RCTRefreshableProtocol.h
-index b0b06f2..64b57ff 100644
---- a/React/Views/RefreshControl/RCTRefreshableProtocol.h
-+++ b/React/Views/RefreshControl/RCTRefreshableProtocol.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RefreshControl/RCTRefreshableProtocol.h upstream-rn-0.84.1/React/Views/RefreshControl/RCTRefreshableProtocol.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RefreshControl/RCTRefreshableProtocol.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/RefreshControl/RCTRefreshableProtocol.h	2026-04-14 21:48:12
 @@ -6,7 +6,7 @@
   */
  
@@ -423,10 +402,9 @@ index b0b06f2..64b57ff 100644
  
  /**
   * Protocol used to dispatch commands in `RCTRefreshControlManager.h`.
-diff --git a/React/Views/SafeAreaView/RCTSafeAreaView.h b/React/Views/SafeAreaView/RCTSafeAreaView.h
-index 08a9794..88dfd23 100644
---- a/React/Views/SafeAreaView/RCTSafeAreaView.h
-+++ b/React/Views/SafeAreaView/RCTSafeAreaView.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/SafeAreaView/RCTSafeAreaView.h upstream-rn-0.84.1/React/Views/SafeAreaView/RCTSafeAreaView.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/SafeAreaView/RCTSafeAreaView.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/SafeAreaView/RCTSafeAreaView.h	2026-04-14 21:48:12
 @@ -5,7 +5,7 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -436,10 +414,9 @@ index 08a9794..88dfd23 100644
  
  #ifndef RCT_REMOVE_LEGACY_ARCH
  
-diff --git a/React/Views/SafeAreaView/RCTSafeAreaViewLocalData.h b/React/Views/SafeAreaView/RCTSafeAreaViewLocalData.h
-index 6df07b7..9cae6a5 100644
---- a/React/Views/SafeAreaView/RCTSafeAreaViewLocalData.h
-+++ b/React/Views/SafeAreaView/RCTSafeAreaViewLocalData.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/SafeAreaView/RCTSafeAreaViewLocalData.h upstream-rn-0.84.1/React/Views/SafeAreaView/RCTSafeAreaViewLocalData.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/SafeAreaView/RCTSafeAreaViewLocalData.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/SafeAreaView/RCTSafeAreaViewLocalData.h	2026-04-14 21:48:12
 @@ -5,7 +5,7 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -449,10 +426,9 @@ index 6df07b7..9cae6a5 100644
  
  #ifndef RCT_REMOVE_LEGACY_ARCH
  
-diff --git a/React/Views/ScrollView/RCTScrollContentShadowView.h b/React/Views/ScrollView/RCTScrollContentShadowView.h
-index ced82fd..0abd943 100644
---- a/React/Views/ScrollView/RCTScrollContentShadowView.h
-+++ b/React/Views/ScrollView/RCTScrollContentShadowView.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/ScrollView/RCTScrollContentShadowView.h upstream-rn-0.84.1/React/Views/ScrollView/RCTScrollContentShadowView.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/ScrollView/RCTScrollContentShadowView.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/ScrollView/RCTScrollContentShadowView.h	2026-04-14 21:48:12
 @@ -5,7 +5,7 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -462,10 +438,9 @@ index ced82fd..0abd943 100644
  
  #ifndef RCT_REMOVE_LEGACY_ARCH
  
-diff --git a/React/Views/ScrollView/RCTScrollContentView.h b/React/Views/ScrollView/RCTScrollContentView.h
-index b9033f1..332e6db 100644
---- a/React/Views/ScrollView/RCTScrollContentView.h
-+++ b/React/Views/ScrollView/RCTScrollContentView.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/ScrollView/RCTScrollContentView.h upstream-rn-0.84.1/React/Views/ScrollView/RCTScrollContentView.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/ScrollView/RCTScrollContentView.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/ScrollView/RCTScrollContentView.h	2026-04-14 21:48:12
 @@ -5,7 +5,7 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -475,10 +450,9 @@ index b9033f1..332e6db 100644
  
  #ifndef RCT_REMOVE_LEGACY_ARCH
  
-diff --git a/React/Views/ScrollView/RCTScrollView.h b/React/Views/ScrollView/RCTScrollView.h
-index 9aa5d67..12ab8aa 100644
---- a/React/Views/ScrollView/RCTScrollView.h
-+++ b/React/Views/ScrollView/RCTScrollView.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/ScrollView/RCTScrollView.h upstream-rn-0.84.1/React/Views/ScrollView/RCTScrollView.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/ScrollView/RCTScrollView.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/ScrollView/RCTScrollView.h	2026-04-14 21:48:12
 @@ -5,7 +5,7 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -492,8 +466,8 @@ index 9aa5d67..12ab8aa 100644
  #import <React/RCTScrollableProtocol.h>
  #import <React/RCTView.h>
  
--@protocol RCTUIScrollViewDelegate;
-+@protocol RCTRCTUIScrollViewDelegate;
+-@protocol UIScrollViewDelegate;
++@protocol RCTUIScrollViewDelegate;
  
  __attribute__((deprecated("This API will be removed along with the legacy architecture.")))
 -@interface RCTScrollView : RCTView<UIScrollViewDelegate, RCTScrollableProtocol, RCTAutoInsetsProtocol>
@@ -501,7 +475,7 @@ index 9aa5d67..12ab8aa 100644
  
  - (instancetype)initWithEventDispatcher:(id<RCTEventDispatcherProtocol>)eventDispatcher NS_DESIGNATED_INITIALIZER;
  
-@@ -29,12 +29,12 @@ __attribute__((deprecated("This API will be removed along with the legacy archit
+@@ -29,12 +29,12 @@
   * efficiently since it will have already been computed by the off-main-thread
   * layout system.
   */
@@ -516,7 +490,7 @@ index 9aa5d67..12ab8aa 100644
  
  @property (nonatomic, assign) UIEdgeInsets contentInset;
  @property (nonatomic, assign) BOOL automaticallyAdjustContentInsets;
-@@ -54,7 +54,7 @@ __attribute__((deprecated("This API will be removed along with the legacy archit
+@@ -54,7 +54,7 @@
  /** Focus area of newly-activated text input relative to the window to compare against UIKeyboardFrameBegin/End */
  @property (nonatomic, assign) CGRect firstResponderFocus;
  /** newly-activated text input outside of the scroll view */
@@ -525,7 +499,7 @@ index 9aa5d67..12ab8aa 100644
  
  // NOTE: currently these event props are only declared so we can export the
  // event names to JS - we don't call the blocks directly because scroll events
-@@ -68,7 +68,7 @@ __attribute__((deprecated("This API will be removed along with the legacy archit
+@@ -68,7 +68,7 @@
  
  @end
  
@@ -534,10 +508,9 @@ index 9aa5d67..12ab8aa 100644
  
  - (void)reactUpdateResponderOffsetForScrollView:(RCTScrollView *)scrollView;
  
-diff --git a/React/Views/ScrollView/RCTScrollableProtocol.h b/React/Views/ScrollView/RCTScrollableProtocol.h
-index d85f135..a18317e 100644
---- a/React/Views/ScrollView/RCTScrollableProtocol.h
-+++ b/React/Views/ScrollView/RCTScrollableProtocol.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/ScrollView/RCTScrollableProtocol.h upstream-rn-0.84.1/React/Views/ScrollView/RCTScrollableProtocol.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/ScrollView/RCTScrollableProtocol.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/ScrollView/RCTScrollableProtocol.h	2026-04-14 21:48:12
 @@ -6,7 +6,7 @@
   */
  
@@ -567,10 +540,9 @@ index d85f135..a18317e 100644
  
  @end
  
-diff --git a/React/Views/UIView+Private.h b/React/Views/UIView+Private.h
-index dde1598..874adaf 100644
---- a/React/Views/UIView+Private.h
-+++ b/React/Views/UIView+Private.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/UIView+Private.h upstream-rn-0.84.1/React/Views/UIView+Private.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/UIView+Private.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/UIView+Private.h	2026-04-14 21:48:12
 @@ -5,13 +5,13 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -589,10 +561,9 @@ index dde1598..874adaf 100644
 +- (RCTPlatformView *)react_findClipView;
  
  @end
-diff --git a/React/Views/UIView+React.h b/React/Views/UIView+React.h
-index fbc8ca0..a56a9b1 100644
---- a/React/Views/UIView+React.h
-+++ b/React/Views/UIView+React.h
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/UIView+React.h upstream-rn-0.84.1/React/Views/UIView+React.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/UIView+React.h	1985-10-26 01:15:00
++++ upstream-rn-0.84.1/React/Views/UIView+React.h	2026-04-14 21:48:12
 @@ -5,7 +5,7 @@
   * LICENSE file in the root directory of this source tree.
   */
@@ -602,7 +573,7 @@ index fbc8ca0..a56a9b1 100644
  
  #import <React/RCTComponent.h>
  #import <React/RCTConvert.h>
-@@ -19,15 +19,15 @@ typedef struct {
+@@ -19,15 +19,15 @@
    CGFloat z;
  } RCTTransformOrigin;
  
@@ -623,7 +594,7 @@ index fbc8ca0..a56a9b1 100644
  
  /**
   * The native id of the view, used to locate view from native codes
-@@ -63,7 +63,7 @@ typedef struct {
+@@ -63,7 +63,7 @@
   * Subviews sorted by z-index. Note that this method doesn't do any caching (yet)
   * and sorts all the views each call.
   */
@@ -632,7 +603,7 @@ index fbc8ca0..a56a9b1 100644
  
  /**
   * Updates the subviews array based on the reactSubviews. Default behavior is
-@@ -86,7 +86,7 @@ typedef struct {
+@@ -86,7 +86,7 @@
  /**
   * This method finds and returns the containing view controller for the view.
   */
@@ -641,7 +612,7 @@ index fbc8ca0..a56a9b1 100644
  
  /**
   * This method attaches the specified controller as a child of the
-@@ -94,7 +94,7 @@ typedef struct {
+@@ -94,7 +94,7 @@
   * controller is found (which may happen if the view is not currently
   * attached to the view hierarchy).
   */
@@ -650,7 +621,7 @@ index fbc8ca0..a56a9b1 100644
  
  /**
   * Focus manipulation.
-@@ -125,7 +125,7 @@ typedef struct {
+@@ -125,7 +125,7 @@
   * transparent in favour of some subview.
   * Defaults to `self`.
   */
@@ -659,7 +630,7 @@ index fbc8ca0..a56a9b1 100644
  
  /**
   * Accessibility properties
-@@ -136,8 +136,8 @@ typedef struct {
+@@ -136,8 +136,8 @@
  @property (nonatomic, copy) NSArray<NSDictionary *> *accessibilityActions;
  @property (nonatomic, copy) NSDictionary *accessibilityValueInternal;
  @property (nonatomic, copy) NSString *accessibilityLanguage;

@@ -67,11 +67,8 @@ while IFS= read -r -d '' file; do
   sed -i '' -E 's/: UIViewController([^A-Za-z0-9_])/: RCTPlatformViewController\1/g' "$file"
   sed -i '' 's/: UIViewController$/: RCTPlatformViewController/g' "$file"
 
-  # --- @protocol UIScrollViewDelegate; forward declaration ---
-  sed -i '' 's/@protocol UIScrollViewDelegate;/@protocol RCTUIScrollViewDelegate;/g' "$file"
-
-  # --- UIScrollViewDelegate in protocol conformance and parameter types ---
-  # Must come before UIScrollView * replacement to avoid partial matches
+  # --- UIScrollViewDelegate (all contexts: forward decls, conformance, params) ---
+  # Single pass to avoid double-prefixing (RCTRCTUIScrollViewDelegate)
   sed -i '' -E 's/UIScrollViewDelegate/RCTUIScrollViewDelegate/g' "$file"
 
   # --- UIScrollView * (pointer type) ---

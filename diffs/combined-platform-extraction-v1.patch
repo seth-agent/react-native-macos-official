@@ -1,0 +1,2523 @@
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTConvert+UIKit.h /tmp/rn-combined-final/React/Base/RCTConvert+UIKit.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTConvert+UIKit.h	1969-12-31 16:00:00
++++ /tmp/rn-combined-final/React/Base/RCTConvert+UIKit.h	2026-04-14 21:48:23
+@@ -0,0 +1,76 @@
++/*
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ */
++
++#import <UIKit/UIKit.h>
++
++#import <React/RCTConvert.h>
++
++/**
++ * UIKit-specific RCTConvert methods, extracted from RCTConvert.h/.mm
++ * for platform extraction (RFC 0003).
++ */
++@interface RCTConvert (UIKit)
++
+++ (UITextAutocapitalizationType)UITextAutocapitalizationType:(id)json;
+++ (UITextFieldViewMode)UITextFieldViewMode:(id)json;
+++ (UIKeyboardType)UIKeyboardType:(id)json;
+++ (UIKeyboardAppearance)UIKeyboardAppearance:(id)json;
+++ (UIReturnKeyType)UIReturnKeyType:(id)json;
+++ (UIUserInterfaceStyle)UIUserInterfaceStyle:(id)json API_AVAILABLE(ios(12));
++#if !TARGET_OS_TV
+++ (UIInterfaceOrientationMask)UIInterfaceOrientationMask:(NSString *)orientation;
++#endif
+++ (UIModalPresentationStyle)UIModalPresentationStyle:(id)json;
++
++#if !TARGET_OS_TV
+++ (UIDataDetectorTypes)UIDataDetectorTypes:(id)json;
++#endif
++
+++ (UIViewContentMode)UIViewContentMode:(id)json;
++
+++ (UIEdgeInsets)UIEdgeInsets:(id)json;
++
+++ (UIColor *)UIColorWithRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue alpha:(CGFloat)alpha;
+++ (UIColor *)UIColorWithRed:(CGFloat)red
++                      green:(CGFloat)green
++                       blue:(CGFloat)blue
++                      alpha:(CGFloat)alpha
++              andColorSpace:(RCTColorSpace)colorSpace;
+++ (UIColor *)UIColor:(id)json;
+++ (CGColorRef)CGColor:(id)json CF_RETURNS_NOT_RETAINED;
++
+++ (NSArray<UIColor *> *)UIColorArray:(id)json;
++
++typedef NSArray CGColorArray;
+++ (CGColorArray *)CGColorArray:(id)json;
++
++@end
++
++@interface RCTConvert (Deprecated)
++
++/**
++ * Use lightweight generics syntax instead, e.g. NSArray<NSString *>
++ */
++typedef NSArray NSArrayArray __deprecated_msg("Use NSArray<NSArray *>");
++typedef NSArray NSStringArray __deprecated_msg("Use NSArray<NSString *>");
++typedef NSArray NSStringArrayArray __deprecated_msg("Use NSArray<NSArray<NSString *> *>");
++typedef NSArray NSDictionaryArray __deprecated_msg("Use NSArray<NSDictionary *>");
++typedef NSArray NSURLArray __deprecated_msg("Use NSArray<NSURL *>");
++typedef NSArray RCTFileURLArray __deprecated_msg("Use NSArray<RCTFileURL *>");
++typedef NSArray NSNumberArray __deprecated_msg("Use NSArray<NSNumber *>");
++typedef NSArray UIColorArray __deprecated_msg("Use NSArray<UIColor *>");
++
++/**
++ * Synchronous image loading is generally a bad idea for performance reasons.
++ * If you need to pass image references, try to use `RCTImageSource` and then
++ * `RCTImageLoader` instead of converting directly to a UIImage.
++ */
+++ (UIImage *)UIImage:(id)json;
+++ (CGImageRef)CGImage:(id)json CF_RETURNS_NOT_RETAINED;
++
++@end
++
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTConvert+UIKit.mm /tmp/rn-combined-final/React/Base/RCTConvert+UIKit.mm
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTConvert+UIKit.mm	1969-12-31 16:00:00
++++ /tmp/rn-combined-final/React/Base/RCTConvert+UIKit.mm	2026-04-14 21:48:23
+@@ -0,0 +1,666 @@
++/*
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ */
++
++#import "RCTConvert+UIKit.h"
++
++#import <objc/message.h>
++
++#import "RCTDefines.h"
++#import "RCTImageSource.h"
++#import "RCTParserUtils.h"
++#import "RCTUtils.h"
++
++@implementation RCTConvert (UIKit)
++
++RCT_ENUM_CONVERTER(
++    UITextAutocapitalizationType,
++    (@{
++      @"none" : @(UITextAutocapitalizationTypeNone),
++      @"words" : @(UITextAutocapitalizationTypeWords),
++      @"sentences" : @(UITextAutocapitalizationTypeSentences),
++      @"characters" : @(UITextAutocapitalizationTypeAllCharacters)
++    }),
++    UITextAutocapitalizationTypeSentences,
++    integerValue)
++
++RCT_ENUM_CONVERTER(
++    UITextFieldViewMode,
++    (@{
++      @"never" : @(UITextFieldViewModeNever),
++      @"while-editing" : @(UITextFieldViewModeWhileEditing),
++      @"unless-editing" : @(UITextFieldViewModeUnlessEditing),
++      @"always" : @(UITextFieldViewModeAlways),
++    }),
++    UITextFieldViewModeNever,
++    integerValue)
++
+++ (UIKeyboardType)UIKeyboardType:(id)json RCT_DYNAMIC
++{
++  static NSDictionary<NSString *, NSNumber *> *mapping;
++  static dispatch_once_t onceToken;
++  dispatch_once(&onceToken, ^{
++    NSMutableDictionary<NSString *, NSNumber *> *temporaryMapping = [NSMutableDictionary dictionaryWithDictionary:@{
++      @"default" : @(UIKeyboardTypeDefault),
++      @"ascii-capable" : @(UIKeyboardTypeASCIICapable),
++      @"numbers-and-punctuation" : @(UIKeyboardTypeNumbersAndPunctuation),
++      @"url" : @(UIKeyboardTypeURL),
++      @"number-pad" : @(UIKeyboardTypeNumberPad),
++      @"phone-pad" : @(UIKeyboardTypePhonePad),
++      @"name-phone-pad" : @(UIKeyboardTypeNamePhonePad),
++      @"email-address" : @(UIKeyboardTypeEmailAddress),
++      @"decimal-pad" : @(UIKeyboardTypeDecimalPad),
++      @"twitter" : @(UIKeyboardTypeTwitter),
++      @"web-search" : @(UIKeyboardTypeWebSearch),
++      // Added for Android compatibility
++      @"numeric" : @(UIKeyboardTypeDecimalPad),
++    }];
++    temporaryMapping[@"ascii-capable-number-pad"] = @(UIKeyboardTypeASCIICapableNumberPad);
++    mapping = temporaryMapping;
++  });
++
++  UIKeyboardType type =
++      (UIKeyboardType)RCTConvertEnumValue("UIKeyboardType", mapping, @(UIKeyboardTypeDefault), json).integerValue;
++  return type;
++}
++
++RCT_MULTI_ENUM_CONVERTER(
++    UIDataDetectorTypes,
++    (@{
++      @"phoneNumber" : @(UIDataDetectorTypePhoneNumber),
++      @"link" : @(UIDataDetectorTypeLink),
++      @"address" : @(UIDataDetectorTypeAddress),
++      @"calendarEvent" : @(UIDataDetectorTypeCalendarEvent),
++      @"trackingNumber" : @(UIDataDetectorTypeShipmentTrackingNumber),
++      @"flightNumber" : @(UIDataDetectorTypeFlightNumber),
++      @"lookupSuggestion" : @(UIDataDetectorTypeLookupSuggestion),
++      @"none" : @(UIDataDetectorTypeNone),
++      @"all" : @(UIDataDetectorTypeAll),
++    }),
++    UIDataDetectorTypePhoneNumber,
++    unsignedLongLongValue)
++
++RCT_ENUM_CONVERTER(
++    UIKeyboardAppearance,
++    (@{
++      @"default" : @(UIKeyboardAppearanceDefault),
++      @"light" : @(UIKeyboardAppearanceLight),
++      @"dark" : @(UIKeyboardAppearanceDark),
++    }),
++    UIKeyboardAppearanceDefault,
++    integerValue)
++
++RCT_ENUM_CONVERTER(
++    UIReturnKeyType,
++    (@{
++      @"default" : @(UIReturnKeyDefault),
++      @"go" : @(UIReturnKeyGo),
++      @"google" : @(UIReturnKeyGoogle),
++      @"join" : @(UIReturnKeyJoin),
++      @"next" : @(UIReturnKeyNext),
++      @"route" : @(UIReturnKeyRoute),
++      @"search" : @(UIReturnKeySearch),
++      @"send" : @(UIReturnKeySend),
++      @"yahoo" : @(UIReturnKeyYahoo),
++      @"done" : @(UIReturnKeyDone),
++      @"emergency-call" : @(UIReturnKeyEmergencyCall),
++    }),
++    UIReturnKeyDefault,
++    integerValue)
++
++RCT_ENUM_CONVERTER(
++    UIUserInterfaceStyle,
++    (@{
++      @"unspecified" : @(UIUserInterfaceStyleUnspecified),
++      @"light" : @(UIUserInterfaceStyleLight),
++      @"dark" : @(UIUserInterfaceStyleDark),
++    }),
++    UIUserInterfaceStyleUnspecified,
++    integerValue)
++
++#if !TARGET_OS_TV
++RCT_ENUM_CONVERTER(
++    UIInterfaceOrientationMask,
++    (@{
++      @"ALL" : @(UIInterfaceOrientationMaskAll),
++      @"PORTRAIT" : @(UIInterfaceOrientationMaskPortrait),
++      @"LANDSCAPE" : @(UIInterfaceOrientationMaskLandscape),
++      @"LANDSCAPE_LEFT" : @(UIInterfaceOrientationMaskLandscapeLeft),
++      @"LANDSCAPE_RIGHT" : @(UIInterfaceOrientationMaskLandscapeRight),
++    }),
++    NSNotFound,
++    unsignedIntegerValue)
++#endif
++
++RCT_ENUM_CONVERTER(
++    UIModalPresentationStyle,
++    (@{
++      @"fullScreen" : @(UIModalPresentationFullScreen),
++      @"pageSheet" : @(UIModalPresentationPageSheet),
++      @"formSheet" : @(UIModalPresentationFormSheet),
++      @"overFullScreen" : @(UIModalPresentationOverFullScreen),
++    }),
++    UIModalPresentationFullScreen,
++    integerValue)
++
++RCT_ENUM_CONVERTER(
++    UIViewContentMode,
++    (@{
++      @"scale-to-fill" : @(UIViewContentModeScaleToFill),
++      @"scale-aspect-fit" : @(UIViewContentModeScaleAspectFit),
++      @"scale-aspect-fill" : @(UIViewContentModeScaleAspectFill),
++      @"redraw" : @(UIViewContentModeRedraw),
++      @"center" : @(UIViewContentModeCenter),
++      @"top" : @(UIViewContentModeTop),
++      @"bottom" : @(UIViewContentModeBottom),
++      @"left" : @(UIViewContentModeLeft),
++      @"right" : @(UIViewContentModeRight),
++      @"top-left" : @(UIViewContentModeTopLeft),
++      @"top-right" : @(UIViewContentModeTopRight),
++      @"bottom-left" : @(UIViewContentModeBottomLeft),
++      @"bottom-right" : @(UIViewContentModeBottomRight),
++      // Cross-platform values
++      @"cover" : @(UIViewContentModeScaleAspectFill),
++      @"contain" : @(UIViewContentModeScaleAspectFit),
++      @"stretch" : @(UIViewContentModeScaleToFill),
++    }),
++    UIViewContentModeScaleAspectFill,
++    integerValue)
++
+++ (UIEdgeInsets)UIEdgeInsets:(id)json
++{
++  static NSArray *fields;
++  static dispatch_once_t onceToken;
++  dispatch_once(&onceToken, ^{
++    fields = @[ @"top", @"left", @"bottom", @"right" ];
++  });
++
++  if ([json isKindOfClass:[NSNumber class]]) {
++    CGFloat value = [json doubleValue];
++    return UIEdgeInsetsMake(value, value, value, value);
++  } else {
++    UIEdgeInsets result;
++    convertCGStruct("UIEdgeInsets", fields, (CGFloat *)&result, json);
++    return result;
++  }
++}
++
++static NSString *const RCTFallback = @"fallback";
++static NSString *const RCTFallbackARGB = @"fallback-argb";
++static NSString *const RCTSelector = @"selector";
++static NSString *const RCTIndex = @"index";
++
++/** The following dictionary defines the react-native semantic colors for ios.
++ *  If the value for a given name is empty then the name itself
++ *  is used as the UIColor selector.
++ *  If the RCTSelector key is present then that value is used for a selector instead
++ *  of the key name.
++ *  If the given selector is not available on the running OS version then
++ *  the RCTFallback selector is used instead.
++ *  If the RCTIndex key is present then object returned from UIColor is an
++ *  NSArray and the object at index RCTIndex is to be used.
++ */
++static NSDictionary<NSString *, NSDictionary *> *RCTSemanticColorsMap(void)
++{
++  static NSDictionary<NSString *, NSDictionary *> *colorMap = nil;
++  if (colorMap == nil) {
++    NSMutableDictionary<NSString *, NSDictionary *> *map = [@{
++      // https://developer.apple.com/documentation/uikit/uicolor/ui_element_colors
++      // Label Colors
++      @"labelColor" : @{
++        // iOS 13.0
++        RCTFallbackARGB :
++            @(0xFF000000) // fallback for iOS<=12: RGBA returned by this semantic color in light mode on iOS 13
++      },
++      @"secondaryLabelColor" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0x993c3c43)
++      },
++      @"tertiaryLabelColor" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0x4c3c3c43)
++      },
++      @"quaternaryLabelColor" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0x2d3c3c43)
++      },
++      // Fill Colors
++      @"systemFillColor" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0x33787880)
++      },
++      @"secondarySystemFillColor" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0x28787880)
++      },
++      @"tertiarySystemFillColor" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0x1e767680)
++      },
++      @"quaternarySystemFillColor" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0x14747480)
++      },
++      // Text Colors
++      @"placeholderTextColor" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0x4c3c3c43)
++      },
++      // Standard Content Background Colors
++      @"systemBackgroundColor" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0xFFffffff)
++      },
++      @"secondarySystemBackgroundColor" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0xFFf2f2f7)
++      },
++      @"tertiarySystemBackgroundColor" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0xFFffffff)
++      },
++      // Grouped Content Background Colors
++      @"systemGroupedBackgroundColor" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0xFFf2f2f7)
++      },
++      @"secondarySystemGroupedBackgroundColor" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0xFFffffff)
++      },
++      @"tertiarySystemGroupedBackgroundColor" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0xFFf2f2f7)
++      },
++      // Separator Colors
++      @"separatorColor" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0x493c3c43)
++      },
++      @"opaqueSeparatorColor" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0xFFc6c6c8)
++      },
++      // Link Color
++      @"linkColor" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0xFF007aff)
++      },
++      // Nonadaptable Colors
++      @"darkTextColor" : @{},
++      @"lightTextColor" : @{},
++      // https://developer.apple.com/documentation/uikit/uicolor/standard_colors
++      // Adaptable Colors
++      @"systemBlueColor" : @{},
++      @"systemBrownColor" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0xFFa2845e)
++      },
++      @"systemCyanColor" : @{},
++      @"systemGreenColor" : @{},
++      @"systemIndigoColor" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0xFF5856d6)
++      },
++      @"systemMintColor" : @{},
++      @"systemOrangeColor" : @{},
++      @"systemPinkColor" : @{},
++      @"systemPurpleColor" : @{},
++      @"systemRedColor" : @{},
++      @"systemTealColor" : @{},
++      @"systemYellowColor" : @{},
++      // Adaptable Gray Colors
++      @"systemGrayColor" : @{},
++      @"systemGray2Color" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0xFFaeaeb2)
++      },
++      @"systemGray3Color" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0xFFc7c7cc)
++      },
++      @"systemGray4Color" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0xFFd1d1d6)
++      },
++      @"systemGray5Color" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0xFFe5e5ea)
++      },
++      @"systemGray6Color" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0xFFf2f2f7)
++      },
++      // Transparent Color
++      @"clearColor" : @{
++        // iOS 13.0
++        RCTFallbackARGB : @(0x00000000)
++      },
++    } mutableCopy];
++    // The color names are the Objective-C UIColor selector names,
++    // but Swift selector names are valid as well, so make aliases.
++    static NSString *const RCTColorSuffix = @"Color";
++    NSMutableDictionary<NSString *, NSDictionary *> *aliases = [NSMutableDictionary new];
++    for (NSString *objcSelector in map) {
++      RCTAssert(
++          [objcSelector hasSuffix:RCTColorSuffix], @"A selector in the color map did not end with the suffix Color.");
++      NSMutableDictionary *entry = [map[objcSelector] mutableCopy];
++      RCTAssert([entry objectForKey:RCTSelector] == nil, @"Entry should not already have an RCTSelector");
++      NSString *swiftSelector = [objcSelector substringToIndex:[objcSelector length] - [RCTColorSuffix length]];
++      entry[RCTSelector] = objcSelector;
++      aliases[swiftSelector] = entry;
++    }
++    [map addEntriesFromDictionary:aliases];
++#if DEBUG
++    [map addEntriesFromDictionary:@{
++      // The follow exist for Unit Tests
++      @"unitTestFallbackColor" : @{RCTFallback : @"gridColor"},
++      @"unitTestFallbackColorIOS" : @{RCTFallback : @"blueColor"},
++      @"unitTestFallbackColorEven" : @{
++        RCTSelector : @"unitTestFallbackColorEven",
++        RCTIndex : @0,
++        RCTFallback : @"controlAlternatingRowBackgroundColors"
++      },
++      @"unitTestFallbackColorOdd" : @{
++        RCTSelector : @"unitTestFallbackColorOdd",
++        RCTIndex : @1,
++        RCTFallback : @"controlAlternatingRowBackgroundColors"
++      },
++    }];
++#endif
++    colorMap = [map copy];
++  }
++
++  return colorMap;
++}
++
++/** Returns a UIColor based on a semantic color name.
++ *  Returns nil if the semantic color name is invalid.
++ */
++static UIColor *RCTColorFromSemanticColorName(NSString *semanticColorName)
++{
++  NSDictionary<NSString *, NSDictionary *> *colorMap = RCTSemanticColorsMap();
++  UIColor *color = nil;
++  NSDictionary<NSString *, id> *colorInfo = colorMap[semanticColorName];
++  if (colorInfo) {
++    NSString *semanticColorSelector = colorInfo[RCTSelector];
++    if (semanticColorSelector == nil) {
++      semanticColorSelector = semanticColorName;
++    }
++    SEL selector = NSSelectorFromString(semanticColorSelector);
++    if (![UIColor respondsToSelector:selector]) {
++      NSNumber *fallbackRGB = colorInfo[RCTFallbackARGB];
++      if (fallbackRGB != nil) {
++        RCTAssert([fallbackRGB isKindOfClass:[NSNumber class]], @"fallback ARGB is not a number");
++        return [RCTConvert UIColor:fallbackRGB];
++      }
++      semanticColorSelector = colorInfo[RCTFallback];
++      selector = NSSelectorFromString(semanticColorSelector);
++    }
++    RCTAssert([UIColor respondsToSelector:selector], @"RCTUIColor does not respond to a semantic color selector.");
++    Class klass = [UIColor class];
++    IMP imp = [klass methodForSelector:selector];
++    id (*getSemanticColorObject)(id, SEL) = (id (*)(id, SEL))imp;
++    id colorObject = getSemanticColorObject(klass, selector);
++    if ([colorObject isKindOfClass:[UIColor class]]) {
++      color = colorObject;
++    } else if ([colorObject isKindOfClass:[NSArray class]]) {
++      NSArray *colors = colorObject;
++      NSNumber *index = colorInfo[RCTIndex];
++      RCTAssert(index, @"index should not be null");
++      color = colors[[index unsignedIntegerValue]];
++    } else {
++      RCTAssert(false, @"selector return an unknown object type");
++    }
++  }
++  return color;
++}
++
++/** Returns an alphabetically sorted comma separated list of the valid semantic color names
++ */
++static NSString *RCTSemanticColorNames(void)
++{
++  NSMutableString *names = [NSMutableString new];
++  NSDictionary<NSString *, NSDictionary *> *colorMap = RCTSemanticColorsMap();
++  NSArray *allKeys =
++      [[[colorMap allKeys] mutableCopy] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)];
++
++  for (id key in allKeys) {
++    if ([names length]) {
++      [names appendString:@", "];
++    }
++    [names appendString:key];
++  }
++  return names;
++}
++
+++ (UIColor *)UIColorWithRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue alpha:(CGFloat)alpha
++{
++  RCTColorSpace space = RCTGetDefaultColorSpace();
++  return [self UIColorWithRed:red green:green blue:blue alpha:alpha andColorSpace:space];
++}
+++ (UIColor *)UIColorWithRed:(CGFloat)red
++                      green:(CGFloat)green
++                       blue:(CGFloat)blue
++                      alpha:(CGFloat)alpha
++              andColorSpace:(RCTColorSpace)colorSpace
++{
++  if (colorSpace == RCTColorSpaceDisplayP3) {
++    return [UIColor colorWithDisplayP3Red:red green:green blue:blue alpha:alpha];
++  }
++  return [UIColor colorWithRed:red green:green blue:blue alpha:alpha];
++}
++
+++ (UIColor *)UIColor:(id)json
++{
++  if (!json) {
++    return nil;
++  }
++  if ([json isKindOfClass:[NSArray class]]) {
++    NSArray *components = [self NSNumberArray:json];
++    CGFloat alpha = components.count > 3 ? [self CGFloat:components[3]] : 1.0;
++    return [self UIColorWithRed:[self CGFloat:components[0]]
++                          green:[self CGFloat:components[1]]
++                           blue:[self CGFloat:components[2]]
++                          alpha:alpha];
++  } else if ([json isKindOfClass:[NSNumber class]]) {
++    NSUInteger argb = [self NSUInteger:json];
++    CGFloat a = ((argb >> 24) & 0xFF) / 255.0;
++    CGFloat r = ((argb >> 16) & 0xFF) / 255.0;
++    CGFloat g = ((argb >> 8) & 0xFF) / 255.0;
++    CGFloat b = (argb & 0xFF) / 255.0;
++    return [self UIColorWithRed:r green:g blue:b alpha:a];
++  } else if ([json isKindOfClass:[NSDictionary class]]) {
++    NSDictionary *dictionary = json;
++    id value = nil;
++    NSString *rawColorSpace = [dictionary objectForKey:@"space"];
++    if ([rawColorSpace isEqualToString:@"display-p3"] || [rawColorSpace isEqualToString:@"srgb"]) {
++      CGFloat r = [[dictionary objectForKey:@"r"] floatValue];
++      CGFloat g = [[dictionary objectForKey:@"g"] floatValue];
++      CGFloat b = [[dictionary objectForKey:@"b"] floatValue];
++      CGFloat a = [[dictionary objectForKey:@"a"] floatValue];
++      RCTColorSpace colorSpace = [self RCTColorSpaceFromString:rawColorSpace];
++      return [self UIColorWithRed:r green:g blue:b alpha:a andColorSpace:colorSpace];
++    } else if ((value = [dictionary objectForKey:@"semantic"])) {
++      if ([value isKindOfClass:[NSString class]]) {
++        NSString *semanticName = value;
++        UIColor *color = [UIColor colorNamed:semanticName];
++        if (color != nil) {
++          return color;
++        }
++        color = RCTColorFromSemanticColorName(semanticName);
++        if (color == nil) {
++          RCTLogConvertError(
++              json,
++              [@"a UIColor.  Expected one of the following values: " stringByAppendingString:RCTSemanticColorNames()]);
++        }
++        return color;
++      } else if ([value isKindOfClass:[NSArray class]]) {
++        for (id name in value) {
++          UIColor *color = [UIColor colorNamed:name];
++          if (color != nil) {
++            return color;
++          }
++          color = RCTColorFromSemanticColorName(name);
++          if (color != nil) {
++            return color;
++          }
++        }
++        RCTLogConvertError(
++            json,
++            [@"a UIColor.  None of the names in the array were one of the following values: "
++                stringByAppendingString:RCTSemanticColorNames()]);
++        return nil;
++      }
++      RCTLogConvertError(
++          json, @"a UIColor.  Expected either a single name or an array of names but got something else.");
++      return nil;
++    } else if ((value = [dictionary objectForKey:@"dynamic"])) {
++      NSDictionary *appearances = value;
++      id light = [appearances objectForKey:@"light"];
++      UIColor *lightColor = [RCTConvert UIColor:light];
++      id dark = [appearances objectForKey:@"dark"];
++      UIColor *darkColor = [RCTConvert UIColor:dark];
++      id highContrastLight = [appearances objectForKey:@"highContrastLight"];
++      UIColor *highContrastLightColor = [RCTConvert UIColor:highContrastLight];
++      id highContrastDark = [appearances objectForKey:@"highContrastDark"];
++      UIColor *highContrastDarkColor = [RCTConvert UIColor:highContrastDark];
++      if (lightColor != nil && darkColor != nil) {
++        UIColor *color = [UIColor colorWithDynamicProvider:^UIColor *_Nonnull(UITraitCollection *_Nonnull collection) {
++          if (collection.userInterfaceStyle == UIUserInterfaceStyleDark) {
++            if (collection.accessibilityContrast == UIAccessibilityContrastHigh && highContrastDarkColor != nil) {
++              return highContrastDarkColor;
++            } else {
++              return darkColor;
++            }
++          } else {
++            if (collection.accessibilityContrast == UIAccessibilityContrastHigh && highContrastLightColor != nil) {
++              return highContrastLightColor;
++            } else {
++              return lightColor;
++            }
++          }
++        }];
++        return color;
++
++      } else {
++        RCTLogConvertError(json, @"a UIColor. Expected an iOS dynamic appearance aware color.");
++        return nil;
++      }
++    } else {
++      RCTLogConvertError(json, @"a UIColor. Expected an iOS semantic color or dynamic appearance aware color.");
++      return nil;
++    }
++  } else {
++    RCTLogConvertError(json, @"a UIColor. Did you forget to call processColor() on the JS side?");
++    return nil;
++  }
++}
++
+++ (CGColorRef)CGColor:(id)json
++{
++  return [self UIColor:json].CGColor;
++}
++
++RCT_ARRAY_CONVERTER(UIColor)
++
++// Can't use RCT_ARRAY_CONVERTER due to bridged cast
+++ (NSArray *)CGColorArray:(id)json
++{
++  NSMutableArray *colors = [NSMutableArray new];
++  for (id value in [self NSArray:json]) {
++    [colors addObject:(__bridge id)[self CGColor:value]];
++  }
++  return colors;
++}
++
++@end
++
++@interface RCTImageSource (Packager)
++
++@property (nonatomic, assign) BOOL packagerAsset;
++
++@end
++
++@implementation RCTConvert (Deprecated)
++
++/* This method is only used when loading images synchronously, e.g. for tabbar icons */
+++ (UIImage *)UIImage:(id)json
++{
++  if (!json) {
++    return nil;
++  }
++
++  RCTImageSource *imageSource = [self RCTImageSource:json];
++  if (!imageSource) {
++    return nil;
++  }
++
++  __block UIImage *image;
++  if (!RCTIsMainQueue()) {
++    // It seems that none of the UIImage loading methods can be guaranteed
++    // thread safe, so we'll pick the lesser of two evils here and block rather
++    // than run the risk of crashing
++    RCTLogWarn(@"Calling [RCTConvert UIImage:] on a background thread is not recommended");
++    RCTUnsafeExecuteOnMainQueueSync(^{
++      image = [self UIImage:json];
++    });
++    return image;
++  }
++
++  NSURL *URL = imageSource.request.URL;
++  NSString *scheme = URL.scheme.lowercaseString;
++  if ([scheme isEqualToString:@"file"]) {
++    image = RCTImageFromLocalAssetURL(URL);
++    // There is a case where this may fail when the image is at the bundle location.
++    // RCTImageFromLocalAssetURL only checks for the image in the same location as the jsbundle
++    // Hence, if the bundle is CodePush-ed, it will not be able to find the image.
++    // This check is added here instead of being inside RCTImageFromLocalAssetURL, since
++    // we don't want breaking changes to RCTImageFromLocalAssetURL, which is called in a lot of places
++    // This is a deprecated method, and hence has the least impact on existing code. Basically,
++    // instead of crashing the app, it tries one more location for the image.
++    if (!image) {
++      image = RCTImageFromLocalBundleAssetURL(URL);
++    }
++    if (!image) {
++      RCTLogConvertError(json, @"an image. File not found.");
++    }
++  } else if ([scheme isEqualToString:@"data"]) {
++    image = [UIImage imageWithData:[NSData dataWithContentsOfURL:URL]];
++  } else if ([scheme isEqualToString:@"http"] && imageSource.packagerAsset) {
++    image = [UIImage imageWithData:[NSData dataWithContentsOfURL:URL]];
++  } else {
++    RCTLogConvertError(json, @"an image. Only local files or data URIs are supported.");
++    return nil;
++  }
++
++  CGFloat scale = imageSource.scale;
++  if (!scale && imageSource.size.width) {
++    // If no scale provided, set scale to image width / source width
++    scale = CGImageGetWidth(image.CGImage) / imageSource.size.width;
++  }
++
++  if (scale) {
++    image = [UIImage imageWithCGImage:image.CGImage scale:scale orientation:image.imageOrientation];
++  }
++
++  if (!CGSizeEqualToSize(imageSource.size, CGSizeZero) && !CGSizeEqualToSize(imageSource.size, image.size)) {
++    RCTLogInfo(
++        @"Image source %@ size %@ does not match loaded image size %@.",
++        URL.path.lastPathComponent,
++        NSStringFromCGSize(imageSource.size),
++        NSStringFromCGSize(image.size));
++  }
++
++  return image;
++}
++
+++ (CGImageRef)CGImage:(id)json
++{
++  return [self UIImage:json].CGImage;
++}
++
++@end
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTConvert.h /tmp/rn-combined-final/React/Base/RCTConvert.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTConvert.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Base/RCTConvert.h	2026-04-14 21:48:23
+@@ -73,45 +73,21 @@
+ + (NSUnderlineStyle)NSUnderlineStyle:(id)json;
+ + (NSWritingDirection)NSWritingDirection:(id)json;
+ + (NSLineBreakStrategy)NSLineBreakStrategy:(id)json;
+-+ (UITextAutocapitalizationType)UITextAutocapitalizationType:(id)json;
+-+ (UITextFieldViewMode)UITextFieldViewMode:(id)json;
+-+ (UIKeyboardType)UIKeyboardType:(id)json;
+-+ (UIKeyboardAppearance)UIKeyboardAppearance:(id)json;
+-+ (UIReturnKeyType)UIReturnKeyType:(id)json;
+-+ (UIUserInterfaceStyle)UIUserInterfaceStyle:(id)json API_AVAILABLE(ios(12));
+-#if !TARGET_OS_TV
+-+ (UIInterfaceOrientationMask)UIInterfaceOrientationMask:(NSString *)orientation;
+-#endif
+-+ (UIModalPresentationStyle)UIModalPresentationStyle:(id)json;
+ 
+-#if !TARGET_OS_TV
+-+ (UIDataDetectorTypes)UIDataDetectorTypes:(id)json;
+-#endif
+ 
+-+ (UIViewContentMode)UIViewContentMode:(id)json;
+-
+ + (RCTCursor)RCTCursor:(id)json;
+ 
+ + (CGFloat)CGFloat:(id)json;
+ + (CGPoint)CGPoint:(id)json;
+ + (CGSize)CGSize:(id)json;
+ + (CGRect)CGRect:(id)json;
+-+ (UIEdgeInsets)UIEdgeInsets:(id)json;
+ 
+ + (CGLineCap)CGLineCap:(id)json;
+ + (CGLineJoin)CGLineJoin:(id)json;
+ 
+ + (CGAffineTransform)CGAffineTransform:(id)json;
+ 
+-+ (UIColor *)UIColorWithRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue alpha:(CGFloat)alpha;
+-+ (UIColor *)UIColorWithRed:(CGFloat)red
+-                      green:(CGFloat)green
+-                       blue:(CGFloat)blue
+-                      alpha:(CGFloat)alpha
+-              andColorSpace:(RCTColorSpace)colorSpace;
+ + (RCTColorSpace)RCTColorSpaceFromString:(NSString *)colorSpace;
+-+ (UIColor *)UIColor:(id)json;
+-+ (CGColorRef)CGColor:(id)json CF_RETURNS_NOT_RETAINED;
+ 
+ + (YGValue)YGValue:(id)json;
+ 
+@@ -122,10 +98,7 @@
+ + (NSArray<NSURL *> *)NSURLArray:(id)json;
+ + (NSArray<RCTFileURL *> *)RCTFileURLArray:(id)json;
+ + (NSArray<NSNumber *> *)NSNumberArray:(id)json;
+-+ (NSArray<UIColor *> *)UIColorArray:(id)json;
+ 
+-typedef NSArray CGColorArray;
+-+ (CGColorArray *)CGColorArray:(id)json;
+ 
+ /**
+  * Convert a JSON object to a Plist-safe equivalent by stripping null values.
+@@ -152,29 +125,9 @@
+ 
+ @end
+ 
+-@interface RCTConvert (Deprecated)
+-
+-/**
+- * Use lightweight generics syntax instead, e.g. NSArray<NSString *>
+- */
+-typedef NSArray NSArrayArray __deprecated_msg("Use NSArray<NSArray *>");
+-typedef NSArray NSStringArray __deprecated_msg("Use NSArray<NSString *>");
+-typedef NSArray NSStringArrayArray __deprecated_msg("Use NSArray<NSArray<NSString *> *>");
+-typedef NSArray NSDictionaryArray __deprecated_msg("Use NSArray<NSDictionary *>");
+-typedef NSArray NSURLArray __deprecated_msg("Use NSArray<NSURL *>");
+-typedef NSArray RCTFileURLArray __deprecated_msg("Use NSArray<RCTFileURL *>");
+-typedef NSArray NSNumberArray __deprecated_msg("Use NSArray<NSNumber *>");
+-typedef NSArray UIColorArray __deprecated_msg("Use NSArray<UIColor *>");
+-
+-/**
+- * Synchronous image loading is generally a bad idea for performance reasons.
+- * If you need to pass image references, try to use `RCTImageSource` and then
+- * `RCTImageLoader` instead of converting directly to a UIImage.
+- */
+-+ (UIImage *)UIImage:(id)json;
+-+ (CGImageRef)CGImage:(id)json CF_RETURNS_NOT_RETAINED;
+-
+-@end
++// Compatibility: re-export UIKit category so existing importers
++// of <React/RCTConvert.h> continue to get UIKit methods.
++#import <React/RCTConvert+UIKit.h>
+ 
+ /**
+  * Underlying implementations of RCT_XXX_CONVERTER macros. Ignore these.
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTConvert.mm /tmp/rn-combined-final/React/Base/RCTConvert.mm
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Base/RCTConvert.mm	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Base/RCTConvert.mm	2026-04-14 21:48:23
+@@ -395,160 +395,6 @@
+ }
+ 
+ RCT_ENUM_CONVERTER(
+-    UITextAutocapitalizationType,
+-    (@{
+-      @"none" : @(UITextAutocapitalizationTypeNone),
+-      @"words" : @(UITextAutocapitalizationTypeWords),
+-      @"sentences" : @(UITextAutocapitalizationTypeSentences),
+-      @"characters" : @(UITextAutocapitalizationTypeAllCharacters)
+-    }),
+-    UITextAutocapitalizationTypeSentences,
+-    integerValue)
+-
+-RCT_ENUM_CONVERTER(
+-    UITextFieldViewMode,
+-    (@{
+-      @"never" : @(UITextFieldViewModeNever),
+-      @"while-editing" : @(UITextFieldViewModeWhileEditing),
+-      @"unless-editing" : @(UITextFieldViewModeUnlessEditing),
+-      @"always" : @(UITextFieldViewModeAlways),
+-    }),
+-    UITextFieldViewModeNever,
+-    integerValue)
+-
+-+ (UIKeyboardType)UIKeyboardType:(id)json RCT_DYNAMIC
+-{
+-  static NSDictionary<NSString *, NSNumber *> *mapping;
+-  static dispatch_once_t onceToken;
+-  dispatch_once(&onceToken, ^{
+-    NSMutableDictionary<NSString *, NSNumber *> *temporaryMapping = [NSMutableDictionary dictionaryWithDictionary:@{
+-      @"default" : @(UIKeyboardTypeDefault),
+-      @"ascii-capable" : @(UIKeyboardTypeASCIICapable),
+-      @"numbers-and-punctuation" : @(UIKeyboardTypeNumbersAndPunctuation),
+-      @"url" : @(UIKeyboardTypeURL),
+-      @"number-pad" : @(UIKeyboardTypeNumberPad),
+-      @"phone-pad" : @(UIKeyboardTypePhonePad),
+-      @"name-phone-pad" : @(UIKeyboardTypeNamePhonePad),
+-      @"email-address" : @(UIKeyboardTypeEmailAddress),
+-      @"decimal-pad" : @(UIKeyboardTypeDecimalPad),
+-      @"twitter" : @(UIKeyboardTypeTwitter),
+-      @"web-search" : @(UIKeyboardTypeWebSearch),
+-      // Added for Android compatibility
+-      @"numeric" : @(UIKeyboardTypeDecimalPad),
+-    }];
+-    temporaryMapping[@"ascii-capable-number-pad"] = @(UIKeyboardTypeASCIICapableNumberPad);
+-    mapping = temporaryMapping;
+-  });
+-
+-  UIKeyboardType type =
+-      (UIKeyboardType)RCTConvertEnumValue("UIKeyboardType", mapping, @(UIKeyboardTypeDefault), json).integerValue;
+-  return type;
+-}
+-
+-RCT_MULTI_ENUM_CONVERTER(
+-    UIDataDetectorTypes,
+-    (@{
+-      @"phoneNumber" : @(UIDataDetectorTypePhoneNumber),
+-      @"link" : @(UIDataDetectorTypeLink),
+-      @"address" : @(UIDataDetectorTypeAddress),
+-      @"calendarEvent" : @(UIDataDetectorTypeCalendarEvent),
+-      @"trackingNumber" : @(UIDataDetectorTypeShipmentTrackingNumber),
+-      @"flightNumber" : @(UIDataDetectorTypeFlightNumber),
+-      @"lookupSuggestion" : @(UIDataDetectorTypeLookupSuggestion),
+-      @"none" : @(UIDataDetectorTypeNone),
+-      @"all" : @(UIDataDetectorTypeAll),
+-    }),
+-    UIDataDetectorTypePhoneNumber,
+-    unsignedLongLongValue)
+-
+-RCT_ENUM_CONVERTER(
+-    UIKeyboardAppearance,
+-    (@{
+-      @"default" : @(UIKeyboardAppearanceDefault),
+-      @"light" : @(UIKeyboardAppearanceLight),
+-      @"dark" : @(UIKeyboardAppearanceDark),
+-    }),
+-    UIKeyboardAppearanceDefault,
+-    integerValue)
+-
+-RCT_ENUM_CONVERTER(
+-    UIReturnKeyType,
+-    (@{
+-      @"default" : @(UIReturnKeyDefault),
+-      @"go" : @(UIReturnKeyGo),
+-      @"google" : @(UIReturnKeyGoogle),
+-      @"join" : @(UIReturnKeyJoin),
+-      @"next" : @(UIReturnKeyNext),
+-      @"route" : @(UIReturnKeyRoute),
+-      @"search" : @(UIReturnKeySearch),
+-      @"send" : @(UIReturnKeySend),
+-      @"yahoo" : @(UIReturnKeyYahoo),
+-      @"done" : @(UIReturnKeyDone),
+-      @"emergency-call" : @(UIReturnKeyEmergencyCall),
+-    }),
+-    UIReturnKeyDefault,
+-    integerValue)
+-
+-RCT_ENUM_CONVERTER(
+-    UIUserInterfaceStyle,
+-    (@{
+-      @"unspecified" : @(UIUserInterfaceStyleUnspecified),
+-      @"light" : @(UIUserInterfaceStyleLight),
+-      @"dark" : @(UIUserInterfaceStyleDark),
+-    }),
+-    UIUserInterfaceStyleUnspecified,
+-    integerValue)
+-
+-#if !TARGET_OS_TV
+-RCT_ENUM_CONVERTER(
+-    UIInterfaceOrientationMask,
+-    (@{
+-      @"ALL" : @(UIInterfaceOrientationMaskAll),
+-      @"PORTRAIT" : @(UIInterfaceOrientationMaskPortrait),
+-      @"LANDSCAPE" : @(UIInterfaceOrientationMaskLandscape),
+-      @"LANDSCAPE_LEFT" : @(UIInterfaceOrientationMaskLandscapeLeft),
+-      @"LANDSCAPE_RIGHT" : @(UIInterfaceOrientationMaskLandscapeRight),
+-    }),
+-    NSNotFound,
+-    unsignedIntegerValue)
+-#endif
+-
+-RCT_ENUM_CONVERTER(
+-    UIModalPresentationStyle,
+-    (@{
+-      @"fullScreen" : @(UIModalPresentationFullScreen),
+-      @"pageSheet" : @(UIModalPresentationPageSheet),
+-      @"formSheet" : @(UIModalPresentationFormSheet),
+-      @"overFullScreen" : @(UIModalPresentationOverFullScreen),
+-    }),
+-    UIModalPresentationFullScreen,
+-    integerValue)
+-
+-RCT_ENUM_CONVERTER(
+-    UIViewContentMode,
+-    (@{
+-      @"scale-to-fill" : @(UIViewContentModeScaleToFill),
+-      @"scale-aspect-fit" : @(UIViewContentModeScaleAspectFit),
+-      @"scale-aspect-fill" : @(UIViewContentModeScaleAspectFill),
+-      @"redraw" : @(UIViewContentModeRedraw),
+-      @"center" : @(UIViewContentModeCenter),
+-      @"top" : @(UIViewContentModeTop),
+-      @"bottom" : @(UIViewContentModeBottom),
+-      @"left" : @(UIViewContentModeLeft),
+-      @"right" : @(UIViewContentModeRight),
+-      @"top-left" : @(UIViewContentModeTopLeft),
+-      @"top-right" : @(UIViewContentModeTopRight),
+-      @"bottom-left" : @(UIViewContentModeBottomLeft),
+-      @"bottom-right" : @(UIViewContentModeBottomRight),
+-      // Cross-platform values
+-      @"cover" : @(UIViewContentModeScaleAspectFill),
+-      @"contain" : @(UIViewContentModeScaleAspectFit),
+-      @"stretch" : @(UIViewContentModeScaleToFill),
+-    }),
+-    UIViewContentModeScaleAspectFill,
+-    integerValue)
+-
+-RCT_ENUM_CONVERTER(
+     RCTCursor,
+     (@{
+       @"auto" : @(RCTCursorAuto),
+@@ -604,24 +450,6 @@
+ RCT_CGSTRUCT_CONVERTER(CGSize, (@[ @"width", @"height" ]))
+ RCT_CGSTRUCT_CONVERTER(CGRect, (@[ @"x", @"y", @"width", @"height" ]))
+ 
+-+ (UIEdgeInsets)UIEdgeInsets:(id)json
+-{
+-  static NSArray *fields;
+-  static dispatch_once_t onceToken;
+-  dispatch_once(&onceToken, ^{
+-    fields = @[ @"top", @"left", @"bottom", @"right" ];
+-  });
+-
+-  if ([json isKindOfClass:[NSNumber class]]) {
+-    CGFloat value = [json doubleValue];
+-    return UIEdgeInsetsMake(value, value, value, value);
+-  } else {
+-    UIEdgeInsets result;
+-    convertCGStruct("UIEdgeInsets", fields, (CGFloat *)&result, json);
+-    return result;
+-  }
+-}
+-
+ RCT_ENUM_CONVERTER(
+     CGLineJoin,
+     (@{
+@@ -643,256 +471,6 @@
+     intValue)
+ 
+ RCT_CGSTRUCT_CONVERTER(CGAffineTransform, (@[ @"a", @"b", @"c", @"d", @"tx", @"ty" ]))
+-
+-static NSString *const RCTFallback = @"fallback";
+-static NSString *const RCTFallbackARGB = @"fallback-argb";
+-static NSString *const RCTSelector = @"selector";
+-static NSString *const RCTIndex = @"index";
+-
+-/** The following dictionary defines the react-native semantic colors for ios.
+- *  If the value for a given name is empty then the name itself
+- *  is used as the UIColor selector.
+- *  If the RCTSelector key is present then that value is used for a selector instead
+- *  of the key name.
+- *  If the given selector is not available on the running OS version then
+- *  the RCTFallback selector is used instead.
+- *  If the RCTIndex key is present then object returned from UIColor is an
+- *  NSArray and the object at index RCTIndex is to be used.
+- */
+-static NSDictionary<NSString *, NSDictionary *> *RCTSemanticColorsMap(void)
+-{
+-  static NSDictionary<NSString *, NSDictionary *> *colorMap = nil;
+-  if (colorMap == nil) {
+-    NSMutableDictionary<NSString *, NSDictionary *> *map = [@{
+-      // https://developer.apple.com/documentation/uikit/uicolor/ui_element_colors
+-      // Label Colors
+-      @"labelColor" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB :
+-            @(0xFF000000) // fallback for iOS<=12: RGBA returned by this semantic color in light mode on iOS 13
+-      },
+-      @"secondaryLabelColor" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0x993c3c43)
+-      },
+-      @"tertiaryLabelColor" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0x4c3c3c43)
+-      },
+-      @"quaternaryLabelColor" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0x2d3c3c43)
+-      },
+-      // Fill Colors
+-      @"systemFillColor" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0x33787880)
+-      },
+-      @"secondarySystemFillColor" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0x28787880)
+-      },
+-      @"tertiarySystemFillColor" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0x1e767680)
+-      },
+-      @"quaternarySystemFillColor" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0x14747480)
+-      },
+-      // Text Colors
+-      @"placeholderTextColor" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0x4c3c3c43)
+-      },
+-      // Standard Content Background Colors
+-      @"systemBackgroundColor" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0xFFffffff)
+-      },
+-      @"secondarySystemBackgroundColor" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0xFFf2f2f7)
+-      },
+-      @"tertiarySystemBackgroundColor" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0xFFffffff)
+-      },
+-      // Grouped Content Background Colors
+-      @"systemGroupedBackgroundColor" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0xFFf2f2f7)
+-      },
+-      @"secondarySystemGroupedBackgroundColor" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0xFFffffff)
+-      },
+-      @"tertiarySystemGroupedBackgroundColor" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0xFFf2f2f7)
+-      },
+-      // Separator Colors
+-      @"separatorColor" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0x493c3c43)
+-      },
+-      @"opaqueSeparatorColor" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0xFFc6c6c8)
+-      },
+-      // Link Color
+-      @"linkColor" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0xFF007aff)
+-      },
+-      // Nonadaptable Colors
+-      @"darkTextColor" : @{},
+-      @"lightTextColor" : @{},
+-      // https://developer.apple.com/documentation/uikit/uicolor/standard_colors
+-      // Adaptable Colors
+-      @"systemBlueColor" : @{},
+-      @"systemBrownColor" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0xFFa2845e)
+-      },
+-      @"systemCyanColor" : @{},
+-      @"systemGreenColor" : @{},
+-      @"systemIndigoColor" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0xFF5856d6)
+-      },
+-      @"systemMintColor" : @{},
+-      @"systemOrangeColor" : @{},
+-      @"systemPinkColor" : @{},
+-      @"systemPurpleColor" : @{},
+-      @"systemRedColor" : @{},
+-      @"systemTealColor" : @{},
+-      @"systemYellowColor" : @{},
+-      // Adaptable Gray Colors
+-      @"systemGrayColor" : @{},
+-      @"systemGray2Color" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0xFFaeaeb2)
+-      },
+-      @"systemGray3Color" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0xFFc7c7cc)
+-      },
+-      @"systemGray4Color" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0xFFd1d1d6)
+-      },
+-      @"systemGray5Color" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0xFFe5e5ea)
+-      },
+-      @"systemGray6Color" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0xFFf2f2f7)
+-      },
+-      // Transparent Color
+-      @"clearColor" : @{
+-        // iOS 13.0
+-        RCTFallbackARGB : @(0x00000000)
+-      },
+-    } mutableCopy];
+-    // The color names are the Objective-C UIColor selector names,
+-    // but Swift selector names are valid as well, so make aliases.
+-    static NSString *const RCTColorSuffix = @"Color";
+-    NSMutableDictionary<NSString *, NSDictionary *> *aliases = [NSMutableDictionary new];
+-    for (NSString *objcSelector in map) {
+-      RCTAssert(
+-          [objcSelector hasSuffix:RCTColorSuffix], @"A selector in the color map did not end with the suffix Color.");
+-      NSMutableDictionary *entry = [map[objcSelector] mutableCopy];
+-      RCTAssert([entry objectForKey:RCTSelector] == nil, @"Entry should not already have an RCTSelector");
+-      NSString *swiftSelector = [objcSelector substringToIndex:[objcSelector length] - [RCTColorSuffix length]];
+-      entry[RCTSelector] = objcSelector;
+-      aliases[swiftSelector] = entry;
+-    }
+-    [map addEntriesFromDictionary:aliases];
+-#if DEBUG
+-    [map addEntriesFromDictionary:@{
+-      // The follow exist for Unit Tests
+-      @"unitTestFallbackColor" : @{RCTFallback : @"gridColor"},
+-      @"unitTestFallbackColorIOS" : @{RCTFallback : @"blueColor"},
+-      @"unitTestFallbackColorEven" : @{
+-        RCTSelector : @"unitTestFallbackColorEven",
+-        RCTIndex : @0,
+-        RCTFallback : @"controlAlternatingRowBackgroundColors"
+-      },
+-      @"unitTestFallbackColorOdd" : @{
+-        RCTSelector : @"unitTestFallbackColorOdd",
+-        RCTIndex : @1,
+-        RCTFallback : @"controlAlternatingRowBackgroundColors"
+-      },
+-    }];
+-#endif
+-    colorMap = [map copy];
+-  }
+-
+-  return colorMap;
+-}
+-
+-/** Returns a UIColor based on a semantic color name.
+- *  Returns nil if the semantic color name is invalid.
+- */
+-static UIColor *RCTColorFromSemanticColorName(NSString *semanticColorName)
+-{
+-  NSDictionary<NSString *, NSDictionary *> *colorMap = RCTSemanticColorsMap();
+-  UIColor *color = nil;
+-  NSDictionary<NSString *, id> *colorInfo = colorMap[semanticColorName];
+-  if (colorInfo) {
+-    NSString *semanticColorSelector = colorInfo[RCTSelector];
+-    if (semanticColorSelector == nil) {
+-      semanticColorSelector = semanticColorName;
+-    }
+-    SEL selector = NSSelectorFromString(semanticColorSelector);
+-    if (![UIColor respondsToSelector:selector]) {
+-      NSNumber *fallbackRGB = colorInfo[RCTFallbackARGB];
+-      if (fallbackRGB != nil) {
+-        RCTAssert([fallbackRGB isKindOfClass:[NSNumber class]], @"fallback ARGB is not a number");
+-        return [RCTConvert UIColor:fallbackRGB];
+-      }
+-      semanticColorSelector = colorInfo[RCTFallback];
+-      selector = NSSelectorFromString(semanticColorSelector);
+-    }
+-    RCTAssert([UIColor respondsToSelector:selector], @"RCTUIColor does not respond to a semantic color selector.");
+-    Class klass = [UIColor class];
+-    IMP imp = [klass methodForSelector:selector];
+-    id (*getSemanticColorObject)(id, SEL) = (id (*)(id, SEL))imp;
+-    id colorObject = getSemanticColorObject(klass, selector);
+-    if ([colorObject isKindOfClass:[UIColor class]]) {
+-      color = colorObject;
+-    } else if ([colorObject isKindOfClass:[NSArray class]]) {
+-      NSArray *colors = colorObject;
+-      NSNumber *index = colorInfo[RCTIndex];
+-      RCTAssert(index, @"index should not be null");
+-      color = colors[[index unsignedIntegerValue]];
+-    } else {
+-      RCTAssert(false, @"selector return an unknown object type");
+-    }
+-  }
+-  return color;
+-}
+-
+-/** Returns an alphabetically sorted comma separated list of the valid semantic color names
+- */
+-static NSString *RCTSemanticColorNames(void)
+-{
+-  NSMutableString *names = [NSMutableString new];
+-  NSDictionary<NSString *, NSDictionary *> *colorMap = RCTSemanticColorsMap();
+-  NSArray *allKeys =
+-      [[[colorMap allKeys] mutableCopy] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)];
+-
+-  for (id key in allKeys) {
+-    if ([names length]) {
+-      [names appendString:@", "];
+-    }
+-    [names appendString:key];
+-  }
+-  return names;
+-}
+-
+ // The iOS side is kept in synch with the C++ side by using the
+ // RCTAppDelegate which, at startup, sets the default color space.
+ // The usage of dispatch_once and of once_flag ensoure that those are
+@@ -908,23 +486,6 @@
+   _defaultColorSpace = colorSpace;
+ }
+ 
+-+ (UIColor *)UIColorWithRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue alpha:(CGFloat)alpha
+-{
+-  RCTColorSpace space = RCTGetDefaultColorSpace();
+-  return [self UIColorWithRed:red green:green blue:blue alpha:alpha andColorSpace:space];
+-}
+-+ (UIColor *)UIColorWithRed:(CGFloat)red
+-                      green:(CGFloat)green
+-                       blue:(CGFloat)blue
+-                      alpha:(CGFloat)alpha
+-              andColorSpace:(RCTColorSpace)colorSpace
+-{
+-  if (colorSpace == RCTColorSpaceDisplayP3) {
+-    return [UIColor colorWithDisplayP3Red:red green:green blue:blue alpha:alpha];
+-  }
+-  return [UIColor colorWithRed:red green:green blue:blue alpha:alpha];
+-}
+-
+ + (RCTColorSpace)RCTColorSpaceFromString:(NSString *)colorSpace
+ {
+   if ([colorSpace isEqualToString:@"display-p3"]) {
+@@ -935,117 +496,6 @@
+   return RCTGetDefaultColorSpace();
+ }
+ 
+-+ (UIColor *)UIColor:(id)json
+-{
+-  if (!json) {
+-    return nil;
+-  }
+-  if ([json isKindOfClass:[NSArray class]]) {
+-    NSArray *components = [self NSNumberArray:json];
+-    CGFloat alpha = components.count > 3 ? [self CGFloat:components[3]] : 1.0;
+-    return [self UIColorWithRed:[self CGFloat:components[0]]
+-                          green:[self CGFloat:components[1]]
+-                           blue:[self CGFloat:components[2]]
+-                          alpha:alpha];
+-  } else if ([json isKindOfClass:[NSNumber class]]) {
+-    NSUInteger argb = [self NSUInteger:json];
+-    CGFloat a = ((argb >> 24) & 0xFF) / 255.0;
+-    CGFloat r = ((argb >> 16) & 0xFF) / 255.0;
+-    CGFloat g = ((argb >> 8) & 0xFF) / 255.0;
+-    CGFloat b = (argb & 0xFF) / 255.0;
+-    return [self UIColorWithRed:r green:g blue:b alpha:a];
+-  } else if ([json isKindOfClass:[NSDictionary class]]) {
+-    NSDictionary *dictionary = json;
+-    id value = nil;
+-    NSString *rawColorSpace = [dictionary objectForKey:@"space"];
+-    if ([rawColorSpace isEqualToString:@"display-p3"] || [rawColorSpace isEqualToString:@"srgb"]) {
+-      CGFloat r = [[dictionary objectForKey:@"r"] floatValue];
+-      CGFloat g = [[dictionary objectForKey:@"g"] floatValue];
+-      CGFloat b = [[dictionary objectForKey:@"b"] floatValue];
+-      CGFloat a = [[dictionary objectForKey:@"a"] floatValue];
+-      RCTColorSpace colorSpace = [self RCTColorSpaceFromString:rawColorSpace];
+-      return [self UIColorWithRed:r green:g blue:b alpha:a andColorSpace:colorSpace];
+-    } else if ((value = [dictionary objectForKey:@"semantic"])) {
+-      if ([value isKindOfClass:[NSString class]]) {
+-        NSString *semanticName = value;
+-        UIColor *color = [UIColor colorNamed:semanticName];
+-        if (color != nil) {
+-          return color;
+-        }
+-        color = RCTColorFromSemanticColorName(semanticName);
+-        if (color == nil) {
+-          RCTLogConvertError(
+-              json,
+-              [@"a UIColor.  Expected one of the following values: " stringByAppendingString:RCTSemanticColorNames()]);
+-        }
+-        return color;
+-      } else if ([value isKindOfClass:[NSArray class]]) {
+-        for (id name in value) {
+-          UIColor *color = [UIColor colorNamed:name];
+-          if (color != nil) {
+-            return color;
+-          }
+-          color = RCTColorFromSemanticColorName(name);
+-          if (color != nil) {
+-            return color;
+-          }
+-        }
+-        RCTLogConvertError(
+-            json,
+-            [@"a UIColor.  None of the names in the array were one of the following values: "
+-                stringByAppendingString:RCTSemanticColorNames()]);
+-        return nil;
+-      }
+-      RCTLogConvertError(
+-          json, @"a UIColor.  Expected either a single name or an array of names but got something else.");
+-      return nil;
+-    } else if ((value = [dictionary objectForKey:@"dynamic"])) {
+-      NSDictionary *appearances = value;
+-      id light = [appearances objectForKey:@"light"];
+-      UIColor *lightColor = [RCTConvert UIColor:light];
+-      id dark = [appearances objectForKey:@"dark"];
+-      UIColor *darkColor = [RCTConvert UIColor:dark];
+-      id highContrastLight = [appearances objectForKey:@"highContrastLight"];
+-      UIColor *highContrastLightColor = [RCTConvert UIColor:highContrastLight];
+-      id highContrastDark = [appearances objectForKey:@"highContrastDark"];
+-      UIColor *highContrastDarkColor = [RCTConvert UIColor:highContrastDark];
+-      if (lightColor != nil && darkColor != nil) {
+-        UIColor *color = [UIColor colorWithDynamicProvider:^UIColor *_Nonnull(UITraitCollection *_Nonnull collection) {
+-          if (collection.userInterfaceStyle == UIUserInterfaceStyleDark) {
+-            if (collection.accessibilityContrast == UIAccessibilityContrastHigh && highContrastDarkColor != nil) {
+-              return highContrastDarkColor;
+-            } else {
+-              return darkColor;
+-            }
+-          } else {
+-            if (collection.accessibilityContrast == UIAccessibilityContrastHigh && highContrastLightColor != nil) {
+-              return highContrastLightColor;
+-            } else {
+-              return lightColor;
+-            }
+-          }
+-        }];
+-        return color;
+-
+-      } else {
+-        RCTLogConvertError(json, @"a UIColor. Expected an iOS dynamic appearance aware color.");
+-        return nil;
+-      }
+-    } else {
+-      RCTLogConvertError(json, @"a UIColor. Expected an iOS semantic color or dynamic appearance aware color.");
+-      return nil;
+-    }
+-  } else {
+-    RCTLogConvertError(json, @"a UIColor. Did you forget to call processColor() on the JS side?");
+-    return nil;
+-  }
+-}
+-
+-+ (CGColorRef)CGColor:(id)json
+-{
+-  return [self UIColor:json].CGColor;
+-}
+-
+ + (YGValue)YGValue:(id)json
+ {
+   if (!json) {
+@@ -1097,8 +547,6 @@
+ 
+ RCT_ARRAY_CONVERTER(NSURL)
+ RCT_ARRAY_CONVERTER(RCTFileURL)
+-RCT_ARRAY_CONVERTER(UIColor)
+-
+ /**
+  * This macro is used for creating converter functions for directly
+  * representable json array values that require no conversion.
+@@ -1120,16 +568,6 @@
+ RCT_JSON_ARRAY_CONVERTER(NSDictionary)
+ RCT_JSON_ARRAY_CONVERTER(NSNumber)
+ 
+-// Can't use RCT_ARRAY_CONVERTER due to bridged cast
+-+ (NSArray *)CGColorArray:(id)json
+-{
+-  NSMutableArray *colors = [NSMutableArray new];
+-  for (id value in [self NSArray:json]) {
+-    [colors addObject:(__bridge id)[self CGColor:value]];
+-  }
+-  return colors;
+-}
+-
+ static id RCTConvertPropertyListValue(id json)
+ {
+   if (!json || json == (id)kCFNull) {
+@@ -1288,91 +726,5 @@
+     }),
+     RCTAnimationTypeEaseInEaseOut,
+     integerValue)
+-
+-@end
+-
+-@interface RCTImageSource (Packager)
+-
+-@property (nonatomic, assign) BOOL packagerAsset;
+-
+-@end
+-
+-@implementation RCTConvert (Deprecated)
+-
+-/* This method is only used when loading images synchronously, e.g. for tabbar icons */
+-+ (UIImage *)UIImage:(id)json
+-{
+-  if (!json) {
+-    return nil;
+-  }
+-
+-  RCTImageSource *imageSource = [self RCTImageSource:json];
+-  if (!imageSource) {
+-    return nil;
+-  }
+-
+-  __block UIImage *image;
+-  if (!RCTIsMainQueue()) {
+-    // It seems that none of the UIImage loading methods can be guaranteed
+-    // thread safe, so we'll pick the lesser of two evils here and block rather
+-    // than run the risk of crashing
+-    RCTLogWarn(@"Calling [RCTConvert UIImage:] on a background thread is not recommended");
+-    RCTUnsafeExecuteOnMainQueueSync(^{
+-      image = [self UIImage:json];
+-    });
+-    return image;
+-  }
+-
+-  NSURL *URL = imageSource.request.URL;
+-  NSString *scheme = URL.scheme.lowercaseString;
+-  if ([scheme isEqualToString:@"file"]) {
+-    image = RCTImageFromLocalAssetURL(URL);
+-    // There is a case where this may fail when the image is at the bundle location.
+-    // RCTImageFromLocalAssetURL only checks for the image in the same location as the jsbundle
+-    // Hence, if the bundle is CodePush-ed, it will not be able to find the image.
+-    // This check is added here instead of being inside RCTImageFromLocalAssetURL, since
+-    // we don't want breaking changes to RCTImageFromLocalAssetURL, which is called in a lot of places
+-    // This is a deprecated method, and hence has the least impact on existing code. Basically,
+-    // instead of crashing the app, it tries one more location for the image.
+-    if (!image) {
+-      image = RCTImageFromLocalBundleAssetURL(URL);
+-    }
+-    if (!image) {
+-      RCTLogConvertError(json, @"an image. File not found.");
+-    }
+-  } else if ([scheme isEqualToString:@"data"]) {
+-    image = [UIImage imageWithData:[NSData dataWithContentsOfURL:URL]];
+-  } else if ([scheme isEqualToString:@"http"] && imageSource.packagerAsset) {
+-    image = [UIImage imageWithData:[NSData dataWithContentsOfURL:URL]];
+-  } else {
+-    RCTLogConvertError(json, @"an image. Only local files or data URIs are supported.");
+-    return nil;
+-  }
+-
+-  CGFloat scale = imageSource.scale;
+-  if (!scale && imageSource.size.width) {
+-    // If no scale provided, set scale to image width / source width
+-    scale = CGImageGetWidth(image.CGImage) / imageSource.size.width;
+-  }
+-
+-  if (scale) {
+-    image = [UIImage imageWithCGImage:image.CGImage scale:scale orientation:image.imageOrientation];
+-  }
+-
+-  if (!CGSizeEqualToSize(imageSource.size, CGSizeZero) && !CGSizeEqualToSize(imageSource.size, image.size)) {
+-    RCTLogInfo(
+-        @"Image source %@ size %@ does not match loaded image size %@.",
+-        URL.path.lastPathComponent,
+-        NSStringFromCGSize(imageSource.size),
+-        NSStringFromCGSize(image.size));
+-  }
+-
+-  return image;
+-}
+-
+-+ (CGImageRef)CGImage:(id)json
+-{
+-  return [self UIImage:json].CGImage;
+-}
+ 
+ @end
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTActionSheetManager.h /tmp/rn-combined-final/React/CoreModules/RCTActionSheetManager.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTActionSheetManager.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/CoreModules/RCTActionSheetManager.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTBridge.h>
+ 
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTAlertController.h /tmp/rn-combined-final/React/CoreModules/RCTAlertController.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTAlertController.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/CoreModules/RCTAlertController.h	2026-04-14 21:48:23
+@@ -1,3 +1,4 @@
++// TODO(platform-extraction): Extract to react-native-ios
+ /*
+  * Copyright (c) Meta Platforms, Inc. and affiliates.
+  *
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTAlertManager.h /tmp/rn-combined-final/React/CoreModules/RCTAlertManager.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTAlertManager.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/CoreModules/RCTAlertManager.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTBridgeModule.h>
+ #import <React/RCTInvalidating.h>
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTAppearance.h /tmp/rn-combined-final/React/CoreModules/RCTAppearance.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTAppearance.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/CoreModules/RCTAppearance.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTBridgeModule.h>
+ #import <React/RCTConvert.h>
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTDevMenu.h /tmp/rn-combined-final/React/CoreModules/RCTDevMenu.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTDevMenu.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/CoreModules/RCTDevMenu.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTBridge.h>
+ #import <React/RCTBridgeModule.h>
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTDeviceInfo.h /tmp/rn-combined-final/React/CoreModules/RCTDeviceInfo.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTDeviceInfo.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/CoreModules/RCTDeviceInfo.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTBridge.h>
+ 
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTEventDispatcher.h /tmp/rn-combined-final/React/CoreModules/RCTEventDispatcher.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTEventDispatcher.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/CoreModules/RCTEventDispatcher.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTBridge.h>
+ #import <React/RCTEventDispatcherProtocol.h>
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTFPSGraph.h /tmp/rn-combined-final/React/CoreModules/RCTFPSGraph.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTFPSGraph.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/CoreModules/RCTFPSGraph.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTDefines.h>
+ 
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTLogBox.h /tmp/rn-combined-final/React/CoreModules/RCTLogBox.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTLogBox.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/CoreModules/RCTLogBox.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ #import "RCTLogBoxView.h"
+ 
+ @interface RCTLogBox : NSObject
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTLogBoxView.h /tmp/rn-combined-final/React/CoreModules/RCTLogBoxView.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTLogBoxView.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/CoreModules/RCTLogBoxView.h	2026-04-14 21:48:23
+@@ -8,18 +8,18 @@
+ #import <React/RCTBridge.h>
+ #import <React/RCTSurfacePresenterStub.h>
+ #import <React/RCTSurfaceView.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ @interface RCTLogBoxView : UIWindow
+ 
+ - (instancetype)initWithFrame:(CGRect)frame;
+ 
+-- (void)createRootViewController:(UIView *)view;
++- (void)createRootViewController:(RCTPlatformView *)view;
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+-- (instancetype)initWithWindow:(UIWindow *)window bridge:(RCTBridge *)bridge;
++- (instancetype)initWithWindow:(RCTPlatformWindow *)window bridge:(RCTBridge *)bridge;
+ #endif // RCT_REMOVE_LEGACY_ARCH
+-- (instancetype)initWithWindow:(UIWindow *)window surfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter;
++- (instancetype)initWithWindow:(RCTPlatformWindow *)window surfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter;
+ 
+ - (void)show;
+ 
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTRedBox.h /tmp/rn-combined-final/React/CoreModules/RCTRedBox.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTRedBox.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/CoreModules/RCTRedBox.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTBridgeModule.h>
+ #import <React/RCTErrorCustomizer.h>
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTStatusBarManager.h /tmp/rn-combined-final/React/CoreModules/RCTStatusBarManager.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/CoreModules/RCTStatusBarManager.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/CoreModules/RCTStatusBarManager.h	2026-04-14 21:48:23
+@@ -1,3 +1,4 @@
++// TODO(platform-extraction): Extract to react-native-ios
+ /*
+  * Copyright (c) Meta Platforms, Inc. and affiliates.
+  *
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Modules/RCTLayoutAnimation.h /tmp/rn-combined-final/React/Modules/RCTLayoutAnimation.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Modules/RCTLayoutAnimation.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Modules/RCTLayoutAnimation.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTAnimationType.h>
+ 
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Modules/RCTLayoutAnimationGroup.h /tmp/rn-combined-final/React/Modules/RCTLayoutAnimationGroup.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Modules/RCTLayoutAnimationGroup.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Modules/RCTLayoutAnimationGroup.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTBridgeModule.h>
+ 
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Modules/RCTRedBoxExtraDataViewController.h /tmp/rn-combined-final/React/Modules/RCTRedBoxExtraDataViewController.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Modules/RCTRedBoxExtraDataViewController.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Modules/RCTRedBoxExtraDataViewController.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ @protocol RCTRedBoxExtraDataActionDelegate <NSObject>
+ - (void)reload;
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Modules/RCTSurfacePresenterStub.h /tmp/rn-combined-final/React/Modules/RCTSurfacePresenterStub.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Modules/RCTSurfacePresenterStub.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Modules/RCTSurfacePresenterStub.h	2026-04-14 21:48:23
+@@ -31,7 +31,7 @@
+ 
+ - (id<RCTSurfaceProtocol>)createFabricSurfaceForModuleName:(NSString *)moduleName
+                                          initialProperties:(NSDictionary *)initialProperties;
+-- (nullable UIView *)findComponentViewWithTag_DO_NOT_USE_DEPRECATED:(NSInteger)tag;
++- (nullable RCTPlatformView *)findComponentViewWithTag_DO_NOT_USE_DEPRECATED:(NSInteger)tag;
+ - (void)synchronouslyUpdateViewOnUIThread:(NSNumber *)reactTag props:(NSDictionary *)props;
+ - (void)addObserver:(id<RCTSurfacePresenterObserver>)observer;
+ - (void)removeObserver:(id<RCTSurfacePresenterObserver>)observer;
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Modules/RCTUIManager.h /tmp/rn-combined-final/React/Modules/RCTUIManager.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Modules/RCTUIManager.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Modules/RCTUIManager.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTBridge.h>
+ #import <React/RCTBridgeModule.h>
+@@ -37,7 +37,7 @@
+ /**
+  * Register a root view with the RCTUIManager.
+  */
+-- (void)registerRootView:(UIView *)rootView;
++- (void)registerRootView:(RCTPlatformView *)rootView;
+ 
+ /**
+  * Gets the view name associated with a reactTag.
+@@ -47,7 +47,7 @@
+ /**
+  * Gets the view associated with a reactTag.
+  */
+-- (UIView *)viewForReactTag:(NSNumber *)reactTag;
++- (RCTPlatformView *)viewForReactTag:(NSNumber *)reactTag;
+ 
+ /**
+  * Gets the shadow view associated with a reactTag.
+@@ -61,7 +61,7 @@
+  * this value does not affect root node size style properties.
+  * Can be considered as something similar to `setSize:forView:` but applicable only for root view.
+  */
+-- (void)setAvailableSize:(CGSize)availableSize forRootView:(UIView *)rootView;
++- (void)setAvailableSize:(CGSize)availableSize forRootView:(RCTPlatformView *)rootView;
+ 
+ /**
+  * Sets local data for a shadow view corresponded with given view.
+@@ -72,20 +72,20 @@
+  * the shadow view.
+  * Please respect one-directional data flow of React.
+  */
+-- (void)setLocalData:(NSObject *)localData forView:(UIView *)view;
++- (void)setLocalData:(NSObject *)localData forView:(RCTPlatformView *)view;
+ 
+ /**
+  * Set the size of a view. This might be in response to a screen rotation
+  * or some other layout event outside of the React-managed view hierarchy.
+  */
+-- (void)setSize:(CGSize)size forView:(UIView *)view;
++- (void)setSize:(CGSize)size forView:(RCTPlatformView *)view;
+ 
+ /**
+  * Set the natural size of a view, which is used when no explicit size is set.
+  * Use `UIViewNoIntrinsicMetric` to ignore a dimension.
+  * The `size` must NOT include padding and border.
+  */
+-- (void)setIntrinsicContentSize:(CGSize)intrinsicContentSize forView:(UIView *)view;
++- (void)setIntrinsicContentSize:(CGSize)intrinsicContentSize forView:(RCTPlatformView *)view;
+ 
+ /**
+  * Sets up layout animation which will perform on next layout pass.
+@@ -124,7 +124,7 @@
+  * @param completion the completion block that will hand over the rootView, if any.
+  *
+  */
+-- (void)rootViewForReactTag:(NSNumber *)reactTag withCompletion:(void (^)(UIView *view))completion;
++- (void)rootViewForReactTag:(NSNumber *)reactTag withCompletion:(void (^)(RCTPlatformView *view))completion;
+ 
+ /**
+  * Finds a view that is tagged with nativeID as its nativeID prop
+@@ -134,7 +134,7 @@
+  * @param nativeID the id reference to native component relative to root view.
+  * @param rootTag the react tag of root view hierarchy from which to find the view.
+  */
+-- (UIView *)viewForNativeID:(NSString *)nativeID withRootTag:(NSNumber *)rootTag;
++- (RCTPlatformView *)viewForNativeID:(NSString *)nativeID withRootTag:(NSNumber *)rootTag;
+ 
+ /**
+  * Register a view that is tagged with nativeID as its nativeID prop
+@@ -142,12 +142,12 @@
+  * @param nativeID the id reference to native component relative to root view.
+  * @param view the view that is tagged with nativeID as its nativeID prop.
+  */
+-- (void)setNativeID:(NSString *)nativeID forView:(UIView *)view;
++- (void)setNativeID:(NSString *)nativeID forView:(RCTPlatformView *)view;
+ 
+ /**
+  * The view that is currently first responder, according to the JS context.
+  */
+-+ (UIView *)JSResponder;
+++ (RCTPlatformView *)JSResponder;
+ 
+ /**
+  * In some cases we might want to trigger layout from native side.
+@@ -195,13 +195,13 @@
+  */
+ @interface RCTComposedViewRegistry : NSMutableDictionary
+ 
+-- (instancetype)initWithUIManager:(RCTUIManager *)uiManager andRegistry:(NSDictionary<NSNumber *, UIView *> *)registry;
++- (instancetype)initWithUIManager:(RCTUIManager *)uiManager andRegistry:(NSDictionary<NSNumber *, RCTPlatformView *> *)registry;
+ 
+ @end
+ 
+ // This protocol is needed to silence the "unknown selector" warning
+ @protocol RCTRendererInteropLayerAdapting
+-- (UIView *)paperView;
++- (RCTPlatformView *)paperView;
+ @end
+ 
+ /**
+@@ -210,7 +210,7 @@
+  * If the view passed as parameter is the Interop Layer wrapper, this method returns the wrapped view
+  * Otherwise, it returns the view itself.
+  */
+-RCT_EXTERN UIView *RCTPaperViewOrCurrentView(UIView *view);
++RCT_EXTERN RCTPlatformView *RCTPaperViewOrCurrentView(RCTPlatformView *view);
+ 
+ RCT_EXTERN NSMutableDictionary<NSString *, id> *RCTModuleConstantsForDestructuredComponent(
+     NSMutableDictionary<NSString *, NSDictionary *> *directEvents,
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Modules/RCTUIManagerObserverCoordinator.h /tmp/rn-combined-final/React/Modules/RCTUIManagerObserverCoordinator.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Modules/RCTUIManagerObserverCoordinator.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Modules/RCTUIManagerObserverCoordinator.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTViewManager.h>
+ 
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTActivityIndicatorView.h /tmp/rn-combined-final/React/Views/RCTActivityIndicatorView.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTActivityIndicatorView.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/RCTActivityIndicatorView.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTAutoInsetsProtocol.h /tmp/rn-combined-final/React/Views/RCTAutoInsetsProtocol.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTAutoInsetsProtocol.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/RCTAutoInsetsProtocol.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ /**
+  * Defines a View that wants to support auto insets adjustment
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTBorderDrawing.h /tmp/rn-combined-final/React/Views/RCTBorderDrawing.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTBorderDrawing.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/RCTBorderDrawing.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTBorderStyle.h>
+ #import <React/RCTDefines.h>
+@@ -29,10 +29,10 @@
+ } RCTCornerInsets;
+ 
+ typedef struct {
+-  UIColor *top;
+-  UIColor *left;
+-  UIColor *bottom;
+-  UIColor *right;
++  RCTUIColor *top;
++  RCTUIColor *left;
++  RCTUIColor *bottom;
++  RCTUIColor *right;
+ } RCTBorderColors;
+ 
+ /**
+@@ -75,5 +75,5 @@
+     RCTCornerRadii cornerRadii,
+     UIEdgeInsets borderInsets,
+     RCTBorderColors borderColors,
+-    UIColor *backgroundColor,
++    RCTUIColor *backgroundColor,
+     BOOL drawToEdge);
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTComponentData.h /tmp/rn-combined-final/React/Views/RCTComponentData.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTComponentData.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/RCTComponentData.h	2026-04-14 21:48:23
+@@ -34,7 +34,7 @@
+                               bridge:(RCTBridge *)bridge
+                      eventDispatcher:(id<RCTEventDispatcherProtocol>)eventDispatcher NS_DESIGNATED_INITIALIZER;
+ 
+-- (UIView *)createViewWithTag:(nullable NSNumber *)tag rootTag:(nullable NSNumber *)rootTag;
++- (RCTPlatformView *)createViewWithTag:(nullable NSNumber *)tag rootTag:(nullable NSNumber *)rootTag;
+ - (RCTShadowView *)createShadowViewWithTag:(NSNumber *)tag;
+ - (void)setProps:(NSDictionary<NSString *, id> *)props forView:(id<RCTComponent>)view;
+ - (void)setProps:(NSDictionary<NSString *, id> *)props forShadowView:(RCTShadowView *)shadowView;
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTDebuggingOverlay.h /tmp/rn-combined-final/React/Views/RCTDebuggingOverlay.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTDebuggingOverlay.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/RCTDebuggingOverlay.h	2026-04-14 21:48:23
+@@ -5,16 +5,16 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTView.h>
+ 
+ @interface TraceUpdateTuple : NSObject
+ 
+-@property (nonatomic, strong, readonly) UIView *view;
++@property (nonatomic, strong, readonly) RCTPlatformView *view;
+ @property (nonatomic, copy, readonly) dispatch_block_t cleanupBlock;
+ 
+-- (instancetype)initWithView:(UIView *)view cleanupBlock:(dispatch_block_t)cleanupBlock;
++- (instancetype)initWithView:(RCTPlatformView *)view cleanupBlock:(dispatch_block_t)cleanupBlock;
+ 
+ @end
+ 
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTFont+Private.h /tmp/rn-combined-final/React/Views/RCTFont+Private.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTFont+Private.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/RCTFont+Private.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTDefines.h>
+ 
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTLayout.h /tmp/rn-combined-final/React/Views/RCTLayout.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTLayout.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/RCTLayout.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTDefines.h>
+ #import <yoga/Yoga.h>
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTModalHostView.h /tmp/rn-combined-final/React/Views/RCTModalHostView.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTModalHostView.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/RCTModalHostView.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+@@ -19,7 +19,7 @@
+ @protocol RCTModalHostViewInteractor;
+ 
+ __attribute__((deprecated("This API will be removed along with the legacy architecture.")))
+-@interface RCTModalHostView : UIView<RCTInvalidating, UIAdaptivePresentationControllerDelegate>
++@interface RCTModalHostView : RCTUIView<RCTInvalidating, UIAdaptivePresentationControllerDelegate>
+ 
+ @property (nonatomic, copy) NSString *animationType;
+ @property (nonatomic, assign) UIModalPresentationStyle presentationStyle;
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTModalHostViewController.h /tmp/rn-combined-final/React/Views/RCTModalHostViewController.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTModalHostViewController.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/RCTModalHostViewController.h	2026-04-14 21:48:23
+@@ -5,12 +5,12 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+ __attribute__((deprecated("This API will be removed along with the legacy architecture.")))
+-@interface RCTModalHostViewController : UIViewController
++@interface RCTModalHostViewController : RCTPlatformViewController
+ 
+ @property (nonatomic, copy) void (^boundsDidChangeBlock)(CGRect newBounds);
+ 
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTModalHostViewManager.h /tmp/rn-combined-final/React/Views/RCTModalHostViewManager.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTModalHostViewManager.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/RCTModalHostViewManager.h	2026-04-14 21:48:23
+@@ -12,8 +12,8 @@
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+ typedef void (^RCTModalViewInteractionBlock)(
+-    UIViewController *reactViewController,
+-    UIViewController *viewController,
++    RCTPlatformViewController *reactViewController,
++    RCTPlatformViewController *viewController,
+     BOOL animated,
+     dispatch_block_t completionBlock)
+     __attribute__((deprecated("This API will be removed along with the legacy architecture.")));
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTModalManager.h /tmp/rn-combined-final/React/Views/RCTModalManager.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTModalManager.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/RCTModalManager.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTShadowView+Internal.h /tmp/rn-combined-final/React/Views/RCTShadowView+Internal.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTShadowView+Internal.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/RCTShadowView+Internal.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTShadowView.h>
+ 
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTShadowView+Layout.h /tmp/rn-combined-final/React/Views/RCTShadowView+Layout.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTShadowView+Layout.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/RCTShadowView+Layout.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTShadowView.h>
+ 
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTShadowView.h /tmp/rn-combined-final/React/Views/RCTShadowView.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTShadowView.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/RCTShadowView.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTComponent.h>
+ // Keeps RCTConvert.h here before yoga for clang module to generate correct header imports.
+@@ -17,7 +17,7 @@
+ @class RCTRootShadowView;
+ @class RCTSparseArray;
+ 
+-typedef void (^RCTApplierBlock)(NSDictionary<NSNumber *, UIView *> *viewRegistry);
++typedef void (^RCTApplierBlock)(NSDictionary<NSNumber *, RCTPlatformView *> *viewRegistry);
+ 
+ /**
+  * ShadowView tree mirrors RCT view tree. Every node is highly stateful.
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTSwitch.h /tmp/rn-combined-final/React/Views/RCTSwitch.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTSwitch.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/RCTSwitch.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTView.h /tmp/rn-combined-final/React/Views/RCTView.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTView.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/RCTView.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTBorderCurve.h>
+ #import <React/RCTBorderStyle.h>
+@@ -13,11 +13,11 @@
+ #import <React/RCTCursor.h>
+ #import <React/RCTPointerEvents.h>
+ 
+-extern const UIAccessibilityTraits SwitchAccessibilityTrait;
++extern const RCTUIAccessibilityTraits SwitchAccessibilityTrait;
+ 
+ @protocol RCTAutoInsetsProtocol;
+ 
+-@interface RCTView : UIView
++@interface RCTView : RCTUIView
+ 
+ /**
+  * Accessibility event handlers
+@@ -32,8 +32,8 @@
+  */
+ @property (nonatomic, assign) RCTPointerEvents pointerEvents;
+ 
+-+ (void)autoAdjustInsetsForView:(UIView<RCTAutoInsetsProtocol> *)parentView
+-                 withScrollView:(UIScrollView *)scrollView
+++ (void)autoAdjustInsetsForView:(RCTPlatformView<RCTAutoInsetsProtocol> *)parentView
++                 withScrollView:(RCTUIScrollView *)scrollView
+                    updateOffset:(BOOL)updateOffset;
+ 
+ /**
+@@ -80,16 +80,16 @@
+ /**
+  * Border colors (actually retained).
+  */
+-@property (nonatomic, strong) UIColor *borderTopColor;
+-@property (nonatomic, strong) UIColor *borderRightColor;
+-@property (nonatomic, strong) UIColor *borderBottomColor;
+-@property (nonatomic, strong) UIColor *borderLeftColor;
+-@property (nonatomic, strong) UIColor *borderStartColor;
+-@property (nonatomic, strong) UIColor *borderEndColor;
+-@property (nonatomic, strong) UIColor *borderColor;
+-@property (nonatomic, strong) UIColor *borderBlockColor;
+-@property (nonatomic, strong) UIColor *borderBlockEndColor;
+-@property (nonatomic, strong) UIColor *borderBlockStartColor;
++@property (nonatomic, strong) RCTUIColor *borderTopColor;
++@property (nonatomic, strong) RCTUIColor *borderRightColor;
++@property (nonatomic, strong) RCTUIColor *borderBottomColor;
++@property (nonatomic, strong) RCTUIColor *borderLeftColor;
++@property (nonatomic, strong) RCTUIColor *borderStartColor;
++@property (nonatomic, strong) RCTUIColor *borderEndColor;
++@property (nonatomic, strong) RCTUIColor *borderColor;
++@property (nonatomic, strong) RCTUIColor *borderBlockColor;
++@property (nonatomic, strong) RCTUIColor *borderBlockEndColor;
++@property (nonatomic, strong) RCTUIColor *borderBlockStartColor;
+ 
+ /**
+  * Border widths.
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTViewManager.h /tmp/rn-combined-final/React/Views/RCTViewManager.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTViewManager.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/RCTViewManager.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTBridgeModule.h>
+ #import <React/RCTConvert.h>
+@@ -19,7 +19,7 @@
+ @class RCTSparseArray;
+ @class RCTUIManager;
+ 
+-typedef void (^RCTViewManagerUIBlock)(RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry);
++typedef void (^RCTViewManagerUIBlock)(RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTPlatformView *> *viewRegistry);
+ 
+ @interface RCTViewManager : NSObject <RCTBridgeModule>
+ 
+@@ -37,7 +37,7 @@
+  * return a fresh instance each time. The view module MUST NOT cache the returned
+  * view and return the same instance for subsequent calls.
+  */
+-- (UIView *)view;
++- (RCTPlatformView *)view;
+ 
+ /**
+  * This method instantiates a shadow view to be managed by the module. If omitted,
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTViewUtils.h /tmp/rn-combined-final/React/Views/RCTViewUtils.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTViewUtils.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/RCTViewUtils.h	2026-04-14 21:48:23
+@@ -6,13 +6,13 @@
+  */
+ 
+ #import <React/RCTDefines.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ NS_ASSUME_NONNULL_BEGIN
+ 
+ RCT_EXTERN_C_BEGIN
+ 
+-UIEdgeInsets RCTContentInsets(UIView *view);
++UIEdgeInsets RCTContentInsets(RCTPlatformView *view);
+ 
+ RCT_EXTERN_C_END
+ 
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTWrapperViewController.h /tmp/rn-combined-final/React/Views/RCTWrapperViewController.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RCTWrapperViewController.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/RCTWrapperViewController.h	2026-04-14 21:48:23
+@@ -5,12 +5,12 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ @class RCTWrapperViewController;
+ 
+-@interface RCTWrapperViewController : UIViewController
++@interface RCTWrapperViewController : RCTPlatformViewController
+ 
+-- (instancetype)initWithContentView:(UIView *)contentView NS_DESIGNATED_INITIALIZER;
++- (instancetype)initWithContentView:(RCTPlatformView *)contentView NS_DESIGNATED_INITIALIZER;
+ 
+ @end
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RefreshControl/RCTRefreshControl.h /tmp/rn-combined-final/React/Views/RefreshControl/RCTRefreshControl.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RefreshControl/RCTRefreshControl.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/RefreshControl/RCTRefreshControl.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+@@ -17,7 +17,7 @@
+ 
+ @property (nonatomic, copy) NSString *title;
+ @property (nonatomic, copy) RCTDirectEventBlock onRefresh;
+-@property (nonatomic, weak) UIScrollView *scrollView;
++@property (nonatomic, weak) RCTUIScrollView *scrollView;
+ 
+ @end
+ 
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/RefreshControl/RCTRefreshableProtocol.h /tmp/rn-combined-final/React/Views/RefreshControl/RCTRefreshableProtocol.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/RefreshControl/RCTRefreshableProtocol.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/RefreshControl/RCTRefreshableProtocol.h	2026-04-14 21:48:23
+@@ -6,7 +6,7 @@
+  */
+ 
+ #import <React/RCTComponent.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ /**
+  * Protocol used to dispatch commands in `RCTRefreshControlManager.h`.
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/SafeAreaView/RCTSafeAreaView.h /tmp/rn-combined-final/React/Views/SafeAreaView/RCTSafeAreaView.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/SafeAreaView/RCTSafeAreaView.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/SafeAreaView/RCTSafeAreaView.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/SafeAreaView/RCTSafeAreaViewLocalData.h /tmp/rn-combined-final/React/Views/SafeAreaView/RCTSafeAreaViewLocalData.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/SafeAreaView/RCTSafeAreaViewLocalData.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/SafeAreaView/RCTSafeAreaViewLocalData.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/ScrollView/RCTScrollContentShadowView.h /tmp/rn-combined-final/React/Views/ScrollView/RCTScrollContentShadowView.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/ScrollView/RCTScrollContentShadowView.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/ScrollView/RCTScrollContentShadowView.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/ScrollView/RCTScrollContentView.h /tmp/rn-combined-final/React/Views/ScrollView/RCTScrollContentView.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/ScrollView/RCTScrollContentView.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/ScrollView/RCTScrollContentView.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/ScrollView/RCTScrollView.h /tmp/rn-combined-final/React/Views/ScrollView/RCTScrollView.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/ScrollView/RCTScrollView.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/ScrollView/RCTScrollView.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIScrollView.h>
++#import <React/RCTUIKit.h>
+ 
+ #ifndef RCT_REMOVE_LEGACY_ARCH
+ 
+@@ -15,10 +15,10 @@
+ #import <React/RCTScrollableProtocol.h>
+ #import <React/RCTView.h>
+ 
+-@protocol UIScrollViewDelegate;
++@protocol RCTUIScrollViewDelegate;
+ 
+ __attribute__((deprecated("This API will be removed along with the legacy architecture.")))
+-@interface RCTScrollView : RCTView<UIScrollViewDelegate, RCTScrollableProtocol, RCTAutoInsetsProtocol>
++@interface RCTScrollView : RCTView<RCTUIScrollViewDelegate, RCTScrollableProtocol, RCTAutoInsetsProtocol>
+ 
+ - (instancetype)initWithEventDispatcher:(id<RCTEventDispatcherProtocol>)eventDispatcher NS_DESIGNATED_INITIALIZER;
+ 
+@@ -29,12 +29,12 @@
+  * efficiently since it will have already been computed by the off-main-thread
+  * layout system.
+  */
+-@property (nonatomic, readonly) UIView *contentView;
++@property (nonatomic, readonly) RCTPlatformView *contentView;
+ 
+ /**
+  * The underlying scrollView (TODO: can we remove this?)
+  */
+-@property (nonatomic, readonly) UIScrollView *scrollView;
++@property (nonatomic, readonly) RCTUIScrollView *scrollView;
+ 
+ @property (nonatomic, assign) UIEdgeInsets contentInset;
+ @property (nonatomic, assign) BOOL automaticallyAdjustContentInsets;
+@@ -54,7 +54,7 @@
+ /** Focus area of newly-activated text input relative to the window to compare against UIKeyboardFrameBegin/End */
+ @property (nonatomic, assign) CGRect firstResponderFocus;
+ /** newly-activated text input outside of the scroll view */
+-@property (nonatomic, weak) UIView *firstResponderViewOutsideScrollView;
++@property (nonatomic, weak) RCTPlatformView *firstResponderViewOutsideScrollView;
+ 
+ // NOTE: currently these event props are only declared so we can export the
+ // event names to JS - we don't call the blocks directly because scroll events
+@@ -68,7 +68,7 @@
+ 
+ @end
+ 
+-@interface UIView (RCTScrollView)
++@interface RCTPlatformView (RCTScrollView)
+ 
+ - (void)reactUpdateResponderOffsetForScrollView:(RCTScrollView *)scrollView;
+ 
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/ScrollView/RCTScrollableProtocol.h /tmp/rn-combined-final/React/Views/ScrollView/RCTScrollableProtocol.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/ScrollView/RCTScrollableProtocol.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/ScrollView/RCTScrollableProtocol.h	2026-04-14 21:48:23
+@@ -6,7 +6,7 @@
+  */
+ 
+ #import <React/RCTComponent.h>
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ /**
+  * Contains any methods related to scrolling. Any `RCTView` that has scrolling
+@@ -25,8 +25,8 @@
+ - (void)scrollToEnd:(BOOL)animated;
+ - (void)zoomToRect:(CGRect)rect animated:(BOOL)animated;
+ 
+-- (void)addScrollListener:(NSObject<UIScrollViewDelegate> *)scrollListener;
+-- (void)removeScrollListener:(NSObject<UIScrollViewDelegate> *)scrollListener;
++- (void)addScrollListener:(NSObject<RCTUIScrollViewDelegate> *)scrollListener;
++- (void)removeScrollListener:(NSObject<RCTUIScrollViewDelegate> *)scrollListener;
+ 
+ @end
+ 
+@@ -39,7 +39,7 @@
+ @property (nonatomic, readonly, getter=isRefreshing) BOOL refreshing;
+ 
+ @optional
+-@property (nonatomic, weak) UIScrollView *scrollView;
++@property (nonatomic, weak) RCTUIScrollView *scrollView;
+ 
+ @end
+ 
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/UIView+Private.h /tmp/rn-combined-final/React/Views/UIView+Private.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/UIView+Private.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/UIView+Private.h	2026-04-14 21:48:23
+@@ -5,13 +5,13 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+-@interface UIView (Private)
++@interface RCTPlatformView (Private)
+ 
+ // remove clipped subviews implementation
+ - (void)react_remountAllSubviews;
+-- (void)react_updateClippedSubviewsWithClipRect:(CGRect)clipRect relativeToView:(UIView *)clipView;
+-- (UIView *)react_findClipView;
++- (void)react_updateClippedSubviewsWithClipRect:(CGRect)clipRect relativeToView:(RCTPlatformView *)clipView;
++- (RCTPlatformView *)react_findClipView;
+ 
+ @end
+diff -ruN /tmp/rn-diff-work/react-native-0.84.1/React/Views/UIView+React.h /tmp/rn-combined-final/React/Views/UIView+React.h
+--- /tmp/rn-diff-work/react-native-0.84.1/React/Views/UIView+React.h	1985-10-26 01:15:00
++++ /tmp/rn-combined-final/React/Views/UIView+React.h	2026-04-14 21:48:23
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-#import <UIKit/UIKit.h>
++#import <React/RCTUIKit.h>
+ 
+ #import <React/RCTComponent.h>
+ #import <React/RCTConvert.h>
+@@ -19,15 +19,15 @@
+   CGFloat z;
+ } RCTTransformOrigin;
+ 
+-@interface UIView (React) <RCTComponent>
++@interface RCTPlatformView (React) <RCTComponent>
+ 
+ /**
+  * RCTComponent interface.
+  */
+-- (NSArray<UIView *> *)reactSubviews NS_REQUIRES_SUPER;
+-- (UIView *)reactSuperview NS_REQUIRES_SUPER;
+-- (void)insertReactSubview:(UIView *)subview atIndex:(NSInteger)atIndex NS_REQUIRES_SUPER;
+-- (void)removeReactSubview:(UIView *)subview NS_REQUIRES_SUPER;
++- (NSArray<RCTPlatformView *> *)reactSubviews NS_REQUIRES_SUPER;
++- (RCTPlatformView *)reactSuperview NS_REQUIRES_SUPER;
++- (void)insertReactSubview:(RCTPlatformView *)subview atIndex:(NSInteger)atIndex NS_REQUIRES_SUPER;
++- (void)removeReactSubview:(RCTPlatformView *)subview NS_REQUIRES_SUPER;
+ 
+ /**
+  * The native id of the view, used to locate view from native codes
+@@ -63,7 +63,7 @@
+  * Subviews sorted by z-index. Note that this method doesn't do any caching (yet)
+  * and sorts all the views each call.
+  */
+-- (NSArray<UIView *> *)reactZIndexSortedSubviews;
++- (NSArray<RCTPlatformView *> *)reactZIndexSortedSubviews;
+ 
+ /**
+  * Updates the subviews array based on the reactSubviews. Default behavior is
+@@ -86,7 +86,7 @@
+ /**
+  * This method finds and returns the containing view controller for the view.
+  */
+-- (UIViewController *)reactViewController;
++- (RCTPlatformViewController *)reactViewController;
+ 
+ /**
+  * This method attaches the specified controller as a child of the
+@@ -94,7 +94,7 @@
+  * controller is found (which may happen if the view is not currently
+  * attached to the view hierarchy).
+  */
+-- (void)reactAddControllerToClosestParent:(UIViewController *)controller;
++- (void)reactAddControllerToClosestParent:(RCTPlatformViewController *)controller;
+ 
+ /**
+  * Focus manipulation.
+@@ -125,7 +125,7 @@
+  * transparent in favour of some subview.
+  * Defaults to `self`.
+  */
+-@property (nonatomic, readonly) UIView *reactAccessibilityElement;
++@property (nonatomic, readonly) RCTPlatformView *reactAccessibilityElement;
+ 
+ /**
+  * Accessibility properties
+@@ -136,8 +136,8 @@
+ @property (nonatomic, copy) NSArray<NSDictionary *> *accessibilityActions;
+ @property (nonatomic, copy) NSDictionary *accessibilityValueInternal;
+ @property (nonatomic, copy) NSString *accessibilityLanguage;
+-@property (nonatomic) UIAccessibilityTraits accessibilityRoleTraits;
+-@property (nonatomic) UIAccessibilityTraits roleTraits;
++@property (nonatomic) RCTUIAccessibilityTraits accessibilityRoleTraits;
++@property (nonatomic) RCTUIAccessibilityTraits roleTraits;
+ 
+ /**
+  * Used in debugging to get a description of the view hierarchy rooted at
