@@ -5,3 +5,4 @@ Pods/
 build/
 DerivedData/
 *.log
+upstream-rn-0.84.1/
