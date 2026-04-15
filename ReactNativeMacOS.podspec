@@ -16,6 +16,7 @@ Pod::Spec.new do |s|
   s.subspec 'RCTAppKit' do |ss|
     ss.source_files = 'macos/RCTAppKit/**/*.{h,m,mm}'
     ss.public_header_files = 'macos/RCTAppKit/**/*.h'
+    ss.header_dir = 'React'
     ss.dependency 'React-Core'
   end
 
@@ -47,6 +48,9 @@ Pod::Spec.new do |s|
       'macos/Fabric/**/*.h',
       'cpp/**/*.h',
     ]
+    ss.pod_target_xcconfig = {
+      'HEADER_SEARCH_PATHS' => '"$(PODS_TARGET_SRCROOT)/cpp/react/renderer/components/view/platform/macos"'
+    }
     ss.dependency 'React-Core'
     ss.dependency 'React-Fabric'
     ss.dependency 'ReactNativeMacOS/RCTAppKit'
