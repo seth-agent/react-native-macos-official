@@ -37,6 +37,7 @@ Pod::Spec.new do |s|
   s.subspec 'Linking' do |ss|
     ss.source_files = 'macos/Linking/**/*.{h,m,mm}'
     ss.dependency 'React-Core'
+    ss.dependency 'React-RCTFBReactNativeSpec'
   end
 
   s.subspec 'Fabric' do |ss|
